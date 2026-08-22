@@ -1,4 +1,4 @@
-// api/workspaces/[id]/index.js - Workspace Detail, Progress & Status Update
+// api/workspaces/[id]/index.js - Workspace Detail, Notes, Agreement & Sessions Hub
 import { db, events } from 'hatchable';
 import { requireCurrentUser } from 'lib/auth.js';
 
@@ -17,8 +17,8 @@ export default async function (req, res) {
     const { rows: wsRows } = await db.query(
       `SELECT w.*, 
               c.id as connection_id, c.user1_id, c.user2_id,
-              u1.name as user1_name, u1.avatar_url as user1_avatar, u1.headline as user1_headline,
-              u2.name as user2_name, u2.avatar_url as user2_avatar, u2.headline as user2_headline,
+              u1.name as user1_name, u1.username as user1_username, u1.avatar_url as user1_avatar, u1.headline as user1_headline,
+              u2.name as user2_name, u2.username as user2_username, u2.avatar_url as user2_avatar, u2.headline as user2_headline,
               s1.name as user1_skill_name, s2.name as user2_skill_name
        FROM exchange_workspaces w
        JOIN connections c ON w.connection_id = c.id
@@ -40,6 +40,7 @@ export default async function (req, res) {
     const partner = {
       id: partnerId,
       name: isUser1 ? ws.user2_name : ws.user1_name,
+      username: isUser1 ? ws.user2_username : ws.user1_username,
       avatar_url: isUser1 ? ws.user2_avatar : ws.user1_avatar,
       headline: isUser1 ? ws.user2_headline : ws.user1_headline
     };
@@ -65,6 +66,16 @@ export default async function (req, res) {
       [workspaceId]
     );
 
+    // Scheduled Sessions
+    const { rows: sessions } = await db.query(
+      `SELECT s.*, u.name as proposer_name, u.avatar_url as proposer_avatar
+       FROM scheduled_sessions s
+       JOIN app_users u ON s.proposer_id = u.id
+       WHERE s.workspace_id = $1
+       ORDER BY s.session_date ASC`,
+      [workspaceId]
+    );
+
     // Reviews
     const { rows: reviews } = await db.query(
       `SELECT r.*, u.name as reviewer_name, u.avatar_url as reviewer_avatar
@@ -74,7 +85,17 @@ export default async function (req, res) {
       [workspaceId]
     );
 
-    // Dynamic progress computation based on goals and tasks
+    // Partner Skills for Context Sidebar
+    const { rows: partnerSkills } = await db.query(
+      `SELECT us.*, s.name as skill_name, c.name as category_name
+       FROM user_skills us
+       JOIN skills s ON us.skill_id = s.id
+       JOIN categories c ON s.category_id = c.id
+       WHERE us.user_id = $1`,
+      [partnerId]
+    );
+
+    // Dynamic progress computation
     const totalItems = goals.length + tasks.length;
     let computedProgress = 0;
     if (totalItems > 0) {
@@ -93,7 +114,9 @@ export default async function (req, res) {
         partner,
         goals,
         tasks,
+        sessions,
         reviews,
+        partnerSkills,
         computedProgress: totalItems > 0 ? computedProgress : ws.progress,
         my_review: reviews.find(r => r.reviewer_id === user.id) || null
       }
@@ -101,7 +124,7 @@ export default async function (req, res) {
   }
 
   if (req.method === 'PUT') {
-    const { title, description, target_date, status, progress } = req.body || {};
+    const { title, description, target_date, status, progress, shared_notes, exchange_agreement } = req.body || {};
 
     const { rows: updated } = await db.query(
       `UPDATE exchange_workspaces 
@@ -110,10 +133,12 @@ export default async function (req, res) {
            target_date = COALESCE($3, target_date),
            status = COALESCE($4, status),
            progress = COALESCE($5, progress),
+           shared_notes = COALESCE($6, shared_notes),
+           exchange_agreement = COALESCE($7::jsonb, exchange_agreement),
            updated_at = now()
-       WHERE id = $6
+       WHERE id = $8
        RETURNING *`,
-      [title, description, target_date, status, progress, workspaceId]
+      [title, description, target_date, status, progress, shared_notes, exchange_agreement ? JSON.stringify(exchange_agreement) : null, workspaceId]
     );
 
     if (!updated[0]) {

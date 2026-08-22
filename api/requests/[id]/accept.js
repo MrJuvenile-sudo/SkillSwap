@@ -1,4 +1,4 @@
-// api/requests/[id]/accept.js - Accept Request & Initialize Workspace
+// api/requests/[id]/accept.js - Accept Proposal & Initialize Pinned Agreement Workspace
 import { db, events } from 'hatchable';
 import { requireCurrentUser } from 'lib/auth.js';
 
@@ -14,7 +14,6 @@ export default async function (req, res) {
   }
 
   try {
-    // 1. Fetch request and ensure current user is receiver
     const { rows: reqRows } = await db.query(
       `SELECT r.*, 
               s.name as sender_name, ts.name as teach_skill_name, ls.name as learn_skill_name
@@ -35,7 +34,7 @@ export default async function (req, res) {
       return res.status(400).json({ error: `Request has already been ${request.status.toLowerCase()}` });
     }
 
-    // 2. Mark request as ACCEPTED
+    // 1. Mark request as ACCEPTED
     await db.query(
       `UPDATE requests 
        SET status = 'ACCEPTED', responded_at = now() 
@@ -43,7 +42,7 @@ export default async function (req, res) {
       [requestId]
     );
 
-    // 3. Create Connection
+    // 2. Create Connection
     const { rows: connRows } = await db.query(
       `INSERT INTO connections (user1_id, user2_id, request_id, status)
        VALUES ($1, $2, $3, 'ACTIVE')
@@ -53,22 +52,32 @@ export default async function (req, res) {
 
     const connection = connRows[0];
 
-    // 4. Initialize Exchange Workspace
+    // 3. Initialize Exchange Workspace with Pinned Exchange Agreement
     const teachName = request.teach_skill_name || 'Skill Mentorship';
     const learnName = request.learn_skill_name || 'Skill Learning';
     const wsTitle = `${teachName} ⇄ ${learnName}`;
     const wsDesc = `Peer exchange between ${request.sender_name} and ${user.name}. Track your shared milestones, scheduled practice sessions, and learning goals here.`;
 
+    const agreement = {
+      cadence: request.cadence || 'Weekly (1-2 hrs)',
+      duration: `${request.duration_weeks || 4} weeks`,
+      channel: request.preferred_channel || 'In-App Video',
+      agreed_topics: `${teachName} and ${learnName}`,
+      created_at: new Date().toISOString()
+    };
+
+    const targetDays = (request.duration_weeks || 4) * 7;
+
     const { rows: wsRows } = await db.query(
-      `INSERT INTO exchange_workspaces (connection_id, title, description, status, start_date, target_date, progress, user1_skill_id, user2_skill_id)
-       VALUES ($1, $2, $3, 'ACTIVE', CURRENT_DATE, CURRENT_DATE + 30, 0, $4, $5)
+      `INSERT INTO exchange_workspaces (connection_id, title, description, status, start_date, target_date, progress, user1_skill_id, user2_skill_id, exchange_agreement)
+       VALUES ($1, $2, $3, 'ACTIVE', CURRENT_DATE, CURRENT_DATE + $4, 0, $5, $6, $7::jsonb)
        RETURNING *`,
-      [connection.id, wsTitle, wsDesc, request.teach_skill_id, request.learn_skill_id]
+      [connection.id, wsTitle, wsDesc, targetDays, request.teach_skill_id, request.learn_skill_id, JSON.stringify(agreement)]
     );
 
     const workspace = wsRows[0];
 
-    // 5. Create default initial goals & tasks for both users
+    // 4. Create default initial goals & tasks for both users
     await db.query(
       `INSERT INTO learning_goals (workspace_id, user_id, goal_description, status)
        VALUES 
@@ -92,14 +101,13 @@ export default async function (req, res) {
       [connection.id, user.id, `Hi ${request.sender_name}! I accepted your skill swap request. Our shared learning workspace "${wsTitle}" is ready! Let's get started.`]
     );
 
-    // 6. Notify the sender
+    // 5. Notify the sender
     await db.query(
       `INSERT INTO notifications (user_id, type, title, message, link)
-       VALUES ($1, 'ACCEPTED', 'Exchange Request Accepted! 🎉', $2, $3)`,
-      [request.sender_id, `${user.name} accepted your skill exchange request! Your workspace is ready.`, `/workspaces/${workspace.id}`]
+       VALUES ($1, 'ACCEPTED', 'Exchange Proposal Accepted! 🎉', $2, $3)`,
+      [request.sender_id, `${user.name} accepted your skill exchange proposal! Your shared workspace is ready.`, `/workspaces/${workspace.id}`]
     );
 
-    // 7. Fire realtime event
     try {
       await events.publish(`requests:${request.sender_id}`, 'request_accepted', {
         requestId,
@@ -118,6 +126,6 @@ export default async function (req, res) {
     });
   } catch (err) {
     console.error('Error accepting request:', err);
-    res.status(500).json({ error: 'Failed to accept exchange request' });
+    res.status(500).json({ error: 'Failed to accept exchange proposal.' });
   }
 }

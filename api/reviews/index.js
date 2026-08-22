@@ -1,4 +1,4 @@
-// api/reviews/index.js - Multi-Criteria Reviews & Trust Scoring
+// api/reviews/index.js - Two-Way Blind Reviews & Trust Scoring
 import { db } from 'hatchable';
 import { requireCurrentUser } from 'lib/auth.js';
 
@@ -26,7 +26,7 @@ export default async function (req, res) {
          FROM reviews r
          JOIN app_users u ON r.reviewer_id = u.id
          LEFT JOIN exchange_workspaces w ON r.workspace_id = w.id
-         WHERE r.reviewee_id = $1
+         WHERE r.reviewee_id = $1 AND (r.is_blind = false OR r.revealed_at <= now())
          ORDER BY r.created_at DESC`,
         [userId]
       );
@@ -39,7 +39,7 @@ export default async function (req, res) {
            COALESCE(AVG(knowledge_rating), 5.0)::numeric(3,2) as avg_knowledge,
            COALESCE(AVG(reliability_rating), 5.0)::numeric(3,2) as avg_reliability
          FROM reviews
-         WHERE reviewee_id = $1`,
+         WHERE reviewee_id = $1 AND (is_blind = false OR revealed_at <= now())`,
         [userId]
       );
 
@@ -59,7 +59,6 @@ export default async function (req, res) {
       return res.status(400).json({ error: 'Workspace ID and rating are required' });
     }
 
-    // Verify workspace membership and identify partner
     const { rows: wsRows } = await db.query(
       `SELECT w.*, c.user1_id, c.user2_id 
        FROM exchange_workspaces w
@@ -76,9 +75,17 @@ export default async function (req, res) {
     const revieweeId = ws.user1_id === user.id ? ws.user2_id : ws.user1_id;
 
     try {
+      // Check if partner has already reviewed this workspace
+      const { rows: partnerReviews } = await db.query(
+        `SELECT id FROM reviews WHERE workspace_id = $1 AND reviewer_id = $2`,
+        [workspace_id, revieweeId]
+      );
+
+      const isBothReviewed = partnerReviews.length > 0;
+
       const { rows } = await db.query(
-        `INSERT INTO reviews (workspace_id, reviewer_id, reviewee_id, rating, communication_rating, knowledge_rating, reliability_rating, comment)
-         VALUES ($1, $2, $3, $4, COALESCE($5, 5), COALESCE($6, 5), COALESCE($7, 5), $8)
+        `INSERT INTO reviews (workspace_id, reviewer_id, reviewee_id, rating, communication_rating, knowledge_rating, reliability_rating, comment, is_blind, revealed_at)
+         VALUES ($1, $2, $3, $4, COALESCE($5, 5), COALESCE($6, 5), COALESCE($7, 5), $8, $9, $10)
          ON CONFLICT (workspace_id, reviewer_id) DO UPDATE SET
            rating = EXCLUDED.rating,
            communication_rating = EXCLUDED.communication_rating,
@@ -95,18 +102,28 @@ export default async function (req, res) {
           Math.min(5, Math.max(1, Number(communication_rating || 5))),
           Math.min(5, Math.max(1, Number(knowledge_rating || 5))),
           Math.min(5, Math.max(1, Number(reliability_rating || 5))),
-          comment || ''
+          comment || '',
+          !isBothReviewed,
+          isBothReviewed ? new Date() : new Date(Date.now() + 7 * 86400 * 1000)
         ]
       );
+
+      // If both have reviewed, reveal both reviews immediately!
+      if (isBothReviewed) {
+        await db.query(
+          `UPDATE reviews SET is_blind = false, revealed_at = now() WHERE workspace_id = $1`,
+          [workspace_id]
+        );
+      }
 
       // Notify reviewee
       await db.query(
         `INSERT INTO notifications (user_id, type, title, message, link)
-         VALUES ($1, 'REVIEW', 'New Review Received ⭐', $2, $3)`,
-        [revieweeId, `${user.name} left you a ${rating}★ review for "${ws.title}".`, `/profile?userId=${revieweeId}`]
+         VALUES ($1, 'REVIEW', 'Mutual Review Submitted ⭐', $2, $3)`,
+        [revieweeId, isBothReviewed ? `${user.name} submitted their review — both reviews are now revealed on your profile!` : `${user.name} submitted their exchange review. Leave yours to reveal both!`, `/profile?userId=${revieweeId}`]
       );
 
-      return res.json({ success: true, review: rows[0] });
+      return res.json({ success: true, review: rows[0], isBothReviewed });
     } catch (err) {
       console.error('Error submitting review:', err);
       return res.status(500).json({ error: 'Failed to submit review' });

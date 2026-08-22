@@ -1,4 +1,4 @@
-// api/messages/index.js - One-to-One Chat Messaging per Connection
+// api/messages/index.js - Chat Messaging with Rich Content & Partner Skills Context
 import { db, events } from 'hatchable';
 import { requireCurrentUser } from 'lib/auth.js';
 
@@ -11,12 +11,11 @@ export default async function (req, res) {
   if (req.method === 'GET') {
     const { connection_id } = req.query;
     if (!connection_id) {
-      // List all recent chat threads/conversations for user
       const { rows: threads } = await db.query(
         `SELECT c.id as connection_id, c.status, c.created_at,
-                u1.id as user1_id, u1.name as user1_name, u1.avatar_url as user1_avatar, u1.headline as user1_headline,
-                u2.id as user2_id, u2.name as user2_name, u2.avatar_url as user2_avatar, u2.headline as user2_headline,
-                w.id as workspace_id, w.title as workspace_title,
+                u1.id as user1_id, u1.name as user1_name, u1.username as user1_username, u1.avatar_url as user1_avatar, u1.headline as user1_headline,
+                u2.id as user2_id, u2.name as user2_name, u2.username as user2_username, u2.avatar_url as user2_avatar, u2.headline as user2_headline,
+                w.id as workspace_id, w.title as workspace_title, w.exchange_agreement,
                 (SELECT message FROM messages WHERE connection_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
                 (SELECT created_at FROM messages WHERE connection_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_at,
                 (SELECT sender_id FROM messages WHERE connection_id = c.id ORDER BY created_at DESC LIMIT 1) as last_sender_id,
@@ -35,6 +34,7 @@ export default async function (req, res) {
         const partner = {
           id: isUser1 ? t.user2_id : t.user1_id,
           name: isUser1 ? t.user2_name : t.user1_name,
+          username: isUser1 ? t.user2_username : t.user1_username,
           avatar_url: isUser1 ? t.user2_avatar : t.user1_avatar,
           headline: isUser1 ? t.user2_headline : t.user1_headline
         };
@@ -42,6 +42,7 @@ export default async function (req, res) {
           connection_id: t.connection_id,
           workspace_id: t.workspace_id,
           workspace_title: t.workspace_title,
+          exchange_agreement: t.exchange_agreement,
           partner,
           last_message: t.last_message,
           last_message_at: t.last_message_at,
@@ -52,12 +53,12 @@ export default async function (req, res) {
       return res.json({ threads: formatted });
     }
 
-    // Fetch messages for specific connection
+    // Specific connection
     const { rows: connectionRows } = await db.query(
       `SELECT c.*, 
-              u1.name as user1_name, u1.avatar_url as user1_avatar,
-              u2.name as user2_name, u2.avatar_url as user2_avatar,
-              w.id as workspace_id, w.title as workspace_title
+              u1.name as user1_name, u1.username as user1_username, u1.avatar_url as user1_avatar, u1.headline as user1_headline,
+              u2.name as user2_name, u2.username as user2_username, u2.avatar_url as user2_avatar, u2.headline as user2_headline,
+              w.id as workspace_id, w.title as workspace_title, w.exchange_agreement
        FROM connections c
        JOIN app_users u1 ON c.user1_id = u1.id
        JOIN app_users u2 ON c.user2_id = u2.id
@@ -76,8 +77,20 @@ export default async function (req, res) {
     const partner = {
       id: partnerId,
       name: isUser1 ? conn.user2_name : conn.user1_name,
-      avatar_url: isUser1 ? conn.user2_avatar : conn.user1_avatar
+      username: isUser1 ? conn.user2_username : conn.user1_username,
+      avatar_url: isUser1 ? conn.user2_avatar : conn.user1_avatar,
+      headline: isUser1 ? conn.user2_headline : conn.user1_headline
     };
+
+    // Partner Skills for sidebar context
+    const { rows: partnerSkills } = await db.query(
+      `SELECT us.*, s.name as skill_name, c.name as category_name
+       FROM user_skills us
+       JOIN skills s ON us.skill_id = s.id
+       JOIN categories c ON s.category_id = c.id
+       WHERE us.user_id = $1`,
+      [partnerId]
+    );
 
     const { rows: messages } = await db.query(
       `SELECT m.*, u.name as sender_name, u.avatar_url as sender_avatar
@@ -100,7 +113,12 @@ export default async function (req, res) {
         id: conn.id,
         workspace_id: conn.workspace_id,
         workspace_title: conn.workspace_title,
-        partner
+        exchange_agreement: conn.exchange_agreement,
+        partner,
+        partnerSkills: {
+          teach: partnerSkills.filter(s => s.type === 'TEACH'),
+          learn: partnerSkills.filter(s => s.type === 'LEARN')
+        }
       },
       messages
     });
@@ -109,7 +127,7 @@ export default async function (req, res) {
   if (req.method === 'POST') {
     const { connection_id, message } = req.body || {};
     if (!connection_id || !message || !message.trim()) {
-      return res.status(400).json({ error: 'Connection ID and non-empty message are required' });
+      return res.status(400).json({ error: 'Connection ID and non-empty message are required.' });
     }
 
     const { rows: connRows } = await db.query(
@@ -118,7 +136,7 @@ export default async function (req, res) {
     );
 
     if (!connRows[0]) {
-      return res.status(404).json({ error: 'Connection not found or unauthorized' });
+      return res.status(404).json({ error: 'Connection not found or unauthorized.' });
     }
 
     const conn = connRows[0];
@@ -133,14 +151,12 @@ export default async function (req, res) {
 
     const createdMsg = msgRows[0];
 
-    // Notification for recipient
     await db.query(
       `INSERT INTO notifications (user_id, type, title, message, link)
        VALUES ($1, 'MESSAGE', $2, $3, $4)`,
       [recipientId, `Message from ${user.name}`, message.trim().slice(0, 80), `/chat?connection=${connection_id}`]
     );
 
-    // Fire realtime events to user and connection
     try {
       await events.publish(`user:${recipientId}`, 'new_message', {
         connectionId: connection_id,
