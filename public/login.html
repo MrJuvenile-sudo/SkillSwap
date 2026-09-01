@@ -1,0 +1,278 @@
+<!-- public/login.html - SkillSwap Branded Login & Passkey Authentication -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Sign in — SkillSwap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/theme.css">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background-color: #FAF6EF;
+    color: #1E293B;
+    padding: 20px;
+  }
+  .card {
+    width: 100%;
+    max-width: 400px;
+    background: #FFFFFF;
+    border: 1px solid #E7DFD5;
+    border-radius: 24px;
+    padding: 36px 32px;
+    box-shadow: 0 10px 25px -3px rgba(30, 58, 95, 0.06);
+    text-align: center;
+  }
+  .logo-icon {
+    width: 48px;
+    height: 48px;
+    background: #1E3A5F;
+    color: #FAF6EF;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: #1E3A5F;
+  }
+  .sub {
+    font-size: 13.5px;
+    color: #5C6470;
+    margin: 0 0 24px;
+    line-height: 1.5;
+  }
+  input, button {
+    width: 100%;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  input {
+    padding: 0 16px;
+    border: 1px solid #E7DFD5;
+    background: #FAF6EF;
+    color: #1E293B;
+    display: block;
+    margin-bottom: 12px;
+  }
+  input:focus {
+    outline: 2px solid #1E3A5F;
+    background: #FFFFFF;
+  }
+  button.primary {
+    border: 0;
+    cursor: pointer;
+    font-weight: 600;
+    background: #1E3A5F;
+    color: #FAF6EF;
+    transition: background 0.2s;
+  }
+  button.primary:hover { background: #142842; }
+  button:disabled { opacity: 0.5; }
+  .alt {
+    background: transparent;
+    border: 0;
+    color: #5C6470;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .alt:hover { color: #1E3A5F; }
+  .msg {
+    font-size: 13px;
+    margin-top: 14px;
+    min-height: 1em;
+    color: #5C6470;
+  }
+  .msg.err { color: #E11D48; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="card">
+  <img src="/logo-icon.png" alt="SkillSwapX" style="width: 52px; height: 52px; object-fit: contain; margin: 0 auto 16px; display: block; border-radius: 12px; padding: 2px; border: 1px solid #EFE7D8; background: #fff;">
+  <h1 id="title">Sign In to SkillSwapX</h1>
+  <p class="sub" id="sub">Enter your email and we'll send a one-time secure code. No password needed.</p>
+
+  <form id="form" novalidate>
+    <div id="email-row">
+      <input id="email" name="email" type="email" placeholder="you@example.com"
+             autocomplete="username webauthn" autocapitalize="off" autocorrect="off"
+             spellcheck="false" required aria-label="Email">
+    </div>
+    <div id="code-row" hidden>
+      <input id="code" name="code" type="text" inputmode="numeric" placeholder="6-digit code"
+             autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" aria-label="6-digit code">
+    </div>
+    <button id="submit" class="primary" type="submit">Continue</button>
+    <button id="back" class="alt" type="button" hidden>Use a different email</button>
+  </form>
+
+  <div id="passkey" hidden>
+    <button id="passkey-add" class="primary" type="button">Add a passkey</button>
+    <button id="passkey-skip" class="alt" type="button">Not now</button>
+  </div>
+
+  <p class="msg" id="msg" role="status" aria-live="polite"></p>
+
+  <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E7DFD5; font-size: 12px; color: #8E98A5;">
+    <a href="/" style="color: #1E3A5F; text-decoration: none; font-weight: 600;">← Back to SkillSwap Home</a>
+  </div>
+</div>
+
+<script>
+(function () {
+  var A = window.hatchable && window.hatchable.auth;
+  var form = document.getElementById('form');
+  var emailRow = document.getElementById('email-row');
+  var codeRow = document.getElementById('code-row');
+  var emailEl = document.getElementById('email');
+  var codeEl = document.getElementById('code');
+  var submit = document.getElementById('submit');
+  var back = document.getElementById('back');
+  var msg = document.getElementById('msg');
+  var sub = document.getElementById('sub');
+  var titleEl = document.getElementById('title');
+  var passkeyRow = document.getElementById('passkey');
+  var passkeyAdd = document.getElementById('passkey-add');
+  var passkeySkip = document.getElementById('passkey-skip');
+  var step = 'email';
+  var hasPasskey = false;
+  var PASSKEY_DECLINED = 'passkey_offer_declined';
+
+  function safeNext() {
+    var raw = new URLSearchParams(location.search).get('next') || '/';
+    if (typeof raw !== 'string' || raw.charAt(0) !== '/' || raw.indexOf('//') === 0) return '/';
+    return raw;
+  }
+  function say(text, kind) { msg.textContent = text || ''; msg.className = 'msg ' + (kind || ''); }
+  function done() { location.replace(safeNext()); }
+
+  function declined() {
+    try { return localStorage.getItem(PASSKEY_DECLINED) === '1'; } catch (e) { return false; }
+  }
+  function decline() {
+    try { localStorage.setItem(PASSKEY_DECLINED, '1'); } catch (e) {}
+  }
+
+  function finish() {
+    if (hasPasskey || declined() || !A.registerPasskey || !A.supportsPasskeys || !A.supportsPasskeys()) { 
+      done(); 
+      return; 
+    }
+    step = 'passkey';
+    form.hidden = true;
+    titleEl.textContent = "You're signed in!";
+    sub.textContent = 'Add a passkey and next time you can sign in with your fingerprint or screen lock. No codes needed.';
+    say('');
+    passkeyRow.hidden = false;
+    passkeyAdd.focus();
+  }
+
+  if (!A) { 
+    say('Sign-in service is initializing. Please refresh.', 'err'); 
+    submit.disabled = true; 
+    return; 
+  }
+
+  A.getSession().then(function (s) { if (s && s.user) done(); }).catch(function () {});
+
+  if (A.attachPasskeyAutofill) {
+    try { A.attachPasskeyAutofill(emailEl).then(function (r) { if (r && r.user) done(); }).catch(function () {}); }
+    catch (e) {}
+  }
+
+  passkeyAdd.addEventListener('click', function () {
+    passkeyAdd.disabled = true; 
+    passkeySkip.disabled = true;
+    say('');
+    A.registerPasskey().then(function (r) {
+      if (!r) { decline(); }
+      done();
+    }).catch(function (err) {
+      passkeyAdd.disabled = false; 
+      passkeySkip.disabled = false;
+      say((err && err.message) || 'Could not save passkey. You can continue without one.', 'err');
+    });
+  });
+
+  passkeySkip.addEventListener('click', function () { decline(); done(); });
+
+  back.addEventListener('click', function () {
+    step = 'email'; 
+    codeRow.hidden = true; 
+    emailRow.hidden = false; 
+    back.hidden = true;
+    submit.textContent = 'Continue';
+    sub.textContent = "Enter your email and we'll send a one-time secure code. No password needed.";
+    say(''); 
+    emailEl.focus();
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (step === 'passkey') return;
+    submit.disabled = true;
+
+    if (step === 'email') {
+      var email = (emailEl.value || '').trim();
+      if (!email) { submit.disabled = false; say('Please enter your email address.', 'err'); return; }
+      A.startLogin({ email: email }).then(function (r) {
+        hasPasskey = !!(r && r.has_passkey);
+        if (hasPasskey && A.supportsPasskeys && A.supportsPasskeys()) {
+          return A.signInWithPasskey({ email: email }).then(function (d) {
+            if (d && d.user) { done(); return null; }
+            return 'code';
+          }).catch(function () { return 'code'; });
+        }
+        return 'code';
+      }).then(function (next) {
+        if (next !== 'code') return;
+        step = 'code'; 
+        emailRow.hidden = true; 
+        codeRow.hidden = false; 
+        back.hidden = false;
+        submit.textContent = 'Sign In';
+        sub.textContent = 'Enter the 6-digit code we emailed to ' + emailEl.value.trim() + '.';
+        say('Code sent! It expires in 10 minutes.');
+        codeEl.focus();
+      }).catch(function (err) {
+        say(err && err.status === 429 ? 'Too many attempts. Please wait a moment.' : ((err && err.message) || 'Could not send code. Check email address.'), 'err');
+      }).then(function () { submit.disabled = false; });
+      return;
+    }
+
+    A.verifyCode({ email: (emailEl.value || '').trim(), code: (codeEl.value || '').trim() })
+      .then(function (d) {
+        if (d && d.user) { finish(); return; }
+        say('Invalid code. Please try again.', 'err');
+      })
+      .catch(function (err) { say((err && err.message) || 'Verification failed. Please try again.', 'err'); })
+      .then(function () { submit.disabled = false; });
+  });
+
+  emailEl.focus();
+})();
+</script>
+</body>
+</html>
