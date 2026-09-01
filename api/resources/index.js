@@ -35,12 +35,18 @@ export default async function (req, res) {
       params.push('%' + subject + '%');
     }
     if (q) {
-      conditions.push(`(r.title LIKE $${paramIdx} OR r.description LIKE $${paramIdx} OR r.subject LIKE $${paramIdx})`);
-      params.push('%' + q + '%');
-      paramIdx++;
+      const p1 = paramIdx++;
+      const p2 = paramIdx++;
+      const p3 = paramIdx++;
+      conditions.push(`(r.title LIKE $${p1} OR r.description LIKE $${p2} OR r.subject LIKE $${p3})`);
+      params.push('%' + q + '%', '%' + q + '%', '%' + q + '%');
     }
 
     const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+
+    const savedUserParam = paramIdx++;
+    const limitParam = paramIdx++;
+    const offsetParam = paramIdx++;
 
     const { rows } = await db.query(
       `SELECT r.*,
@@ -48,22 +54,22 @@ export default async function (req, res) {
               (SELECT ROUND(AVG((rr.accuracy + rr.completeness + rr.relevance + rr.usefulness) / 4.0), 1)
                FROM resource_reviews rr WHERE rr.resource_id = r.id) as avg_rating,
               (SELECT COUNT(*) FROM resource_reviews rr WHERE rr.resource_id = r.id) as review_count,
-              (SELECT COUNT(*) FROM saved_resources sr WHERE sr.resource_id = r.id AND sr.user_id = $${paramIdx}) as is_saved
+              (SELECT COUNT(*) FROM saved_resources sr WHERE sr.resource_id = r.id AND sr.user_id = $${savedUserParam}) as is_saved
        FROM resources r
        JOIN app_users u ON r.contributor_id = u.id
        ${where}
        ORDER BY r.created_at DESC
-       LIMIT $${paramIdx + 1} OFFSET $${paramIdx + 2}`,
-      [...params, user.id, Number(limit), offset]
+       LIMIT $${limitParam} OFFSET $${offsetParam}`,
+      [...params, String(user.id), Number(limit), offset]
     );
 
     const { rows: countRows } = await db.query(
-      `SELECT COUNT(*)::int as total FROM resources r ${where}`,
+      `SELECT COUNT(*) as total FROM resources r ${where}`,
       params
     );
 
     const { rows: typeCounts } = await db.query(
-      `SELECT type, COUNT(*)::int as count FROM resources WHERE status = 'APPROVED' GROUP BY type`
+      `SELECT type, COUNT(*) as count FROM resources WHERE status = 'APPROVED' GROUP BY type`
     );
 
     return res.json({
