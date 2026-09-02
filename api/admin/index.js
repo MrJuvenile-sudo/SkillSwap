@@ -2,6 +2,7 @@
 import { db } from 'hatchable';
 import { requireSupport } from 'lib/auth.js';
 
+
 export const access = 'public';
 
 export default async function (req, res) {
@@ -22,11 +23,13 @@ export default async function (req, res) {
     );
 
     // 2. Skill KPIs
+
     const { rows: skillCounts } = await db.query(
       `SELECT 
          (SELECT COUNT(*)::int FROM categories) as total_categories,
          (SELECT COUNT(*)::int FROM skills) as total_skills,
          (SELECT COUNT(*)::int FROM skills WHERE is_popular = 1 OR is_popular = true) as popular_skills,
+
          (SELECT COUNT(*)::int FROM user_skills WHERE type = 'TEACH') as total_teach_offerings,
          (SELECT COUNT(*)::int FROM user_skills WHERE type = 'LEARN') as total_learn_demands`
     );
@@ -72,6 +75,7 @@ export default async function (req, res) {
     const { rows: recentReports } = await db.query(
       `SELECT r.*, 
               rep.name as reporter_name, rep.avatar_url as reporter_avatar,
+
               tar.name as reported_name, tar.email as reported_email, tar.status as reported_status
        FROM reports r
        JOIN app_users rep ON r.reporter_id = rep.id
@@ -130,6 +134,7 @@ export default async function (req, res) {
       topSkills,
       recentProblems,
       activityTimeline
+
     });
   } catch (err) {
     console.error('Error loading admin stats:', err);

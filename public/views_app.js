@@ -1,4 +1,5 @@
 // public/views_app.js - Premium Application Views (Enhanced UI/UX after Login)
+
 (function() {
   window.SkillSwap = window.SkillSwap || {};
 
@@ -33,6 +34,7 @@
         }
       }).catch(console.error);
       api('/api/notifications').then(data => setNotifications((data.notifications || []).slice(0, 4))).catch(console.error);
+
     }, []);
 
     const teachCount = (user.skills || []).filter(s => s.type === 'TEACH').length;
@@ -114,7 +116,16 @@
             <!-- Top Matches Section -->
             <div class="space-y-5">
               <div class="flex items-center justify-between">
-                <h2 class="font-serif text-2xl font-bold text-navy-900">Highly Compatible Peers</h2>
+                <div>
+                  <h2 class="font-serif text-2xl font-bold text-navy-900">
+                    ${hasSkills ? 'Highly Compatible Peers' : 'Platform Active Swappers'}
+                  </h2>
+                  ${!hasSkills ? html`
+                    <p class="text-xs text-warmgray-500 mt-0.5">
+                      💡 Complete your profile by adding skills you can teach to calculate personalized 1:1 reciprocal synergy matches.
+                    </p>
+                  ` : null}
+                </div>
                 <button onClick=${() => setActiveTab('matches')} class="text-xs font-bold text-navy-700 hover:underline">View all matches →</button>
               </div>
 
@@ -131,8 +142,8 @@
                           </div>
                         </div>
                         <div class="text-right shrink-0">
-                          <span class="px-2.5 py-1.5 bg-navy-50 text-navy-700 border border-navy-200/50 rounded-xl font-serif font-bold text-xs shadow-sm">
-                            ${m.score || m.matchScore || 0}% Match
+                          <span class="px-2.5 py-1.5 ${m.score > 0 ? 'bg-navy-50 text-navy-700 border-navy-200/50' : 'bg-cream-100 text-warmgray-600 border-cream-300'} border rounded-xl font-serif font-bold text-xs shadow-sm">
+                            ${hasSkills && m.score > 0 ? `${m.score}% Match` : 'Network Member'}
                           </span>
                         </div>
                       </div>
@@ -311,6 +322,7 @@
               </div>
             </div>
           </div>
+
         </div>
       </div>
     `;
@@ -319,13 +331,15 @@
 
   // ----------------------------------------------------
   // Matches Discovery View (Premium Badging & Highlight)
+
   // ----------------------------------------------------
-  function MatchesView({ onProposeSwap, onComparePeers, onViewProfile }) {
+  function MatchesView({ currentUser, onProposeSwap, onComparePeers, onViewProfile }) {
     const [matches, setMatches] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [minSynergy, setMinSynergy] = useState(50);
+    const [minSynergy, setMinSynergy] = useState(0);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [selectedPeers, setSelectedPeers] = useState([]);
+
 
     useEffect(() => {
       loadMatches();
@@ -354,6 +368,7 @@
         setSelectedPeers(prev => [...prev, userRecord]);
       }
     };
+
 
     const filteredMatches = useMemo(() => {
       return matches.filter(m => {
@@ -386,6 +401,7 @@
                 Select 2 peers to compare side-by-side
               </div>
             `}
+
           </div>
         </div>
 
@@ -398,6 +414,7 @@
 
             <div>
               <label class="block font-bold text-navy-900 mb-1.5">Search Keywords</label>
+
               <input
                 type="text"
                 value=${searchKeyword}
@@ -410,6 +427,7 @@
             <div class="space-y-2">
               <div class="flex justify-between font-bold text-navy-900">
                 <span>Minimum Synergy</span>
+
                 <span class="text-navy-700">${minSynergy}%</span>
               </div>
               <input
@@ -419,6 +437,7 @@
                 value=${minSynergy}
                 onChange=${e => setMinSynergy(Number(e.target.value))}
                 class="w-full accent-navy-700 cursor-pointer"
+
               />
             </div>
           </div>
@@ -493,6 +512,7 @@
                   </div>
                 `;
               })}
+
             </div>
           </div>
         </div>
@@ -541,6 +561,7 @@
 
     const handleDeleteSkill = async (id) => {
       if (!confirm('Are you sure you want to remove this skill from your profile?')) return;
+
       await api('/api/skills/user?id=' + id, { method: 'DELETE' });
       onRefresh && onRefresh();
     };
@@ -550,9 +571,14 @@
 
     return html`
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-left animate-fadeIn">
-        <div>
-          <h1 class="font-serif text-3xl font-bold text-navy-900">Skill Matrix</h1>
-          <p class="text-warmgray-600 text-xs sm:text-sm">Manage the topics you can offer to teach and those you want to acquire.</p>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-300 pb-5">
+          <div>
+            <h1 class="font-serif text-3xl font-bold text-navy-900">Skill Matrix & Exchange Targets</h1>
+            <p class="text-warmgray-600 text-xs sm:text-sm">Manage topics you offer to teach and target skills you want to master to power bilateral matching.</p>
+          </div>
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold shrink-0">
+            <span>⚡ Synergy Portfolio: ${myTeach.length} Teach / ${myLearn.length} Learn</span>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -566,12 +592,14 @@
                 <div class="grid grid-cols-2 gap-2">
                   <button type="button" onClick=${() => setType('TEACH')} class="py-2.5 rounded-xl font-bold transition-all ${type === 'TEACH' ? 'bg-navy-700 text-white shadow-sm' : 'bg-cream-100 text-warmgray-600 hover:bg-cream-200/50'}">I Can Teach</button>
                   <button type="button" onClick=${() => setType('LEARN')} class="py-2.5 rounded-xl font-bold transition-all ${type === 'LEARN' ? 'bg-amber-700 text-white shadow-sm' : 'bg-cream-100 text-warmgray-600 hover:bg-cream-200/50'}">I Want to Learn</button>
+
                 </div>
               </div>
 
               <div>
                 <label class="block font-bold text-navy-900 mb-1.5">Select Skill</label>
                 <select required value=${selectedSkillId} onChange=${e => setSelectedSkillId(e.target.value)} class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900">
+
                   <option value="">Choose a skill...</option>
                   ${allSkills.map(s => html`<option key=${s.id} value=${s.id}>${s.name} (${s.category_name})</option>`)}
                 </select>
@@ -580,6 +608,7 @@
               <div>
                 <label class="block font-bold text-navy-900 mb-1.5">Proficiency / Target Level</label>
                 <select value=${level} onChange=${e => setLevel(e.target.value)} class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900">
+
                   <option value="Beginner">Beginner</option>
                   <option value="Intermediate">Intermediate</option>
                   <option value="Advanced">Advanced</option>
@@ -597,6 +626,7 @@
 
               <button type="submit" disabled=${loading} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
                 ${loading ? 'Adding to profile...' : 'Add to Skill Matrix'}
+
               </button>
             </form>
           </div>
@@ -616,6 +646,7 @@
                       <p class="text-[11px] text-warmgray-500 font-semibold uppercase tracking-wider">${s.level} · ${s.experience_years} Years Exp</p>
                     </div>
                     <button onClick=${() => handleDeleteSkill(s.id)} class="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 transition-colors">
+
                       <${Icon} name="trash-2" class="w-4 h-4" />
                     </button>
                   </div>
@@ -636,6 +667,7 @@
                       <p class="text-[11px] text-warmgray-500 font-semibold uppercase tracking-wider">Target Level: ${s.level}</p>
                     </div>
                     <button onClick=${() => handleDeleteSkill(s.id)} class="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 transition-colors">
+
                       <${Icon} name="trash-2" class="w-4 h-4" />
                     </button>
                   </div>
@@ -656,6 +688,7 @@
     const [incoming, setIncoming] = useState([]);
     const [loading, setLoading] = useState(true);
 
+
     useEffect(() => {
       loadRequests();
     }, []);
@@ -670,6 +703,7 @@
       } finally {
         setLoading(false);
       }
+
     };
 
     const handleAccept = async (reqId) => {
@@ -718,6 +752,7 @@
                 ` : html`<span class="px-3 py-1 rounded bg-cream-200 font-bold text-xs text-navy-800">${r.status}</span>`}
               </div>
             `)}
+
           </div>
         </div>
       </div>
@@ -749,6 +784,7 @@
     }, []);
 
     const loadWorkspaces = async () => {
+
       api('/api/workspaces').then(data => {
         setWorkspaces(data.workspaces || []);
         if (data.workspaces && data.workspaces[0]) {
@@ -757,12 +793,14 @@
       }).catch(console.error);
     };
 
+
     const loadWorkspaceDetails = async (id) => {
       const data = await api('/api/workspaces/' + id);
       setActiveWorkspace(data.workspace);
       api('/api/sessions?workspace_id=' + id).then(sData => {
         setSessions(sData.sessions || []);
       }).catch(console.error);
+
     };
 
     const handleAddTask = async (e) => {
@@ -771,6 +809,7 @@
       await api('/api/workspaces/' + activeWorkspace.id + '/tasks', {
         method: 'POST',
         body: JSON.stringify({ title: newTaskTitle.trim() })
+
       });
       setNewTaskTitle('');
       loadWorkspaceDetails(activeWorkspace.id);
@@ -853,6 +892,7 @@
                   </div>
                   <div class="flex justify-between font-semibold">
                     <span class="text-warmgray-500">Duration Limit:</span>
+
                     <span class="text-navy-900">4 Weeks</span>
                   </div>
                 </div>
@@ -911,6 +951,7 @@
                   <span class="text-xs font-bold text-warmgray-500 bg-cream-100 px-3 py-1 rounded-full">
                     ${(activeWorkspace.tasks || []).filter(t => t.status === 'COMPLETED').length}/${(activeWorkspace.tasks || []).length} Completed
                   </span>
+
                 </div>
 
                 <form onSubmit=${handleAddTask} class="flex gap-2">
@@ -935,6 +976,7 @@
                         <span class="font-medium text-xs ${t.status === 'COMPLETED' ? 'line-through text-warmgray-400' : 'text-navy-900'}">${t.title}</span>
                       </div>
                       <span class="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded ${t.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'}">${t.status}</span>
+
                     </div>
                   `)}
                 </div>
@@ -942,7 +984,6 @@
             </div>
           </div>
         `}
-
         <!-- Scheduler Form Modal -->
         ${schedulerOpen ? html`
           <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-955/60 backdrop-blur-sm">
@@ -1003,6 +1044,7 @@
             </div>
           </div>
         ` : null}
+
       </div>
     `;
   }
@@ -1053,6 +1095,7 @@
               <${Icon} name="message-square" class="w-5 h-5 text-navy-700" /> Direct Messages
             </h3>
             <div class="space-y-1.5">
+
               ${connections.map(c => html`
                 <div
                   key=${c.id}
@@ -1063,6 +1106,7 @@
                   <div class="text-xs truncate flex-1">
                     <p class="font-bold text-navy-900 truncate">${c.partner_name}</p>
                     <p class="text-warmgray-500 text-[11px] truncate mt-0.5 font-medium">${c.last_message || 'Start the conversation...'}</p>
+
                   </div>
                 </div>
               `)}
@@ -1078,6 +1122,7 @@
                   <div>
                     <h4 class="font-bold text-navy-900 text-sm leading-snug">${activeConn.partner_name}</h4>
                     <span class="text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded">Active swap</span>
+
                   </div>
                 </div>
               </div>
@@ -1097,6 +1142,7 @@
               </div>
 
               <!-- Input form -->
+
               <form onSubmit=${handleSend} class="flex gap-2 pt-4 border-t border-cream-200">
                 <input
                   type="text"
@@ -1116,6 +1162,7 @@
                   <${Icon} name="message-square" class="w-6 h-6" />
                 </div>
                 <p>Select a learning partner from the sidebar to begin swap discussions.</p>
+
               </div>
             `}
           </div>
@@ -1124,7 +1171,6 @@
     `;
   }
   window.SkillSwap.ChatView = ChatView;
-
   // ----------------------------------------------------
   // SkillSwapX Admin Panel (Enterprise Governance Suite)
   // ----------------------------------------------------
@@ -1467,16 +1513,7 @@
               </div>
             </div>
 
-            <!-- Admin Role Pill Banner -->
-            <div class="px-5 py-3 bg-cream-50/70 border-b border-cream-200 flex items-center justify-between text-xs">
-              <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="font-bold text-navy-950">${currentUser?.name?.split(' ')[0] || 'Admin'}</span>
-              </div>
-              <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${getRoleBadgeStyle(userRole)}">
-                ${userRole}
-              </span>
-            </div>
+
 
             <!-- Core Nav Items List -->
             <nav class="p-3 space-y-1 text-xs font-semibold">
@@ -1617,22 +1654,13 @@
               <span>Switch to User Portal</span>
             </button>
 
-            <div class="flex items-center justify-between pt-2 px-1 text-xs">
-              <div class="flex items-center gap-2">
-                <img src=${currentUser?.avatar_url || '/favicon.png'} class="w-7 h-7 rounded-full object-cover border border-cream-300" />
-                <div class="text-left">
-                  <p class="font-bold text-navy-950 text-[11px] leading-tight">${currentUser?.name || 'Administrator'}</p>
-                  <p class="text-[9px] text-warmgray-500">${currentUser?.email || ''}</p>
-                </div>
-              </div>
-              <button
-                onClick=${onLogout}
-                class="p-1.5 text-warmgray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                title="Logout"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-              </button>
-            </div>
+            <button
+              onClick=${onLogout}
+              class="w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2"
+            >
+              <span>🚪</span>
+              <span>Log Out Admin</span>
+            </button>
           </div>
         </aside>
 
@@ -3018,13 +3046,21 @@
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-      if (!username) return;
+      const targetQuery = username
+        ? ('username=' + encodeURIComponent(username))
+        : (currentUser ? ('userId=' + encodeURIComponent(currentUser.id)) : null);
+
+      if (!targetQuery) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
-      api('/api/public/profile?username=' + encodeURIComponent(username))
+      api('/api/public/profile?' + targetQuery)
         .then(data => setProfile(data.user || null))
         .catch(console.error)
         .finally(() => setLoading(false));
-    }, [username]);
+    }, [username, currentUser]);
 
     if (loading) {
       return html`<div class="p-20 text-center font-serif text-warmgray-500">Syncing member credentials...</div>`;
@@ -3054,32 +3090,45 @@
         </button>
 
         <!-- Profile Hero Banner Card -->
-        <div class="bg-gradient-to-br from-navy-800 via-navy-900 to-navy-950 rounded-3xl p-8 border border-navy-700/30 shadow-xl flex flex-col md:flex-row items-center md:items-start justify-between gap-8 text-cream-100 relative overflow-hidden">
-          <div class="absolute -right-20 -top-20 w-52 h-52 bg-navy-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="bg-gradient-to-br from-navy-900 via-navy-950 to-navy-900 rounded-3xl p-8 sm:p-10 border border-navy-700/50 shadow-2xl flex flex-col md:flex-row items-center md:items-start justify-between gap-8 text-cream-100 relative overflow-hidden">
+          <div class="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
           <div class="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
-            <img src=${profile.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop'} class="w-24 h-24 rounded-3xl object-cover border-2 border-white/20 shadow-md" />
-            <div class="space-y-2 text-center md:text-left">
+            <div class="relative shrink-0">
+              <img src=${profile.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop'} class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover ring-4 ring-white/10 shadow-xl" />
+              <span class="absolute -bottom-1 -right-1 px-2 py-0.5 bg-emerald-500 text-white text-[9px] font-black uppercase rounded-md shadow-xs border border-white/20">Verified</span>
+            </div>
+            <div class="space-y-2.5 text-center md:text-left">
               <div class="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
-                <h1 class="font-serif text-3xl font-bold tracking-tight">${profile.name}</h1>
-                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Verified Partner</span>
+                <h1 class="font-serif text-3xl sm:text-4xl font-extrabold tracking-tight">${profile.name}</h1>
+                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                  ★ ${profile.avg_rating || '4.9'} Double-Blind Karma
+                </span>
               </div>
-              <p class="text-xs sm:text-sm text-cream-200/90 max-w-xl font-medium leading-relaxed">${profile.headline || 'SkillSwapX Community Member'}</p>
-              <p class="text-[11px] text-cream-300/70 font-semibold">📍 ${profile.location || 'Remote'} · 🌐 ${profile.timezone || 'UTC'} · 🗣️ ${profile.preferred_language || 'English'}</p>
+              <p class="text-xs sm:text-sm text-cream-200/90 max-w-xl font-medium leading-relaxed">${profile.headline || 'SkillSwapX Community Swapper'}</p>
+              <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-cream-200/70 font-semibold pt-1">
+                <span>📍 ${profile.location || 'Remote'}</span>
+                <span>•</span>
+                <span>🌐 ${profile.timezone || 'UTC'}</span>
+                <span>•</span>
+                <span>🗣️ ${profile.preferred_language || 'English'}</span>
+                <span>•</span>
+                <span>⏱️ ${profile.weekly_hours || 4} hrs/week</span>
+              </div>
             </div>
           </div>
 
           <!-- Quick Action Buttons -->
           <div class="flex flex-row md:flex-col gap-3 shrink-0 w-full md:w-auto z-10 pt-4 md:pt-0 border-t border-white/10 md:border-none">
             ${currentUser && currentUser.id !== profile.id ? html`
-              <button onClick=${() => onProposeSwap(profile)} class="flex-1 md:flex-none px-6 py-3 bg-white hover:bg-cream-100 text-navy-950 font-bold text-xs rounded-xl shadow-md transition-all">
-                Propose Skill Swap
+              <button onClick=${() => onProposeSwap(profile)} class="flex-1 md:flex-none px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all">
+                🤝 Propose Skill Swap
               </button>
-              <button onClick=${() => onOpenReport(profile.id)} class="flex-1 md:flex-none px-4 py-3 bg-transparent hover:bg-rose-500/10 text-rose-300 border border-rose-500/30 font-bold text-xs rounded-xl transition-all">
+              <button onClick=${() => onOpenReport(profile.id)} class="flex-1 md:flex-none px-4 py-2.5 bg-white/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold text-xs rounded-xl transition-all">
                 ⚠ Report User
               </button>
             ` : html`
               <button onClick=${() => setActiveTab('settings')} class="px-6 py-3 bg-white hover:bg-cream-100 text-navy-955 font-bold text-xs rounded-xl transition-all">
-                Edit Settings
+                Edit Preferences
               </button>
             `}
           </div>
@@ -3190,7 +3239,7 @@
   window.SkillSwap.PublicProfileView = PublicProfileView;
 
   // ----------------------------------------------------
-  // User Profile Settings and Security Form
+  // User Profile Settings and Security Form (Refined Minimalistic)
   // ----------------------------------------------------
   function SettingsView({ user, onUserUpdated }) {
     const [activeSection, setActiveSection] = useState('matchmaking');
@@ -3233,7 +3282,7 @@
         setUsername(s.username || '');
         setEmail(s.email || '');
 
-        setAvatarUrl(s.avatar_url || (currentUser && currentUser.avatar_url) || '');
+        setAvatarUrl(s.avatar_url || (user && user.avatar_url) || '');
         setBio(s.bio || '');
         setHeadline(s.headline || '');
         setLocation(s.location || '');
@@ -3265,12 +3314,11 @@
             }
           })
         });
-        // Update user profile bio / headlines / avatar
         await api('/api/profile', {
           method: 'PUT',
           body: JSON.stringify({ bio, headline, location, avatar_url: avatarUrl })
         });
-        alert('Matchmaking details and profile updated!');
+        alert('Matchmaking settings and profile updated!');
         onUserUpdated && onUserUpdated();
       } catch (err) {
         alert(err.message);
@@ -3295,7 +3343,7 @@
         });
         setCurrentPassword('');
         setNewPassword('');
-        alert('Account credentials saved successfully!');
+        alert('Account credentials updated successfully!');
         onUserUpdated && onUserUpdated();
       } catch (err) {
         alert(err.message);
@@ -3328,101 +3376,102 @@
     }
 
     return html`
-      <div class="max-w-6xl mx-auto px-4 py-8 space-y-8 text-left animate-fadeIn">
-        <div class="border-b border-cream-300 pb-5">
-          <h1 class="font-serif text-3xl font-bold text-navy-900">Account Settings</h1>
-          <p class="text-warmgray-600 text-xs sm:text-sm">Manage profile credentials, portfolios, and matchmaking parameters.</p>
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-left animate-fadeIn">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-300 pb-5">
+          <div>
+            <h1 class="font-serif text-3xl font-extrabold text-navy-950 tracking-tight">Account Preferences</h1>
+            <p class="text-warmgray-600 text-xs sm:text-sm mt-1">Manage public profile presence, matchmaking parameters, and security credentials.</p>
+          </div>
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-navy-50 text-navy-800 border border-navy-200 text-xs font-bold shrink-0">
+            <span>🛡️ Verified Swapper Profile</span>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <!-- Sidebar tabs -->
-          <div class="lg:col-span-1 space-y-1.5 bg-white p-5 rounded-3xl border border-cream-300 shadow-sm h-fit text-xs font-bold text-warmgray-600">
-            <button onClick=${() => setActiveSection('matchmaking')} class="w-full text-left px-4 py-3 rounded-xl transition-all ${activeSection === 'matchmaking' ? 'bg-navy-700 text-white' : 'hover:bg-cream-100'}">
-              Profile & Matchmaking
+          <!-- Sidebar Navigation Tabs -->
+          <div class="lg:col-span-1 flex flex-row lg:flex-col overflow-x-auto gap-2 bg-white p-3 sm:p-4 rounded-3xl border border-cream-300 shadow-sm h-fit text-xs font-bold scrollbar-none">
+            <button
+              onClick=${() => setActiveSection('matchmaking')}
+              class="shrink-0 text-left px-4 py-3 rounded-2xl transition-all duration-200 flex items-center gap-2.5 whitespace-nowrap ${activeSection === 'matchmaking' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-700 hover:bg-cream-100'}"
+            >
+              <${Icon} name="user" class="w-4 h-4" />
+              <span>Profile & Matchmaking</span>
             </button>
-            <button onClick=${() => setActiveSection('security')} class="w-full text-left px-4 py-3 rounded-xl transition-all ${activeSection === 'security' ? 'bg-navy-700 text-white' : 'hover:bg-cream-100'}">
-              Credentials & Security
+            
+            <button
+              onClick=${() => setActiveSection('security')}
+              class="shrink-0 text-left px-4 py-3 rounded-2xl transition-all duration-200 flex items-center gap-2.5 whitespace-nowrap ${activeSection === 'security' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-700 hover:bg-cream-100'}"
+            >
+              <${Icon} name="shield" class="w-4 h-4" />
+              <span>Credentials & Security</span>
             </button>
-            <button onClick=${() => setActiveSection('portfolio')} class="w-full text-left px-4 py-3 rounded-xl transition-all ${activeSection === 'portfolio' ? 'bg-navy-700 text-white' : 'hover:bg-cream-100'}">
-              Portfolio & Proof-of-work
+            
+            <button
+              onClick=${() => setActiveSection('portfolio')}
+              class="shrink-0 text-left px-4 py-3 rounded-2xl transition-all duration-200 flex items-center gap-2.5 whitespace-nowrap ${activeSection === 'portfolio' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-700 hover:bg-cream-100'}"
+            >
+              <${Icon} name="folder" class="w-4 h-4" />
+              <span>Portfolio & Proof-of-work</span>
             </button>
           </div>
 
-          <!-- Main form panel -->
+          <!-- Main Form Panel -->
           <div class="lg:col-span-3">
             ${activeSection === 'matchmaking' && html`
-              <form onSubmit=${handleUpdateMatchmaking} class="bg-white p-7 rounded-3xl border border-cream-300 shadow-sm space-y-6 text-xs animate-fadeIn border-l-4 border-l-navy-600">
-                <h3 class="font-serif text-lg font-bold text-navy-950 pb-2 border-b border-cream-100">Profile Picture & Matchmaking</h3>
-                
-                <!-- Enhanced Profile Picture Customizer -->
-                <div class="p-5 bg-cream-50/80 rounded-2xl border border-cream-200 space-y-4">
-                  <span class="block font-bold text-navy-950 text-xs">Profile Picture & Avatar</span>
-                  
-                  <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4.5">
-                    <div class="relative shrink-0">
-                      <img src=${avatarUrl || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&h=160&fit=crop'} alt="Avatar Preview" class="w-18 h-18 sm:w-20 sm:h-20 rounded-3xl object-cover ring-4 ring-navy-600/30 border-2 border-white shadow-md" />
-                      <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-300"></span>
-                    </div>
-
-                    <div class="space-y-2 flex-1 w-full text-left">
-                      <div class="space-y-1">
-                        <label class="block font-bold text-navy-900 text-[11px]">Custom Avatar Image URL</label>
-                        <input
-                          type="url"
-                          value=${avatarUrl}
-                          onChange=${e => setAvatarUrl(e.target.value)}
-                          placeholder="https://images.unsplash.com/... or any image link"
-                          class="w-full p-2.5 bg-white border border-cream-300 rounded-xl text-xs focus:outline-none focus:border-navy-600"
-                        />
-                      </div>
-
-                      <!-- Quick Preset Avatars -->
-                      <div class="space-y-1 pt-1">
-                        <span class="text-[10px] font-bold text-warmgray-500 block">Or Choose a Verified Preset Avatar:</span>
-                        <div class="flex items-center gap-2 overflow-x-auto py-1">
-                          ${[
-                            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop',
-                            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop',
-                            'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&fit=crop',
-                            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop',
-                            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop',
-                            'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&h=120&fit=crop'
-                          ].map((url, idx) => html`
-                            <button
-                              type="button"
-                              key=${idx}
-                              onClick=${() => setAvatarUrl(url)}
-                              class="relative shrink-0 rounded-2xl transition-all duration-150 ${avatarUrl === url ? 'ring-3 ring-navy-600 scale-105 shadow-sm' : 'opacity-70 hover:opacity-100 hover:scale-105'}"
-                            >
-                              <img src=${url} class="w-9 h-9 rounded-2xl object-cover border border-cream-300" />
-                            </button>
-                          `)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <form onSubmit=${handleUpdateMatchmaking} class="bg-white p-6 sm:p-8 rounded-3xl border border-cream-300 shadow-sm space-y-6 text-xs animate-fadeIn">
+                <div class="border-b border-cream-100 pb-4">
+                  <h3 class="font-serif text-xl font-bold text-navy-950">Profile & Matchmaking Settings</h3>
+                  <p class="text-warmgray-500 text-[11px] mt-0.5">Customize your public presence and match algorithm variables.</p>
                 </div>
 
+                <!-- Headline & Location -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label class="block font-bold text-navy-950 mb-1">Headline</label>
-                    <input required type="text" value=${headline} onChange=${e => setHeadline(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+                    <label class="block font-bold text-navy-950 mb-1.5">Professional Headline</label>
+                    <input
+                      type="text"
+                      required
+                      value=${headline}
+                      onChange=${e => setHeadline(e.target.value)}
+                      placeholder="e.g. Senior Fullstack Engineer | React & Node Mentor"
+                      class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium focus:outline-none focus:border-navy-600"
+                    />
                   </div>
                   <div>
-                    <label class="block font-bold text-navy-950 mb-1">Location</label>
-                    <input required type="text" value=${location} onChange=${e => setLocation(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+                    <label class="block font-bold text-navy-950 mb-1.5">Location / City</label>
+                    <input
+                      type="text"
+                      required
+                      value=${location}
+                      onChange=${e => setLocation(e.target.value)}
+                      placeholder="e.g. San Francisco, CA or Remote"
+                      class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium focus:outline-none focus:border-navy-600"
+                    />
                   </div>
                 </div>
 
+                <!-- Bio -->
                 <div>
-                  <label class="block font-bold text-navy-950 mb-1">Biography & Goals</label>
-                  <textarea required rows="4" value=${bio} onChange=${e => setBio(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl leading-relaxed"></textarea>
+                  <label class="block font-bold text-navy-950 mb-1.5">Biography & Exchange Goals</label>
+                  <textarea
+                    required
+                    rows="4"
+                    value=${bio}
+                    onChange=${e => setBio(e.target.value)}
+                    placeholder="Share your background, what topics you enjoy teaching, and what you aim to build with exchange partners..."
+                    class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium leading-relaxed focus:outline-none focus:border-navy-600"
+                  ></textarea>
                 </div>
 
+                <!-- Timezone, Limit & Language -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-cream-100 pt-4">
                   <div>
-                    <label class="block font-bold text-navy-950 mb-1">Timezone</label>
-                    <select value=${timezone} onChange=${e => setTimezone(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold">
+                    <label class="block font-bold text-navy-950 mb-1.5">Timezone</label>
+                    <select
+                      value=${timezone}
+                      onChange=${e => setTimezone(e.target.value)}
+                      class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-semibold text-navy-900 focus:outline-none"
+                    >
                       <option value="PST (UTC-8)">PST (UTC-8)</option>
                       <option value="EST (UTC-5)">EST (UTC-5)</option>
                       <option value="GMT (UTC+0)">GMT (UTC+0)</option>
@@ -3431,79 +3480,103 @@
                     </select>
                   </div>
                   <div>
-                    <label class="block font-bold text-navy-950 mb-1">Swap Hours Limit</label>
-                    <input type="number" min="1" max="20" value=${weeklyHours} onChange=${e => setWeeklyHours(Number(e.target.value))} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold" />
+                    <label class="block font-bold text-navy-950 mb-1.5">Weekly Swap Hours Limit</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value=${weeklyHours}
+                      onChange=${e => setWeeklyHours(Number(e.target.value))}
+                      class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-semibold text-navy-900 focus:outline-none"
+                    />
                   </div>
                   <div>
-                    <label class="block font-bold text-navy-950 mb-1">Preferred Language</label>
-                    <input type="text" value=${preferredLanguage} onChange=${e => setPreferredLanguage(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+                    <label class="block font-bold text-navy-950 mb-1.5">Preferred Language</label>
+                    <input
+                      type="text"
+                      value=${preferredLanguage}
+                      onChange=${e => setPreferredLanguage(e.target.value)}
+                      class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium text-navy-900 focus:outline-none"
+                    />
                   </div>
                 </div>
 
-                <button type="submit" class="px-6 py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-sm transition-all mt-4">
-                  Save Matchmaking settings
-                </button>
+                <div class="pt-2">
+                  <button type="submit" class="px-6 py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-extrabold rounded-xl shadow-md transition-all">
+                    Save Matchmaking Settings
+                  </button>
+                </div>
               </form>
             `}
 
             ${activeSection === 'security' && html`
-              <form onSubmit=${handleUpdateSecurity} class="bg-white p-7 rounded-3xl border border-cream-300 shadow-sm space-y-5 text-xs animate-fadeIn border-l-4 border-l-navy-600">
-                <h3 class="font-serif text-lg font-bold text-navy-950 pb-2 border-b border-cream-100">Security & Credentials</h3>
-                
+              <form onSubmit=${handleUpdateSecurity} class="bg-white p-6 sm:p-8 rounded-3xl border border-cream-300 shadow-sm space-y-6 text-xs animate-fadeIn">
+                <div class="border-b border-cream-100 pb-4">
+                  <h3 class="font-serif text-xl font-bold text-navy-950">Security & Account Credentials</h3>
+                  <p class="text-warmgray-500 text-[11px] mt-0.5">Manage your account name, email address, and authentication credentials.</p>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label class="block font-bold text-navy-950 mb-1">Display Name</label>
-                    <input required type="text" value=${name} onChange=${e => setName(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+                    <label class="block font-bold text-navy-950 mb-1.5">Display Name</label>
+                    <input type="text" required value=${name} onChange=${e => setName(e.target.value)} class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium focus:outline-none focus:border-navy-600" />
                   </div>
                   <div>
-                    <label class="block font-bold text-navy-955 mb-1">Username</label>
-                    <input required type="text" value=${username} onChange=${e => setUsername(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+                    <label class="block font-bold text-navy-950 mb-1.5">Username</label>
+                    <input type="text" required value=${username} onChange=${e => setUsername(e.target.value)} class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium focus:outline-none focus:border-navy-600" />
                   </div>
                   <div>
-                    <label class="block font-bold text-navy-955 mb-1">Email</label>
-                    <input required type="email" value=${email} onChange=${e => setEmail(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+                    <label class="block font-bold text-navy-950 mb-1.5">Email Address</label>
+                    <input type="email" required value=${email} onChange=${e => setEmail(e.target.value)} class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium focus:outline-none focus:border-navy-600" />
                   </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-cream-100 pt-4">
                   <div>
-                    <label class="block font-bold text-navy-955 mb-1">Current Password (needed to change password)</label>
-                    <input type="password" value=${currentPassword} onChange=${e => setCurrentPassword(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+                    <label class="block font-bold text-navy-950 mb-1.5">Current Password</label>
+                    <input type="password" value=${currentPassword} onChange=${e => setCurrentPassword(e.target.value)} placeholder="Required only if changing password" class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium focus:outline-none focus:border-navy-600" />
                   </div>
                   <div>
-                    <label class="block font-bold text-navy-955 mb-1">New Password (leave empty to keep current)</label>
-                    <input type="password" minlength="6" value=${newPassword} onChange=${e => setNewPassword(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+                    <label class="block font-bold text-navy-950 mb-1.5">New Password</label>
+                    <input type="password" minlength="6" value=${newPassword} onChange=${e => setNewPassword(e.target.value)} placeholder="Leave empty to keep current" class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium focus:outline-none focus:border-navy-600" />
                   </div>
                 </div>
 
-                <button type="submit" class="px-6 py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-sm transition-all mt-4">
-                  Save Credentials
-                </button>
+                <div class="pt-2">
+                  <button type="submit" class="px-6 py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-extrabold rounded-xl shadow-md transition-all">
+                    Save Credentials
+                  </button>
+                </div>
               </form>
             `}
 
             ${activeSection === 'portfolio' && html`
-              <form onSubmit=${handleUpdatePortfolio} class="bg-white p-7 rounded-3xl border border-cream-300 shadow-sm space-y-5 text-xs animate-fadeIn border-l-4 border-l-navy-600">
-                <h3 class="font-serif text-lg font-bold text-navy-950 pb-2 border-b border-cream-100">Portfolio Proof-of-work</h3>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <form onSubmit=${handleUpdatePortfolio} class="bg-white p-6 sm:p-8 rounded-3xl border border-cream-300 shadow-sm space-y-6 text-xs animate-fadeIn">
+                <div class="border-b border-cream-100 pb-4">
+                  <h3 class="font-serif text-xl font-bold text-navy-950">Portfolio & Proof-of-work</h3>
+                  <p class="text-warmgray-500 text-[11px] mt-0.5">Link your external code repositories, design showcases, or personal site to boost trust ratings.</p>
+                </div>
+
+                <div class="space-y-4">
                   <div>
-                    <label class="block font-bold text-navy-950 mb-1">GitHub Profile Link</label>
-                    <input type="url" value=${github} onChange=${e => setGithub(e.target.value)} placeholder="https://github.com/yourusername" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+                    <label class="block font-bold text-navy-950 mb-1.5">GitHub Profile URL</label>
+                    <input type="url" value=${github} onChange=${e => setGithub(e.target.value)} placeholder="https://github.com/yourusername" class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium focus:outline-none focus:border-navy-600" />
                   </div>
                   <div>
-                    <label class="block font-bold text-navy-955 mb-1">LinkedIn URL</label>
-                    <input type="url" value=${linkedin} onChange=${e => setLinkedin(e.target.value)} placeholder="https://linkedin.com/in/yourusername" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+                    <label class="block font-bold text-navy-950 mb-1.5">LinkedIn Profile URL</label>
+                    <input type="url" value=${linkedin} onChange=${e => setLinkedin(e.target.value)} placeholder="https://linkedin.com/in/yourusername" class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium focus:outline-none focus:border-navy-600" />
                   </div>
                   <div>
-                    <label class="block font-bold text-navy-955 mb-1">Personal Portfolio / Website</label>
-                    <input type="url" value=${website} onChange=${e => setWebsite(e.target.value)} placeholder="https://yourwebsite.com" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+                    <label class="block font-bold text-navy-950 mb-1.5">Personal Website / Portfolio</label>
+                    <input type="url" value=${website} onChange=${e => setWebsite(e.target.value)} placeholder="https://yourwebsite.com" class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium focus:outline-none focus:border-navy-600" />
                   </div>
                 </div>
 
-                <button type="submit" class="px-6 py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-sm transition-all mt-4">
-                  Save Portfolios
-                </button>
+                <div class="pt-2">
+                  <button type="submit" class="px-6 py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-extrabold rounded-xl shadow-md transition-all">
+                    Save Portfolios
+                  </button>
+                </div>
               </form>
             `}
           </div>
@@ -3512,4 +3585,5 @@
     `;
   }
   window.SkillSwap.SettingsView = SettingsView;
+
 })();

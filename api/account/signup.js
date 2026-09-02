@@ -55,6 +55,7 @@ export default async function (req, res) {
       `INSERT INTO profiles (user_id, bio, location, preferred_language, availability, timezone, completion_percentage)
        VALUES ($1, $2, $3, 'English', 'Flexible Evenings & Weekends', 'UTC', 60)`,
       [newUser.id, bio || 'Excited to share knowledge and acquire new skills on SkillSwapX!', location || 'Remote / Worldwide']
+
     );
 
     // 3. Add initial Teach Skills if provided
@@ -89,6 +90,7 @@ export default async function (req, res) {
     await db.query(
       `INSERT INTO notifications (user_id, type, title, message, link)
        VALUES ($1, 'SYSTEM', 'Welcome to SkillSwapX! 🎉', 'Complete your quick onboarding to start receiving reciprocal peer matches.', '/onboarding')`,
+
       [newUser.id]
     );
 

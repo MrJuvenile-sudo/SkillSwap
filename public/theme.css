@@ -16,15 +16,28 @@
   --border-card: #EFE9E0;
 }
 
-body {
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
   background-color: #FAF6EF;
   color: #1E293B;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
 }
 
 .font-serif-heading {
   font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* Hide scrollbars for clean horizontal tab bars on mobile */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* Custom scrollbar */
@@ -65,4 +78,11 @@ body {
 
 .animate-fadeIn {
   animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Touch target optimizations for mobile */
+@media (max-width: 640px) {
+  button, input, select, textarea {
+    min-height: 40px;
+  }
 }

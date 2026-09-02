@@ -83,7 +83,8 @@ VALUES
   ('user_david', 'David Kim', 'david@skillswap.io', 'USER', 'ACTIVE', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces', 'Polyglot Language Coach & Public Speaking Mentor'),
   ('user_elena', 'Elena Rostova', 'elena@skillswap.io', 'USER', 'ACTIVE', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop&crop=faces', 'Session Guitarist & Independent Music Producer'),
   ('user_frank', 'Frank Miller', 'frank@skillswap.io', 'USER', 'ACTIVE', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=faces', 'Commercial Photographer & Conversion Copywriter'),
-  ('user_admin', 'Sarah Connor (Admin)', 'admin@skillswap.io', 'ADMIN', 'ACTIVE', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=faces', 'SkillSwapX Trust & Safety Administrator')
+  ('user_admin', 'Super Admin', 'admin@skillswap.io', 'SUPER_ADMIN', 'ACTIVE', NULL, 'SkillSwapX Super Admin & Platform Supervisor')
+
 ON CONFLICT (id) DO UPDATE SET 
   name = EXCLUDED.name,
   role = EXCLUDED.role,
@@ -100,7 +101,8 @@ VALUES
   ('user_david', 'Passionate language coach and speech educator. Ready to dive into database querying and data analytics to measure learning outcomes.', 'New York, NY', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces', '10 years language pedagogy', 'English, Spanish, Japanese', 'Flexible Evenings', 'EST (UTC-5)', 6, 95),
   ('user_elena', 'Fingerstyle acoustic guitarist and sound designer. Eager to master photography lighting to shoot my own album covers and write compelling newsletter copy.', 'London, UK', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop&crop=faces', '9 years professional musician', 'English, Russian', 'Weekdays 2pm - 6pm UTC', 'GMT (UTC+0)', 4, 90),
   ('user_frank', 'Editorial and portrait photographer. Wanting to learn guitar chords and basic audio mastering to score my video reels.', 'Chicago, IL', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=faces', '6 years commercial photography', 'English', 'Evenings & Weekends', 'CST (UTC-6)', 4, 90),
-  ('user_admin', 'SkillSwapX platform administrator and community supervisor.', 'San Francisco, CA', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=faces', 'Platform operations', 'English', 'Business Hours', 'PST (UTC-8)', 10, 100)
+  ('user_admin', 'SkillSwapX platform administrator and community supervisor.', 'San Francisco, CA', NULL, 'Platform operations', 'English', 'Business Hours', 'PST (UTC-8)', 10, 100)
+
 ON CONFLICT (user_id) DO UPDATE SET
   bio = EXCLUDED.bio,
   location = EXCLUDED.location,
@@ -284,11 +286,9 @@ VALUES
   (603, 502, 'user_david', 'I’m a native Spanish speaker from Madrid and I want to get into ML. This is a perfect match. I’ve sent you a proposal request!', now() - INTERVAL '10 hours')
 ON CONFLICT (id) DO NOTHING;
 
--- 9. Update RBAC Roles on Demo Accounts
+-- 9. Update RBAC Roles on Demo Accounts (Strictly ONE Admin: Super Admin)
 UPDATE app_users SET role = 'SUPER_ADMIN' WHERE id = 'user_admin';
-UPDATE app_users SET role = 'ADMIN' WHERE id = 'user_carol';
-UPDATE app_users SET role = 'MODERATOR' WHERE id = 'user_david';
-UPDATE app_users SET role = 'SUPPORT' WHERE id = 'user_frank';
+UPDATE app_users SET role = 'USER' WHERE id != 'user_admin';
 
 -- 10. Sample Problems (Problem Exchange Architecture)
 INSERT INTO problems (id, user_id, title, description, category_id, required_skill_id, offered_skill_id, urgency, estimated_hours, status, created_at)
@@ -338,3 +338,4 @@ VALUES
   ('email_digest', 'true', now()),
   ('verification_policy', 'strict_github_portfolio', now())
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+

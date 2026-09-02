@@ -2,6 +2,7 @@
 import { db } from 'hatchable';
 import { requireModerator } from 'lib/auth.js';
 
+
 export const access = 'public';
 
 export default async function (req, res) {
@@ -49,6 +50,7 @@ export default async function (req, res) {
       return res.json({ report: rows[0], contextualMessages });
     }
 
+
     const { rows } = await db.query(
       `SELECT r.*, 
               rep.name as reporter_name, rep.avatar_url as reporter_avatar,
@@ -57,12 +59,14 @@ export default async function (req, res) {
        JOIN app_users rep ON r.reporter_id = rep.id
        JOIN app_users tar ON r.reported_user_id = tar.id
        ORDER BY (r.status = 'OPEN') DESC, (r.status = 'UNDER_INVESTIGATION') DESC, r.created_at DESC`
+
     );
     return res.json({ reports: rows });
   }
 
   if (req.method === 'PUT') {
     const { report_id, status, resolution_notes, block_user, priority } = req.body || {};
+
     if (!report_id || !status) {
       return res.status(400).json({ error: 'Report ID and status required' });
     }
@@ -72,6 +76,7 @@ export default async function (req, res) {
        SET status = $1,
            resolution_notes = COALESCE($2, resolution_notes),
            resolved_at = CASE WHEN $1 IN ('RESOLVED', 'DISMISSED') THEN now() ELSE resolved_at END
+
        WHERE id = $3
        RETURNING *`,
       [status, resolution_notes || '', report_id]
@@ -84,6 +89,7 @@ export default async function (req, res) {
     const report = repRows[0];
 
     // Suspend user directly if requested
+
     if (block_user && report.reported_user_id) {
       await db.query(
         `UPDATE app_users SET status = 'BLOCKED', updated_at = now() WHERE id = $1`,
@@ -96,6 +102,7 @@ export default async function (req, res) {
       `INSERT INTO admin_logs (admin_id, action, target_type, target_id, details)
        VALUES ($1, $2, 'REPORT', $3, $4)`,
       [admin.id, `MODERATE_REPORT_${status}`, report_id, JSON.stringify({ status, resolution_notes, block_user })]
+
     );
 
     return res.json({ success: true, report });

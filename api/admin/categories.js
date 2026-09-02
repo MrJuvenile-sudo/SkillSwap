@@ -29,6 +29,7 @@ export default async function (req, res) {
 
   if (req.method === 'POST') {
     const { name, description, icon, is_featured, sort_order } = req.body || {};
+
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Category name is required' });
     }
@@ -82,6 +83,7 @@ export default async function (req, res) {
       `INSERT INTO admin_logs (admin_id, action, target_type, target_id, details)
        VALUES ($1, 'UPDATE_CATEGORY', 'CATEGORY', $2, $3)`,
       [admin.id, String(id), JSON.stringify({ name, is_featured })]
+
     );
 
     return res.json({ success: true, category: rows[0] });
@@ -94,12 +96,12 @@ export default async function (req, res) {
     }
 
     await db.query(`DELETE FROM categories WHERE id = $1`, [id]);
-
     await db.query(
       `INSERT INTO admin_logs (admin_id, action, target_type, target_id, details)
        VALUES ($1, 'DELETE_CATEGORY', 'CATEGORY', $2, NULL)`,
       [admin.id, String(id)]
     );
+
 
     return res.json({ success: true });
   }

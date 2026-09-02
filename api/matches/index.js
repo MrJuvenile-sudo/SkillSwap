@@ -27,6 +27,7 @@ export default async function (req, res) {
               p.bio, p.location, p.availability, p.preferred_language, p.completion_percentage, p.timezone,
               COALESCE(AVG(r.rating), 5.0) as avg_rating,
               COUNT(r.id) as reviews_count
+
        FROM app_users u
        LEFT JOIN profiles p ON u.id = p.user_id
        LEFT JOIN reviews r ON u.id = r.reviewee_id
@@ -118,6 +119,7 @@ export default async function (req, res) {
           is_bookmarked: bookmarkedIds.has(peer.id)
         },
         score: matchResult.matchScore,
+
         matchScore: matchResult.matchScore,
         subScores: matchResult.subScores,
         reasons: matchResult.reasons,
@@ -148,7 +150,8 @@ export default async function (req, res) {
         name: me.name,
         username: me.username,
         teach_count: (me.skills || []).filter(s => s.type === 'TEACH').length,
-        learn_count: (me.skills || []).filter(s => s.type === 'LEARN').length
+        learn_count: (me.skills || []).filter(s => s.type === 'LEARN').length,
+        is_reciprocal_ready: (me.skills || []).filter(s => s.type === 'TEACH').length > 0 && (me.skills || []).filter(s => s.type === 'LEARN').length > 0
       },
       matches
     });

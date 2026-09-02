@@ -12,6 +12,7 @@ export default async function (req, res) {
               COUNT(r.id) as reviews_count,
               (SELECT COUNT(*) FROM user_skills WHERE user_id = u.id AND type = 'TEACH') as teach_count,
               (SELECT COUNT(*) FROM user_skills WHERE user_id = u.id AND type = 'LEARN') as learn_count
+
        FROM app_users u
        LEFT JOIN profiles p ON u.id = p.user_id
        LEFT JOIN reviews r ON u.id = r.reviewee_id

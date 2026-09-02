@@ -1,4 +1,5 @@
 // public/components.js - Premium Shared UI, Modals & Notifications Center for SkillSwap
+
 (function() {
   window.SkillSwap = window.SkillSwap || {};
 
@@ -10,10 +11,12 @@
   const html = htm.bind(React.createElement);
   const { api } = window.SkillSwap;
 
+
   // ----------------------------------------------------
   // Global API fetcher
   // ----------------------------------------------------
   async function apiFetch(path, options) {
+
     const opt = options || {};
     const headers = {
       'Content-Type': 'application/json',
@@ -27,6 +30,7 @@
     return data;
   }
   window.SkillSwap.api = apiFetch;
+
 
   // ----------------------------------------------------
   // Lightweight SVG Icon Component
@@ -57,7 +61,14 @@
       'settings': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
       'columns': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 3v18"/></svg>`,
       'book-open': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
-      'bot': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="12" x="3" y="6" rx="2"/><path d="M9 11h.01"/><path d="M15 11h.01"/><path d="M12 2v4"/><path d="M12 18v4"/></svg>`
+      'bot': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="12" x="3" y="6" rx="2"/><path d="M9 11h.01"/><path d="M15 11h.01"/><path d="M12 2v4"/><path d="M12 18v4"/></svg>`,
+      'menu': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>`,
+      'activity': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+      'inbox': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>`,
+      'message-circle': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>`,
+      'circle': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/></svg>`,
+      'folder': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2z"/></svg>`
+
     };
     return icons[name] || html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="8"/></svg>`;
   }
@@ -67,6 +78,7 @@
   // Premium Multi-Column Light Footer
   // ----------------------------------------------------
   function Footer({ setActiveTab, onOpenRegister, user }) {
+
     const [newsletterEmail, setNewsletterEmail] = useState('');
     const [subscribed, setSubscribed] = useState(false);
 
@@ -111,6 +123,7 @@
               <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 Synergy Match Engine: Active
+
               </span>
             </div>
           </div>
@@ -141,6 +154,7 @@
             ${subscribed ? html`
               <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold">
                 ✓ Subscribed to weekly digest!
+
               </div>
             ` : html`
               <form onSubmit=${handleSubscribe} class="space-y-2">
@@ -153,6 +167,7 @@
                   class="w-full px-4 py-3 bg-white border border-cream-300 rounded-xl text-xs focus:outline-none focus:border-navy-600"
                 />
                 <button type="submit" class="w-full py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-bold text-xs rounded-xl shadow transition-all duration-200">
+
                   Join Newsletter
                 </button>
               </form>
@@ -161,6 +176,7 @@
         </div>
 
         <div class="border-t border-cream-200 bg-cream-200/20 py-8 px-4 sm:px-6 lg:px-8 text-xs text-warmgray-600">
+
           <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               © 2026 SkillSwap Platform. Built for authentic peer learning.
@@ -169,6 +185,7 @@
               <button onClick=${() => setActiveTab('privacy')} class="hover:text-navy-800 transition-colors">Privacy</button>
               <button onClick=${() => setActiveTab('terms')} class="hover:text-navy-800 transition-colors">Terms of Service</button>
               <button onClick=${() => setActiveTab('guidelines')} class="hover:text-navy-800 transition-colors">Guidelines</button>
+
             </div>
           </div>
         </div>
@@ -180,7 +197,7 @@
   // ----------------------------------------------------
   // Header Navigation Component with Notification Center
   // ----------------------------------------------------
-  function Header({ user, activeTab, setActiveTab, pendingRequestsCount, onLogout }) {
+  function Header({ user, activeTab, setActiveTab, pendingRequestsCount, onLogout, onViewProfile }) {
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -198,6 +215,21 @@
     useEffect(() => {
       loadNotifications();
     }, [user, pendingRequestsCount]);
+
+    useEffect(() => {
+      const handleOutsideClick = (e) => {
+        const userContainer = document.getElementById('user-menu-container');
+        const notifContainer = document.getElementById('notif-menu-container');
+        if (userContainer && !userContainer.contains(e.target)) {
+          setUserMenuOpen(false);
+        }
+        if (notifContainer && !notifContainer.contains(e.target)) {
+          setNotifOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleOutsideClick);
+      return () => document.removeEventListener('mousedown', handleOutsideClick);
+    }, []);
 
     const handleToggleNotif = () => {
       setNotifOpen(!notifOpen);
@@ -224,6 +256,8 @@
     const handleNavClick = (tab) => {
       setActiveTab(tab);
       setMobileOpen(false);
+      setUserMenuOpen(false);
+      setNotifOpen(false);
     };
 
     const guestNavLinks = [
@@ -352,19 +386,7 @@
                     ` : null}
                   </button>
                 `)}
-                ${user && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role) ? html`
-                  <button
-                    onClick=${() => handleNavClick('admin')}
-                    class="px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 font-extrabold ${
-                      activeTab === 'admin'
-                        ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-400/40'
-                        : 'text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-300/80 shadow-2xs'
-                    }"
-                  >
-                    <span>🛡️</span>
-                    <span>Admin Panel</span>
-                  </button>
-                ` : null}
+                <!-- (Admin Panel link moved inside Admin Profile dropdown) -->
               `}
             </nav>
 
@@ -384,7 +406,7 @@
                 </button>
               ` : html`
                 <!-- Notification center dropdown toggle -->
-                <div class="relative">
+                <div class="relative" id="notif-menu-container">
                   <button onClick=${handleToggleNotif} class="p-2 rounded-xl hover:bg-cream-200/70 border border-transparent hover:border-cream-300 relative transition-all duration-200">
                     <${Icon} name="bell" class="w-5 h-5 text-navy-900" />
                     ${unreadCount > 0 ? html`<span class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-amber-600 border-2 border-cream-100 animate-pulse"></span>` : null}
@@ -424,59 +446,82 @@
                 </div>
 
                 <!-- User profile dropdown toggle -->
-                <div class="relative">
+                <div class="relative" id="user-menu-container">
                   <button onClick=${() => { setUserMenuOpen(!userMenuOpen); if (notifOpen) setNotifOpen(false); }} class="flex items-center gap-2.5 p-1.5 pl-2 rounded-2xl hover:bg-cream-200/70 border border-cream-200 hover:border-cream-300 transition-all duration-200 group bg-white shadow-2xs">
                     <div class="relative">
-                      <img src=${user.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop'} alt=${user.name} class="w-9 h-9 rounded-full object-cover ring-2 ring-navy-600/30 group-hover:ring-navy-600 shadow-xs transition-all duration-200" />
-                      <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-300"></span>
+                      ${['SUPER_ADMIN', 'ADMIN'].includes(user.role) ? html`
+                        <div class="w-9 h-9 rounded-full bg-indigo-700 text-white flex items-center justify-center font-bold text-sm shadow-xs border border-indigo-500">
+                          🛡️
+                        </div>
+                      ` : html`
+                        <img src=${user.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop'} alt=${user.name} class="w-9 h-9 rounded-full object-cover ring-2 ring-navy-600/30 group-hover:ring-navy-600 shadow-xs transition-all duration-200" />
+                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-300"></span>
+                      `}
                     </div>
                     <div class="hidden sm:flex flex-col text-left -space-y-0.5">
                       <span class="font-bold text-xs text-navy-950 flex items-center gap-1">
-                        <span>${(user.name || 'User').split(' ')[0]}</span>
+                        <span>${['SUPER_ADMIN', 'ADMIN'].includes(user.role) ? user.name : (user.name || 'User').split(' ')[0]}</span>
                         <span class="text-[9px] text-emerald-600 font-extrabold">✓</span>
                       </span>
-                      <span class="text-[10px] text-warmgray-500 font-semibold">4.9★ Karma</span>
+                      <span class="text-[10px] text-warmgray-500 font-semibold">
+                        ${['SUPER_ADMIN', 'ADMIN'].includes(user.role) ? 'Administrator' : '4.9★ Karma'}
+                      </span>
                     </div>
-                    <${Icon} name="chevron-down" class="w-3.5 h-3.5 text-warmgray-400 group-hover:text-navy-900 transition-colors" />
+                    <${Icon} name="chevron-down" class="w-3.5 h-3.5 text-warmgray-400 group-hover:text-navy-900 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}" />
                   </button>
 
                   ${userMenuOpen ? html`
                     <div class="absolute right-0 mt-2.5 w-72 bg-white rounded-3xl shadow-2xl border border-cream-300 py-3 z-50 text-xs text-left animate-fadeIn ring-1 ring-black/5 overflow-hidden">
                       <div class="px-4 py-3.5 border-b border-cream-100 mb-2 bg-gradient-to-br from-navy-50/80 to-cream-50/60 flex items-center gap-3.5">
                         <div class="relative shrink-0">
-                          <img src=${user.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=140&h=140&fit=crop'} alt=${user.name} class="w-12 h-12 rounded-2xl object-cover ring-2 ring-navy-600 shadow-md" />
-                          <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-300"></span>
+                          ${['SUPER_ADMIN', 'ADMIN'].includes(user.role) ? html`
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-700 text-white flex items-center justify-center font-bold text-lg shadow-md border border-indigo-500">
+                              🛡️
+                            </div>
+                          ` : html`
+                            <img src=${user.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=140&h=140&fit=crop'} alt=${user.name} class="w-12 h-12 rounded-2xl object-cover ring-2 ring-navy-600 shadow-md" />
+                            <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-300"></span>
+                          `}
                         </div>
                         <div class="flex-1 min-w-0">
                           <p class="font-bold text-navy-950 text-sm truncate flex items-center gap-1">
                             <span>${user.name}</span>
                             <span class="text-navy-600 font-black text-xs" title="Verified Swapper">✓</span>
                           </p>
-                          <p class="text-warmgray-500 truncate text-[11px]">@${user.username || 'member'}</p>
+                          <p class="text-warmgray-500 truncate text-[11px]">@${user.username || 'admin'}</p>
                           <div class="flex items-center gap-1.5 mt-1">
-                            <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-extrabold text-[9px] uppercase tracking-wider border border-emerald-200">Karma: 4.9★</span>
-                            ${user.role === 'ADMIN' ? html`<span class="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-extrabold text-[8px] uppercase tracking-wider">Admin</span>` : null}
+                            ${['SUPER_ADMIN', 'ADMIN'].includes(user.role) ? html`
+                              <span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 font-extrabold text-[9px] uppercase tracking-wider border border-purple-300">Super Admin</span>
+                            ` : html`
+                              <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-extrabold text-[9px] uppercase tracking-wider border border-emerald-200">Karma: 4.9★</span>
+                            `}
                           </div>
                         </div>
                       </div>
-                      <button onClick=${() => { setUserMenuOpen(false); handleNavClick('public-profile'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
-                        <${Icon} name="user" class="w-4 h-4 text-navy-600" /> View Public Profile
-                      </button>
-                      <button onClick=${() => { setUserMenuOpen(false); handleNavClick('skills'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
-                        <${Icon} name="layers" class="w-4 h-4 text-navy-600" /> Manage Teach & Learn
-                      </button>
-                      <button onClick=${() => { setUserMenuOpen(false); handleNavClick('settings'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
-                        <${Icon} name="settings" class="w-4 h-4 text-navy-600" /> Account & Preferences
-                      </button>
+                      ${['SUPER_ADMIN', 'ADMIN'].includes(user.role) ? html`
+                        <button onClick=${() => { setUserMenuOpen(false); handleNavClick(activeTab === 'admin' ? 'dashboard' : 'admin'); }} class="w-full text-left px-4 py-2.5 hover:bg-indigo-50 text-indigo-900 flex items-center gap-2.5 transition-colors font-bold">
+                          <${Icon} name="shield" class="w-4 h-4 text-indigo-600" /> ${activeTab === 'admin' ? 'Switch to User Portal' : 'Admin Panel'}
+                        </button>
+                      ` : html`
+                        <button onClick=${() => { setUserMenuOpen(false); if (onViewProfile && user) { onViewProfile(user.username || user.id); } else { handleNavClick('public-profile'); } }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
+                          <${Icon} name="user" class="w-4 h-4 text-navy-600" /> View Public Profile
+                        </button>
+                        <button onClick=${() => { setUserMenuOpen(false); handleNavClick('skills'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
+                          <${Icon} name="layers" class="w-4 h-4 text-navy-600" /> Manage Teach & Learn
+                        </button>
+                        <button onClick=${() => { setUserMenuOpen(false); handleNavClick('settings'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
+                          <${Icon} name="settings" class="w-4 h-4 text-navy-600" /> Account & Preferences
+                        </button>
+                      `}
                       <div class="border-t border-cream-100 my-2"></div>
                       <button onClick=${() => { setUserMenuOpen(false); onLogout(); }} class="w-full text-left px-4 py-2.5 hover:bg-rose-50 text-rose-700 flex items-center gap-2.5 font-bold transition-colors">
                         <${Icon} name="log-out" class="w-4 h-4 text-rose-500" /> Log Out
+
                       </button>
                     </div>
                   ` : null}
                 </div>
               `}
-
               <!-- Mobile Menu Toggle Button -->
               <button
                 onClick=${() => setMobileOpen(!mobileOpen)}
@@ -530,9 +575,22 @@
                   Join Free →
                 </button>
               </div>
-            ` : null}
+            ` : html`
+              <div class="pt-3 border-t border-cream-200 space-y-1">
+                <button onClick=${() => { setMobileOpen(false); if (onViewProfile && user) { onViewProfile(user.username || user.id); } else { handleNavClick('public-profile'); } }} class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-warmgray-700 hover:bg-cream-100 flex items-center gap-2.5">
+                  <${Icon} name="user" class="w-4 h-4 text-navy-600" /> View Public Profile
+                </button>
+                <button onClick=${() => { setMobileOpen(false); handleNavClick('settings'); }} class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-warmgray-700 hover:bg-cream-100 flex items-center gap-2.5">
+                  <${Icon} name="settings" class="w-4 h-4 text-navy-600" /> Account & Preferences
+                </button>
+                <button onClick=${() => { setMobileOpen(false); onLogout(); }} class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-rose-700 hover:bg-rose-50 flex items-center gap-2.5">
+                  <${Icon} name="log-out" class="w-4 h-4 text-rose-500" /> Log Out
+                </button>
+              </div>
+            `}
           </div>
         ` : null}
+
       </header>
     `;
   }
@@ -548,6 +606,7 @@
     const [message, setMessage] = useState('');
     const [duration, setDuration] = useState(4);
     const [cadence, setCadence] = useState('Weekly (1-2 hrs)');
+
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -563,6 +622,7 @@
             message: message.trim() || `Hi ${peer.name}! I would love to exchange skills with you.`
           })
         });
+
         onClose();
         onSubmitted?.();
       } catch (err) {
@@ -621,6 +681,7 @@
 
             <button type="submit" disabled=${submitting} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-bold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
               ${submitting ? 'Sending Proposal...' : 'Send Reciprocal Exchange Proposal →'}
+
             </button>
           </form>
         </div>
@@ -681,6 +742,7 @@
               <button onClick=${() => { onClose(); onProposeSwap({ user: peer2 }); }} class="w-full py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow transition-all duration-200">
                 Propose Swap with ${peer2.name.split(' ')[0]}
               </button>
+
             </div>
           </div>
         </div>

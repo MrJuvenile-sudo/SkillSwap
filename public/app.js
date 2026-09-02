@@ -49,6 +49,7 @@
     LearningHubRequestsView,
     ExamModeView,
     SkillSwapAIWidget
+
   } = window.SkillSwap;
 
   function App() {
@@ -61,6 +62,7 @@
     const [reportedUserId, setReportedUserId] = useState(null);
     const [hubResourceId, setHubResourceId] = useState(null);
 
+
     const checkSession = async () => {
       try {
         const data = await api('/api/session');
@@ -68,6 +70,7 @@
           setUser(data.user);
           if (activeTab === 'home' || activeTab === 'login' || activeTab === 'signup') {
             setActiveTab(data.user.role === 'ADMIN' ? 'admin' : 'dashboard');
+
           }
         } else {
           setUser(null);
@@ -129,6 +132,7 @@
             setActiveTab=${setActiveTab}
             pendingRequestsCount=${(user && user.unread_notifications) || 0}
             onLogout=${handleLogout}
+            onViewProfile=${handleViewProfile}
           />
         ` : null}
 
@@ -146,6 +150,7 @@
           ${activeTab === 'community' && html`<${CommunityFeedView} currentUser=${user} onProposeSwap=${handleOpenProposal} setActiveTab=${setActiveTab} />`}
           ${activeTab === 'public-profile' && html`<${PublicProfileView} username=${viewingUsername} currentUser=${user} onProposeSwap=${handleOpenProposal} setActiveTab=${setActiveTab} onOpenReport=${handleOpenReportAbuse} />`}
           ${activeTab === 'dashboard' && user && html`<${DashboardView} user=${user} setActiveTab=${setActiveTab} onProposeSwap=${handleOpenProposal} onViewProfile=${handleViewProfile} />`}
+
           ${activeTab === 'matches' && html`<${MatchesView} currentUser=${user} onProposeSwap=${handleOpenProposal} onComparePeers=${handleOpenCompare} onViewProfile=${handleViewProfile} />`}
           ${activeTab === 'skills' && user && html`<${MySkillsView} user=${user} onRefresh=${checkSession} />`}
           ${activeTab === 'requests' && user && html`<${RequestsView} onAcceptRequest=${() => setActiveTab('workspaces')} />`}
@@ -178,6 +183,7 @@
           />
         ` : null}
 
+
         <${ProposalModal}
           isOpen=${!!proposalModalMatch}
           onClose=${() => setProposalModalMatch(null)}
@@ -192,12 +198,12 @@
           peer2=${compareModalPeers && compareModalPeers.p2}
           onProposeSwap=${handleOpenProposal}
         />
-
         <${SkillSwapAIWidget}
           currentUser=${user}
           activeTab=${activeTab}
           setActiveTab=${setActiveTab}
         />
+
       </div>
     `;
   }

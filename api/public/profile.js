@@ -21,6 +21,7 @@ export default async function (req, res) {
              COALESCE(AVG(r.communication_rating), 5.0) as avg_communication,
              COALESCE(AVG(r.knowledge_rating), 5.0) as avg_knowledge,
              COALESCE(AVG(r.reliability_rating), 5.0) as avg_reliability
+
       FROM app_users u
       LEFT JOIN profiles p ON u.id = p.user_id
       LEFT JOIN reviews r ON u.id = r.reviewee_id
@@ -54,6 +55,7 @@ export default async function (req, res) {
     const { rows: userSkills } = await db.query(
       `SELECT us.*, s.name as skill_name, s.description as skill_desc, 
               c.name as category_name, c.icon as category_icon
+
        FROM user_skills us
        JOIN skills s ON us.skill_id = s.id
        JOIN categories c ON s.category_id = c.id
@@ -81,6 +83,7 @@ export default async function (req, res) {
       endorsements: endorsements.filter(e => e.user_skill_id === us.id)
     }));
 
+
     // Fetch verified reviews
     const { rows: reviews } = await db.query(
       `SELECT r.*, u.name as reviewer_name, u.avatar_url as reviewer_avatar, u.headline as reviewer_headline,
@@ -98,6 +101,7 @@ export default async function (req, res) {
         ...user,
         teach_skills: skillsWithEndorsements.filter(s => s.type === 'TEACH'),
         learn_skills: skillsWithEndorsements.filter(s => s.type === 'LEARN'),
+
         reviews
       }
     });

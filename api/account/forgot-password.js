@@ -47,6 +47,7 @@ export default async function (req, res) {
         to: user.email,
         subject: 'Reset your SkillSwapX password',
         html: `<p>Hello ${user.name},</p><p>You requested a password reset for your SkillSwapX account. Use this token to reset your password: <strong>${resetToken}</strong></p><p>Or visit: <a href="https://skillswap.hatchable.site/reset-password?token=${resetToken}">Reset Password</a></p>`
+
       });
     } catch {
       // Shared sending domain fallback

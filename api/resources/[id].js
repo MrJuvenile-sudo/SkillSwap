@@ -16,6 +16,7 @@ export default async function (req, res) {
 
   if (req.method === 'GET') {
     try {
+      // Place $1, $2, $3 in exact numerical sequence as they appear in the SQL string
       const { rows } = await db.query(
         `SELECT r.*,
                 u.name as contributor_name, u.avatar_url as contributor_avatar,
@@ -23,15 +24,15 @@ export default async function (req, res) {
                 (SELECT ROUND(AVG((rr.accuracy + rr.completeness + rr.relevance + rr.usefulness) / 4.0), 1)
                  FROM resource_reviews rr WHERE rr.resource_id = r.id) as avg_rating,
                 (SELECT COUNT(*) FROM resource_reviews rr WHERE rr.resource_id = r.id) as review_count,
-                (SELECT COUNT(*) FROM saved_resources sr WHERE sr.resource_id = r.id AND sr.user_id = $2) as is_saved,
+                (SELECT COUNT(*) FROM saved_resources sr WHERE sr.resource_id = r.id AND sr.user_id = $1) as is_saved,
                 (SELECT AVG(accuracy) FROM resource_reviews WHERE resource_id = r.id) as avg_accuracy,
                 (SELECT AVG(completeness) FROM resource_reviews WHERE resource_id = r.id) as avg_completeness,
                 (SELECT AVG(relevance) FROM resource_reviews WHERE resource_id = r.id) as avg_relevance,
                 (SELECT AVG(usefulness) FROM resource_reviews WHERE resource_id = r.id) as avg_usefulness
          FROM resources r
          JOIN app_users u ON r.contributor_id = u.id
-         WHERE r.id = $1 AND (r.status = 'APPROVED' OR r.contributor_id = $2)`,
-        [rId, user.id]
+         WHERE r.id = $2 AND (r.status = 'APPROVED' OR r.contributor_id = $3)`,
+        [String(user.id), rId, String(user.id)]
       );
 
       if (!rows.length) return res.status(404).json({ error: 'Resource not found' });
@@ -58,7 +59,9 @@ export default async function (req, res) {
         [rId]
       );
 
-      // Peer teachers who can teach this subject (the core differentiator)
+      // Peer teachers who can teach this subject
+      const subjTerm = '%' + resource.subject + '%';
+      const topicTerm = '%' + (resource.unit_topic || resource.subject).split(' ')[0] + '%';
       const { rows: peerTeachers } = await db.query(
         `SELECT u.id, u.name, u.avatar_url, u.username, u.headline,
                 s.name as skill_name,
@@ -71,12 +74,12 @@ export default async function (req, res) {
          LEFT JOIN reviews rv ON rv.reviewee_id = u.id
          WHERE us.type = 'TEACH'
            AND u.status = 'ACTIVE'
-           AND u.id != $2
-           AND (LOWER(s.name) LIKE LOWER($1) OR LOWER(s.name) LIKE LOWER($3))
+           AND u.id != $1
+           AND (LOWER(s.name) LIKE LOWER($2) OR LOWER(s.name) LIKE LOWER($3))
          GROUP BY u.id, u.name, u.avatar_url, u.username, u.headline, s.name, us.level
          ORDER BY avg_rating DESC
          LIMIT 4`,
-        ['%' + resource.subject + '%', user.id, '%' + (resource.unit_topic || resource.subject).split(' ')[0] + '%']
+        [String(user.id), subjTerm, topicTerm]
       );
 
       return res.json({ resource, keyPoints, reviews, peerTeachers });
@@ -96,7 +99,7 @@ export default async function (req, res) {
 
       const { rows: existing } = await db.query(
         `SELECT id FROM resource_reviews WHERE resource_id = $1 AND reviewer_id = $2`,
-        [rId, user.id]
+        [rId, String(user.id)]
       );
       if (existing.length) {
         return res.status(409).json({ error: 'You have already reviewed this resource.' });
@@ -112,7 +115,7 @@ export default async function (req, res) {
       await db.query(
         `INSERT INTO resource_reviews (resource_id, reviewer_id, accuracy, completeness, relevance, usefulness, comment)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [rId, user.id,
+        [rId, String(user.id),
          Math.min(5, Math.max(1, Number(accuracy))),
          Math.min(5, Math.max(1, Number(completeness))),
          Math.min(5, Math.max(1, Number(relevance))),

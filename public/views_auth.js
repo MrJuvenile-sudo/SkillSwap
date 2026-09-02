@@ -1,4 +1,5 @@
 // public/views_auth.js - Refactored Landing, Directory, Category details, FAQs, Community Board & comments
+
 (function() {
   window.SkillSwap = window.SkillSwap || {};
 
@@ -12,6 +13,7 @@
 
   // ----------------------------------------------------
   // Home Landing Page View (Pristine Hero, FAQ, Roadmap)
+
   // ----------------------------------------------------
   function HomeLandingView({ setActiveTab }) {
     const [searchVal, setSearchVal] = useState('');
@@ -29,14 +31,15 @@
       'System Design', 'Spanish', 'Guitar', 'Product Management', 'SQL & Database Design'
     ];
 
+
     useEffect(() => {
       api('/api/skills/directory').then(data => {
         setCategories(data.categories || []);
       }).catch(console.error);
-
       api('/api/users/list').then(data => {
         setFeaturedPeers((data.users || []).slice(0, 3));
       }).catch(console.error);
+
     }, []);
 
     const handleSearchSubmit = (e) => {
@@ -202,6 +205,7 @@
             <div class="flex items-center bg-white p-2.5 rounded-2xl border border-cream-300 shadow-xl focus-within:border-navy-600 focus-within:ring-2 focus-within:ring-navy-100 transition-all duration-200">
               <div class="pl-3.5 text-warmgray-400">
                 <${Icon} name="search" class="w-5.5 h-5.5" />
+
               </div>
               <input
                 type="text"
@@ -244,6 +248,7 @@
             </div>
             <div class="flex items-center gap-2">
               <span class="font-extrabold text-navy-900 text-lg sm:text-xl font-serif">$0</span> Cost Forever
+
             </div>
           </div>
         </section>
@@ -511,12 +516,12 @@
                 <div class="flex items-center justify-between pt-3 text-[11px] font-bold text-navy-700">
                   <span>${p.teach_count || 2} skills to teach</span>
                   <button onClick=${() => { setSearchVal(p.username); setActiveTab('skills-dir'); }} class="hover:underline">View profile →</button>
+
                 </div>
               </div>
             `)}
           </div>
         </section>
-
         <!-- 7. Trust, Escrow & Safety Architecture -->
         <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 text-left">
           <div class="text-center space-y-2 max-w-xl mx-auto">
@@ -630,6 +635,7 @@
             </div>
           </div>
         </section>
+
       </div>
     `;
   }
@@ -711,11 +717,13 @@
             </div>
 
             <button type="submit" disabled=${loading} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-lg transition-all duration-200 text-sm mt-2">
+
               ${loading ? 'Creating Account...' : 'Complete & Launch Onboarding →'}
             </button>
           </form>
 
           <div class="text-center pt-4 border-t border-cream-200 text-xs text-warmgray-600">
+
             Already have an account? <button onClick=${() => setActiveTab('login')} class="font-bold text-navy-700 hover:underline">Log in</button>
           </div>
         </div>
@@ -745,6 +753,7 @@
         if (res.user) {
           onAuthSuccess(res.user);
           setActiveTab(res.user.role === 'ADMIN' ? 'admin' : 'dashboard');
+
         }
       } catch (err) {
         setError(err.message);
@@ -772,6 +781,7 @@
           <form onSubmit=${handleLogin} class="space-y-4 text-xs">
             <div>
               <label class="block font-bold text-navy-955 mb-1">Email or Username</label>
+
               <input
                 required
                 type="text"
@@ -779,11 +789,13 @@
                 onChange=${e => setIdentifier(e.target.value)}
                 placeholder="alice@skillswap.io or alice"
                 class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold"
+
               />
             </div>
 
             <div>
               <label class="block font-bold text-navy-955 mb-1">Password</label>
+
               <input
                 required
                 type="password"
@@ -795,6 +807,7 @@
             </div>
 
             <button type="submit" disabled=${loading} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-lg transition-all duration-200 text-sm">
+
               ${loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
@@ -809,12 +822,14 @@
                 Bob (Photoshop/Design)
               </button>
               <button onClick=${() => handleQuickLogin('admin@skillswap.io')} class="px-3 py-1.5 bg-white border border-cream-300 rounded-lg text-amber-800 border-amber-200 font-bold hover:bg-amber-50 transition-colors">
+
                 Admin
               </button>
             </div>
           </div>
 
           <div class="text-center pt-4 border-t border-cream-200 text-xs text-warmgray-600">
+
             Don't have an account? <button onClick=${() => setActiveTab('signup')} class="font-bold text-navy-700 hover:underline">Sign up free</button>
           </div>
         </div>
@@ -825,6 +840,7 @@
 
   // ----------------------------------------------------
   // Onboarding Wizard View - Step 1: Profile Params
+
   // ----------------------------------------------------
   function OnboardingWizardView({ user, setActiveTab, onComplete }) {
     const [timezone, setTimezone] = useState('PST (UTC-8)');
@@ -856,6 +872,7 @@
               <p class="text-xs text-warmgray-500 mt-1">Configure timezone, learning capacity, and a brief biography.</p>
             </div>
             <span class="px-3 py-1 rounded-full text-xs font-bold bg-navy-50 text-navy-700 border border-navy-100">Step 1</span>
+
           </div>
 
           <form onSubmit=${handleSave} class="space-y-6 text-xs">
@@ -863,6 +880,7 @@
               <div>
                 <label class="block font-bold text-navy-950 mb-1.5">Your Local Timezone</label>
                 <select value=${timezone} onChange=${e => setTimezone(e.target.value)} class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900">
+
                   <option value="PST (UTC-8)">PST (UTC-8) - US Pacific</option>
                   <option value="EST (UTC-5)">EST (UTC-5) - US Eastern</option>
                   <option value="GMT (UTC+0)">GMT (UTC+0) - London</option>
@@ -874,6 +892,7 @@
               <div>
                 <label class="block font-bold text-navy-955 mb-1.5">Max Target Weekly Swap Hours</label>
                 <input type="number" min="1" max="20" value=${weeklyHours} onChange=${e => setWeeklyHours(Number(e.target.value))} class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900" />
+
               </div>
             </div>
 
@@ -884,6 +903,7 @@
 
             <button type="submit" class="w-full py-4 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-sm">
               Save & Proceed to Skills Wizard →
+
             </button>
           </form>
         </div>
@@ -1008,6 +1028,7 @@
     const [requestSkillName, setRequestSkillName] = useState('');
     const [requestCategory, setRequestCategory] = useState('Engineering');
     const [requestSubmitted, setRequestSubmitted] = useState(false);
+
 
     useEffect(() => {
       api('/api/skills/directory').then(data => setDirectory(data.directory || [])).catch(console.error);
@@ -1174,6 +1195,7 @@
                 <option value="LEARNERS">🎯 Most Learners Seeking</option>
                 <option value="ALPHA">🔤 Alphabetical (A-Z)</option>
               </select>
+
             </div>
           </div>
         </div>
@@ -1343,6 +1365,7 @@
                       </div>
                       <button onClick=${() => setActiveTab('matches')} class="w-full py-2.5 bg-cream-50 hover:bg-navy-700 hover:text-white text-navy-900 font-bold text-xs rounded-xl border border-cream-200 hover:border-navy-700 transition-all duration-200 text-center shadow-2xs">
                         Find Synergy Matches →
+
                       </button>
                     </div>
                   </div>
@@ -1350,7 +1373,6 @@
               </div>
             </div>
           `)}
-
           ${filtered.length === 0 ? html`
             <div class="bg-white p-12 rounded-3xl border border-cream-300 text-center space-y-4 shadow-sm">
               <p class="text-sm font-semibold text-warmgray-600">No skills or categories match your active filters.</p>
@@ -1403,6 +1425,7 @@
               </button>
             </form>
           `}
+
         </div>
       </div>
     `;
@@ -1453,6 +1476,7 @@
         <div class="p-20 text-center space-y-4">
           <h2 class="font-serif text-2xl font-bold text-navy-900">Category not found</h2>
           <button onClick=${() => setActiveTab('skills-dir')} class="px-4 py-2 bg-navy-700 text-white rounded-xl text-xs">Return to Directory</button>
+
         </div>
       `;
     }
@@ -1478,6 +1502,7 @@
             />
             <div class="absolute left-3.5 top-3 text-warmgray-400">
               <${Icon} name="search" class="w-4.5 h-4.5" />
+
             </div>
           </div>
         </div>
@@ -1490,6 +1515,7 @@
                 <div key=${s.id} class="p-3 bg-cream-50/50 border border-cream-200/50 rounded-xl flex justify-between items-center">
                   <span class="font-semibold text-navy-900">${s.name}</span>
                   <span class="px-2 py-0.5 rounded bg-cream-200 text-[9px] font-extrabold uppercase">${s.total_members || 0} active</span>
+
                 </div>
               `)}
             </div>
@@ -1533,6 +1559,7 @@
                 </div>
               `)}
               ${filteredMembers.length === 0 ? html`<p class="text-xs text-warmgray-500 py-6 text-center sm:col-span-2">No category members match your search.</p>` : null}
+
             </div>
           </div>
         </div>
@@ -1616,6 +1643,7 @@
 
             <button type="submit" disabled=${submitting} class="w-full py-3.5 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-xl shadow-md transition-colors text-sm">
               ${submitting ? 'Submitting Report...' : 'File Safety Report to Admin'}
+
             </button>
           </form>
         </div>
@@ -1775,6 +1803,62 @@
           
           <!-- Main Feed Column (2 Cols) -->
           <div class="lg:col-span-2 space-y-6">
+            <!-- Post Composer Card -->
+            ${currentUser ? html`
+              <div class="bg-white rounded-3xl p-6 border border-cream-300 shadow-md space-y-4 text-xs">
+                <div class="flex items-center justify-between border-b border-cream-100 pb-3">
+                  <h3 class="font-serif text-base font-bold text-navy-950 flex items-center gap-2">
+                    <span>✍️ Publish Swap Announcement</span>
+                  </h3>
+                  <span class="text-[10px] font-semibold text-warmgray-500">Public Community Board</span>
+                </div>
+
+                <form onSubmit=${handleCreatePost} class="space-y-3.5">
+                  <input
+                    type="text"
+                    required
+                    value=${title}
+                    onChange=${e => setTitle(e.target.value)}
+                    placeholder="Headline / Swap Title (e.g. Offering React state hooks mentoring for Python FastAPI)..."
+                    class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900"
+                  />
+
+                  <textarea
+                    required
+                    rows="3"
+                    value=${content}
+                    onChange=${e => setContent(e.target.value)}
+                    placeholder="Describe what you want to practice, your availability schedule, and what projects you want to build..."
+                    class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-medium text-navy-900 leading-relaxed"
+                  ></textarea>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block font-bold text-emerald-800 text-[10px] uppercase mb-1">Skill You Offer to Teach</label>
+                      <select value=${teachSkillId} onChange=${e => setTeachSkillId(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold text-navy-900">
+                        <option value="">(Optional) Select teaching skill...</option>
+                        ${allSkills.map(s => html`<option key=${s.id} value=${s.id}>🌱 ${s.name}</option>`)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="block font-bold text-amber-800 text-[10px] uppercase mb-1">Skill You Want to Learn</label>
+                      <select value=${learnSkillId} onChange=${e => setLearnSkillId(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold text-navy-900">
+                        <option value="">(Optional) Select learning target...</option>
+                        ${allSkills.map(s => html`<option key=${s.id} value=${s.id}>🎯 ${s.name}</option>`)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="flex justify-end pt-1">
+                    <button type="submit" disabled=${submitting} class="px-6 py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-bold text-xs rounded-xl shadow-md transition-all">
+                      ${submitting ? 'Publishing...' : 'Publish to Feed →'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ` : null}
+
             ${loading ? html`<div class="p-12 text-center text-warmgray-500 font-serif">Loading community discussions...</div>` : null}
             ${!loading && filteredPosts.length === 0 ? html`
               <div class="p-12 bg-white rounded-3xl border border-cream-300 text-center space-y-3 shadow-sm">
@@ -2333,12 +2417,12 @@
           <button onClick=${() => (setActiveTab ? setActiveTab('signup') : (window.location.hash = 'signup'))} class="px-7 py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-extrabold rounded-xl text-xs shadow-md transition-all">
             Get Started Free →
           </button>
+
         </div>
       </div>
     `;
   }
   window.SkillSwap.HelpCenterView = HelpCenterView;
-
   // ----------------------------------------------------
   // Features View (Deep-Dive 6-Factor Synergy, Workspaces & Comparison Table)
   // ----------------------------------------------------
@@ -2668,4 +2752,5 @@
     `;
   }
   window.SkillSwap.FaqView = FaqView;
+
 })();

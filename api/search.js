@@ -15,6 +15,7 @@ export default async function (req, res) {
              p.bio, p.location, p.availability, p.preferred_language, p.completion_percentage,
              COALESCE(AVG(r.rating), 5.0) as avg_rating,
              COUNT(r.id) as reviews_count
+
       FROM app_users u
       JOIN profiles p ON u.id = p.user_id
       LEFT JOIN user_skills us ON u.id = us.user_id
@@ -34,6 +35,7 @@ export default async function (req, res) {
 
     if (category) {
       query += ` AND (c.name LIKE $${paramIdx} OR CAST(c.id AS TEXT) = $${paramIdx})`;
+
       params.push(`%${category}%`);
       paramIdx++;
     }
@@ -50,6 +52,7 @@ export default async function (req, res) {
 
     if (availability) {
       query += ` AND p.availability LIKE $${paramIdx++}`;
+
       params.push(`%${availability}%`);
     }
 
@@ -60,6 +63,7 @@ export default async function (req, res) {
         s.name LIKE $${paramIdx} OR 
         c.name LIKE $${paramIdx} OR
         p.bio LIKE $${paramIdx}
+
       )`;
       params.push(`%${q.trim()}%`);
       paramIdx++;
@@ -97,6 +101,7 @@ export default async function (req, res) {
     // Format output
     const results = matchedUsers.map(r => {
       const allSkills = allUserSkills.filter(s => s.user_id === r.id);
+
       return {
         id: r.id,
         name: r.name,

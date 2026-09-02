@@ -224,25 +224,26 @@ async function loadRoutes() {
     }
   }
 
-  // Sort routes: static paths first, parameterized paths later
+  // Sort routes: static routes first (longer first), parameterized routes later
   routes.sort((a, b) => {
-    const partsA = a.path.split('/');
-    const partsB = b.path.split('/');
-    if (partsA.length !== partsB.length) {
-      return partsB.length - partsA.length;
-    }
-    for (let i = 0; i < partsA.length; i++) {
-      const isParamA = partsA[i].startsWith(':');
-      const isParamB = partsB[i].startsWith(':');
-      if (isParamA && !isParamB) return 1;
-      if (!isParamA && isParamB) return -1;
-    }
-    return 0;
+    const isParamA = a.path.includes(':');
+    const isParamB = b.path.includes(':');
+    if (isParamA && !isParamB) return 1;
+    if (!isParamA && isParamB) return -1;
+    return b.path.length - a.path.length;
   });
 
   // Register routes in Express
   for (const route of routes) {
     app.all(route.path, async (req, res, next) => {
+      // For static routes, ensure exact path match so /api/resources doesn't swallow /api/resources/upload
+      if (!route.path.includes(':')) {
+        const cleanReqPath = req.path.replace(/\/$/, '');
+        const cleanRoutePath = route.path.replace(/\/$/, '');
+        if (cleanReqPath !== cleanRoutePath) {
+          return next();
+        }
+      }
       try {
         await route.handler(req, res);
       } catch (err) {

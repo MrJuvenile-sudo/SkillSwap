@@ -115,7 +115,7 @@ export default async function (req, res) {
     const user = await requireCurrentUser(req, res);
     if (!user) return;
 
-    const { id } = req.body || req.query || {};
+    const id = req.query?.id || req.body?.id;
     if (!id) {
       return res.status(400).json({ error: 'Skill record ID required' });
     }
