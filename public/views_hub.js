@@ -22,7 +22,7 @@
 
   const TYPE_COLORS = {
     NOTES: 'bg-blue-50 text-blue-700 border-blue-200',
-    ASSIGNMENT: 'bg-amber-50 text-amber-700 border-amber-200',
+    ASSIGNMENT: 'bg-sky-50 text-indigo-700 border-indigo-200',
     KEY_POINTS: 'bg-violet-50 text-violet-700 border-violet-200',
     PYQ: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     LAB: 'bg-rose-50 text-rose-700 border-rose-200',
@@ -53,7 +53,7 @@
             ${isCommunityReviewed ? html`
               <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-200">✓ Reviewed</span>
             ` : null}
-            ${resource.avg_rating ? html`<span class="text-[11px] font-bold text-amber-600">★ ${Number(resource.avg_rating).toFixed(1)}</span>` : null}
+            ${resource.avg_rating ? html`<span class="text-[11px] font-bold text-indigo-600">★ ${Number(resource.avg_rating).toFixed(1)}</span>` : null}
           </div>
         </div>
 
@@ -325,7 +325,7 @@
               </div>
             </div>
             ${form.type === 'ASSIGNMENT' ? html`
-              <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-semibold">
+              <div class="p-3.5 bg-sky-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 font-semibold">
                 ⚠️ <strong>Academic Integrity Notice:</strong> Assignments are labeled as Reference Material only. Use for learning. Do not submit another student's work as your own.
               </div>
             ` : null}
@@ -457,7 +457,7 @@
               </div>
             </div>
 
-            <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-2">
+            <div class="p-4 bg-sky-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 space-y-2">
               <p class="font-bold">📋 Academic Integrity Declaration</p>
               <p>This material is shared for learning and reference only. Do not submit another student's work as your own.</p>
               <label class="flex items-start gap-2 cursor-pointer pt-1">
@@ -562,7 +562,7 @@
                 ${typeInfo.icon} ${typeInfo.label}
               </span>
               ${isCommunityReviewed ? html`<span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-200 rounded-full">✓ Community Reviewed</span>` : null}
-              ${resource.type === 'ASSIGNMENT' ? html`<span class="px-2.5 py-1 bg-amber-50 text-amber-700 text-[9px] font-bold border border-amber-200 rounded-full">⚠ Reference Material Only</span>` : null}
+              ${resource.type === 'ASSIGNMENT' ? html`<span class="px-2.5 py-1 bg-sky-50 text-indigo-700 text-[9px] font-bold border border-indigo-200 rounded-full">⚠ Reference Material Only</span>` : null}
             </div>
             <div class="flex items-center gap-2">
               <button onClick=${handleSave} class="${saved ? 'text-indigo-600 border-indigo-300 bg-indigo-50' : 'text-warmgray-600 border-cream-300'} px-3 py-2 border rounded-xl text-xs font-bold hover:border-indigo-300 hover:text-indigo-600 transition-all">
@@ -588,7 +588,7 @@
           </div>
 
           ${resource.type === 'ASSIGNMENT' ? html`
-            <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-semibold">
+            <div class="p-3.5 bg-sky-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 font-semibold">
               ⚠️ <strong>Academic Integrity:</strong> Use for learning and reference only. Do not submit another student's work as your own.
             </div>
           ` : null}
@@ -598,7 +598,7 @@
           <div class="flex flex-wrap gap-5 pt-2 border-t border-cream-100 text-xs">
             <span class="font-semibold text-warmgray-500">⬇ ${resource.downloads || 0} downloads</span>
             <span class="font-semibold text-warmgray-500">💬 ${resource.review_count || 0} reviews</span>
-            ${resource.avg_rating ? html`<span class="font-bold text-amber-600">★ ${Number(resource.avg_rating).toFixed(1)} avg</span>` : null}
+            ${resource.avg_rating ? html`<span class="font-bold text-indigo-600">★ ${Number(resource.avg_rating).toFixed(1)} avg</span>` : null}
           </div>
 
           <div class="flex items-center gap-3 pt-2 border-t border-cream-100">
@@ -672,7 +672,7 @@
                     <div class="min-w-0">
                       <p class="font-bold text-sm truncate">${peer.name}</p>
                       <p class="text-[10px] text-navy-300 font-semibold">${peer.skill_name} · ${peer.level || 'Intermediate'}</p>
-                      ${peer.avg_rating ? html`<p class="text-[10px] text-amber-400 font-bold">★ ${peer.avg_rating}</p>` : null}
+                      ${peer.avg_rating ? html`<p class="text-[10px] text-sky-400 font-bold">★ ${peer.avg_rating}</p>` : null}
                     </div>
                   </div>
                   <button onClick=${() => onProposeSwap && onProposeSwap(peer)}
@@ -708,7 +708,7 @@
                     <div class="flex gap-1">
                       ${[1,2,3,4,5].map(star => html`
                         <button key=${star} type="button" onClick=${() => setReviewForm(f => ({ ...f, [field]: star }))}
-                          class="text-xl ${star <= reviewForm[field] ? 'text-amber-400' : 'text-cream-300'} hover:text-amber-400 transition-colors leading-none">★</button>
+                          class="text-xl ${star <= reviewForm[field] ? 'text-sky-400' : 'text-cream-300'} hover:text-sky-400 transition-colors leading-none">★</button>
                       `)}
                     </div>
                   </div>
@@ -732,7 +732,7 @@
                       <img src=${r.reviewer_avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40&h=40&fit=crop'} class="w-7 h-7 rounded-full object-cover" />
                       <span class="text-xs font-bold text-navy-950">${r.reviewer_name}</span>
                     </div>
-                    <span class="text-xs font-bold text-amber-500">★ ${((Number(r.accuracy) + Number(r.completeness) + Number(r.relevance) + Number(r.usefulness)) / 4).toFixed(1)}</span>
+                    <span class="text-xs font-bold text-indigo-600">★ ${((Number(r.accuracy) + Number(r.completeness) + Number(r.relevance) + Number(r.usefulness)) / 4).toFixed(1)}</span>
                   </div>
                   ${r.comment ? html`<p class="text-xs text-warmgray-600 leading-relaxed">${r.comment}</p>` : null}
                 </div>
@@ -816,7 +816,7 @@
     }, [tab]);
 
     const STATUS_BADGE = {
-      PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
+      PENDING: 'bg-sky-50 text-indigo-700 border-indigo-200',
       APPROVED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       REJECTED: 'bg-rose-50 text-rose-700 border-rose-200',
       REPORTED: 'bg-red-50 text-red-700 border-red-200'

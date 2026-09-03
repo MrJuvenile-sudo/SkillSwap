@@ -293,14 +293,14 @@
               <span class="text-navy-400 hidden sm:inline">•</span>
               <span class="hidden sm:inline text-cream-200/80">14,200+ Verified Swappers</span>
               <span class="text-navy-400 hidden md:inline">•</span>
-              <span class="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-navy-800/90 text-amber-300 border border-amber-400/20 shadow-2xs">
+              <span class="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-navy-800/90 text-sky-300 border border-sky-400/20 shadow-2xs">
                 Zero Fees Forever
               </span>
             </div>
 
             <!-- Center Micro-Announcement -->
             <div class="hidden lg:flex items-center gap-2 text-[10.5px] text-cream-200/70">
-              <span class="text-amber-400 font-bold">⚡ AI Synergy Engine:</span>
+              <span class="text-sky-400 font-bold">⚡ AI Synergy Engine:</span>
               <span>Matching 120+ Skills with 99.4% Bilateral Precision</span>
             </div>
 
@@ -382,7 +382,7 @@
                       <span class="px-1 py-0.2 text-[8px] font-black rounded-md ${activeTab === link.id ? 'bg-white/20 text-white' : 'bg-navy-100 text-navy-700'}">${link.badge}</span>
                     ` : null}
                     ${link.count > 0 ? html`
-                      <span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-500 text-white shadow-xs">${link.count}</span>
+                      <span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-500 text-white shadow-xs">${link.count}</span>
                     ` : null}
                   </button>
                 `)}
@@ -409,7 +409,7 @@
                 <div class="relative" id="notif-menu-container">
                   <button onClick=${handleToggleNotif} class="p-2 rounded-xl hover:bg-cream-200/70 border border-transparent hover:border-cream-300 relative transition-all duration-200">
                     <${Icon} name="bell" class="w-5 h-5 text-navy-900" />
-                    ${unreadCount > 0 ? html`<span class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-amber-600 border-2 border-cream-100 animate-pulse"></span>` : null}
+                    ${unreadCount > 0 ? html`<span class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-indigo-600 border-2 border-cream-100 animate-pulse"></span>` : null}
                   </button>
 
                   <!-- Notifications list dropdown -->
@@ -552,14 +552,14 @@
                     ${link.label}
                   </span>
                   ${link.count > 0 ? html`
-                    <span class="px-2 py-0.5 rounded-full text-xs font-extrabold bg-amber-500 text-white">${link.count}</span>
+                    <span class="px-2 py-0.5 rounded-full text-xs font-extrabold bg-sky-500 text-white">${link.count}</span>
                   ` : null}
                 </button>
               `)}
               ${user && user.role === 'ADMIN' ? html`
                 <button
                   onClick=${() => handleNavClick('admin')}
-                  class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-2.5 text-amber-800 bg-amber-50 border border-amber-200"
+                  class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-2.5 text-indigo-900 bg-sky-50 border border-indigo-200"
                 >
                   🛡️ Admin Console
                 </button>

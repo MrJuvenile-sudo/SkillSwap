@@ -70,7 +70,7 @@
         title: "AI & Machine Learning",
         icon: "cpu",
         badge: "Trending 🔥",
-        color: "bg-amber-50 text-amber-800 border-amber-200",
+        color: "bg-sky-50 text-indigo-900 border-indigo-200",
         skills: ["Python", "PyTorch", "LLM Fine-Tuning", "RAG Pipelines", "LangChain"],
         description: "Trade software architecture knowledge to master transformer models and prompt engineering.",
         swappers: "2,850+ Active"
@@ -268,7 +268,7 @@
               </div>
               <div class="text-right shrink-0 bg-navy-800/80 p-3 rounded-2xl border border-navy-700 text-center">
                 <span class="text-[10px] uppercase font-bold text-cream-200/70 block">Calculated Synergy</span>
-                <span class="font-serif text-3xl font-extrabold text-amber-400">96%</span>
+                <span class="font-serif text-3xl font-extrabold text-sky-400">96%</span>
               </div>
             </div>
 
@@ -289,7 +289,7 @@
               </div>
 
               <div class="space-y-2 bg-navy-800/40 p-5 rounded-2xl border border-navy-700/50">
-                <label class="block text-xs font-bold uppercase tracking-wider text-amber-400">
+                <label class="block text-xs font-bold uppercase tracking-wider text-sky-400">
                   Step 2: What skill do you want to learn?
                 </label>
                 <select
@@ -320,7 +320,7 @@
                     <p class="text-xs text-cream-200/70">★ 4.98 Karma · 18 Swaps Completed · UTC-4 (New York)</p>
                   </div>
                 </div>
-                <button onClick=${() => setActiveTab('signup')} class="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-navy-950 font-extrabold rounded-xl shadow-lg transition-all text-xs shrink-0">
+                <button onClick=${() => setActiveTab('signup')} class="px-6 py-3 bg-gradient-to-r from-navy-700 to-indigo-700 hover:from-navy-800 hover:to-indigo-800 text-navy-950 font-extrabold rounded-xl shadow-lg transition-all text-xs shrink-0">
                   Claim Match & Start Free →
                 </button>
               </div>
@@ -329,7 +329,7 @@
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-[11px]">
                 <div class="p-2.5 bg-navy-900/80 rounded-xl border border-navy-800">
                   <span class="text-cream-200/60 block text-[9px] uppercase font-bold">They Teach:</span>
-                  <span class="font-bold text-amber-300">${sandboxLearn}</span>
+                  <span class="font-bold text-sky-300">${sandboxLearn}</span>
                 </div>
                 <div class="p-2.5 bg-navy-900/80 rounded-xl border border-navy-800">
                   <span class="text-cream-200/60 block text-[9px] uppercase font-bold">They Want:</span>
@@ -454,7 +454,7 @@
               >
                 <div class="flex items-center justify-between mb-1">
                   <span class="text-xs font-black uppercase tracking-wider opacity-80">Phase 0${ws.step}</span>
-                  <span class="w-2 h-2 rounded-full ${sandboxWorkflowStep === i ? 'bg-amber-400' : 'bg-cream-300'}"></span>
+                  <span class="w-2 h-2 rounded-full ${sandboxWorkflowStep === i ? 'bg-sky-400' : 'bg-cream-300'}"></span>
                 </div>
                 <h4 class="font-bold text-xs sm:text-sm truncate">${ws.title}</h4>
               </button>
@@ -554,7 +554,7 @@
             </div>
 
             <div class="p-6 bg-white border border-cream-300 rounded-3xl shadow-sm space-y-3">
-              <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold text-lg border border-amber-200">
+              <div class="w-10 h-10 rounded-xl bg-sky-50 text-indigo-700 flex items-center justify-center font-bold text-lg border border-indigo-200">
                 🛡️
               </div>
               <h3 class="font-serif text-lg font-bold text-navy-950">Admin Mediation & Reports</h3>
@@ -821,7 +821,7 @@
               <button onClick=${() => handleQuickLogin('bob@skillswap.io')} class="px-3 py-1.5 bg-white border border-cream-300 rounded-lg text-warmgray-700 hover:bg-cream-100 font-semibold transition-colors">
                 Bob (Photoshop/Design)
               </button>
-              <button onClick=${() => handleQuickLogin('admin@skillswap.io')} class="px-3 py-1.5 bg-white border border-cream-300 rounded-lg text-amber-800 border-amber-200 font-bold hover:bg-amber-50 transition-colors">
+              <button onClick=${() => handleQuickLogin('admin@skillswap.io')} class="px-3 py-1.5 bg-white border border-cream-300 rounded-lg text-indigo-900 border-indigo-200 font-bold hover:bg-sky-50 transition-colors">
 
                 Admin
               </button>
@@ -961,7 +961,7 @@
               <h2 class="font-serif text-2xl font-bold text-navy-900">Onboarding: Skill Selection (Step 2/2)</h2>
               <p class="text-xs text-warmgray-500 mt-1">Add at least one skill you can teach and one you want to learn to initialize matches.</p>
             </div>
-            <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">Step 2</span>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-sky-50 text-indigo-700 border border-sky-100">Step 2</span>
           </div>
 
           ${successMessage ? html`<div class="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl font-bold text-xs">${successMessage}</div>` : null}
@@ -971,7 +971,7 @@
             
             <div class="grid grid-cols-2 gap-3">
               <button type="button" onClick=${() => setType('TEACH')} class="py-2 rounded-xl font-bold ${type === 'TEACH' ? 'bg-navy-700 text-white' : 'bg-cream-100 text-warmgray-700'}">I Can Teach</button>
-              <button type="button" onClick=${() => setType('LEARN')} class="py-2 rounded-xl font-bold ${type === 'LEARN' ? 'bg-amber-700 text-white' : 'bg-cream-100 text-warmgray-700'}">I Want to Learn</button>
+              <button type="button" onClick=${() => setType('LEARN')} class="py-2 rounded-xl font-bold ${type === 'LEARN' ? 'bg-navy-700 text-white' : 'bg-cream-100 text-warmgray-700'}">I Want to Learn</button>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1219,7 +1219,7 @@
               >
                 <div class="space-y-2.5">
                   <div class="flex items-center justify-between">
-                    <span class="px-2 py-0.5 rounded-md bg-navy-800 text-amber-300 text-[9px] font-black uppercase tracking-wider border border-navy-700">
+                    <span class="px-2 py-0.5 rounded-md bg-navy-800 text-sky-300 text-[9px] font-black uppercase tracking-wider border border-navy-700">
                       ${path.badge}
                     </span>
                     <span class="text-[10px] text-cream-200/70 font-semibold">${path.pairs}</span>
@@ -1232,7 +1232,7 @@
                     <span>Teach:</span>
                     <span class="font-bold">${path.teach}</span>
                   </div>
-                  <div class="flex items-center justify-between text-amber-300 font-semibold">
+                  <div class="flex items-center justify-between text-sky-300 font-semibold">
                     <span>Learn:</span>
                     <span class="font-bold">${path.learn}</span>
                   </div>
@@ -1246,12 +1246,12 @@
         <div class="bg-gradient-to-r from-navy-900 via-navy-950 to-navy-900 rounded-3xl p-6 sm:p-8 text-white border border-navy-700/50 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
           <div class="flex items-center gap-4">
             <div class="relative shrink-0">
-              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=140&h=140&fit=crop" class="w-15 h-15 sm:w-18 sm:h-18 rounded-2xl object-cover ring-2 ring-amber-400 shadow-lg" />
-              <span class="absolute -bottom-1 -right-1 px-1.5 py-0.5 bg-amber-400 text-navy-950 text-[8px] font-black uppercase rounded-md shadow-xs">Mentor</span>
+              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=140&h=140&fit=crop" class="w-15 h-15 sm:w-18 sm:h-18 rounded-2xl object-cover ring-2 ring-indigo-400 shadow-lg" />
+              <span class="absolute -bottom-1 -right-1 px-1.5 py-0.5 bg-sky-400 text-navy-950 text-[8px] font-black uppercase rounded-md shadow-xs">Mentor</span>
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[9px] font-extrabold border border-amber-500/30">🌟 Practitioner Spotlight of the Week</span>
+                <span class="px-2.5 py-0.5 rounded-md bg-indigo-500/20 text-sky-300 text-[9px] font-extrabold border border-indigo-500/30">🌟 Practitioner Spotlight of the Week</span>
                 <span class="text-xs text-cream-200/70">★ 5.0 (24 verified reviews)</span>
               </div>
               <h3 class="font-serif text-lg sm:text-xl font-bold">Sophia Lin · Senior Staff UI/UX Architect</h3>
@@ -1358,7 +1358,7 @@
                           <span>🌱</span>
                           <span>${s.teachers_count || 1} Teachers</span>
                         </span>
-                        <span class="text-amber-700 flex items-center gap-1">
+                        <span class="text-indigo-700 flex items-center gap-1">
                           <span>🎯</span>
                           <span>${s.learners_count || 1} Learners</span>
                         </span>
@@ -1386,7 +1386,7 @@
         <!-- "Can't Find Your Skill?" Track Request Section -->
         <div class="bg-white rounded-3xl p-8 sm:p-10 border border-cream-300 shadow-md space-y-6">
           <div class="space-y-1">
-            <span class="px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200">
+            <span class="px-2.5 py-0.5 rounded-md bg-sky-50 text-indigo-900 text-[10px] font-bold border border-indigo-200">
               💡 Community Requested Tracks
             </span>
             <h3 class="font-serif text-2xl font-bold text-navy-950">Can't find the skill you want to learn or teach?</h3>
@@ -1545,9 +1545,9 @@
                         </div>
                       </div>
                       <div>
-                        <span class="font-bold text-amber-800 uppercase block tracking-wider">Wants to Learn:</span>
+                        <span class="font-bold text-indigo-900 uppercase block tracking-wider">Wants to Learn:</span>
                         <div class="flex flex-wrap gap-1 mt-0.5">
-                          ${(m.learn_skills || []).map(s => html`<span key=${s.id} class="px-1.5 py-0.5 bg-amber-50 text-amber-900 border border-amber-200 rounded font-medium">${s.skill_name}</span>`)}
+                          ${(m.learn_skills || []).map(s => html`<span key=${s.id} class="px-1.5 py-0.5 bg-sky-50 text-indigo-950 border border-indigo-200 rounded font-medium">${s.skill_name}</span>`)}
                         </div>
                       </div>
                     </div>
@@ -1842,7 +1842,7 @@
                     </div>
 
                     <div>
-                      <label class="block font-bold text-amber-800 text-[10px] uppercase mb-1">Skill You Want to Learn</label>
+                      <label class="block font-bold text-indigo-900 text-[10px] uppercase mb-1">Skill You Want to Learn</label>
                       <select value=${learnSkillId} onChange=${e => setLearnSkillId(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold text-navy-900">
                         <option value="">(Optional) Select learning target...</option>
                         ${allSkills.map(s => html`<option key=${s.id} value=${s.id}>🎯 ${s.name}</option>`)}
@@ -1898,8 +1898,8 @@
                     </span>
                   ` : null}
                   ${p.learn_skill ? html`
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 font-semibold text-[10px]">
-                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-sky-50 text-indigo-900 border border-indigo-200 font-semibold text-[10px]">
+                      <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
                       Wants to Learn: ${p.learn_skill}
                     </span>
                   ` : null}
@@ -2074,7 +2074,7 @@
                       </div>
                     </div>
                     <div class="text-right">
-                      <span class="px-2 py-0.5 bg-amber-50 text-amber-900 border border-amber-200 rounded-md font-extrabold text-[10px] block">
+                      <span class="px-2 py-0.5 bg-sky-50 text-indigo-950 border border-indigo-200 rounded-md font-extrabold text-[10px] block">
                         ${leader.karma}
                       </span>
                       <span class="text-[9px] text-warmgray-500 font-bold block mt-0.5">${leader.swaps} swaps</span>
@@ -2193,7 +2193,7 @@
         </div>
 
         <div class="bg-white p-8 rounded-3xl border border-cream-300 shadow-sm space-y-6 text-xs sm:text-sm leading-relaxed text-warmgray-700">
-          <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-xs font-semibold leading-relaxed">
+          <div class="p-4 bg-sky-50 border border-indigo-200 rounded-2xl text-indigo-900 text-xs font-semibold leading-relaxed">
             📢 Read our peer conduct expectations carefully. Community safety and reliability are our highest priorities.
           </div>
 
@@ -2326,7 +2326,7 @@
         <div class="bg-gradient-to-br from-navy-900 via-navy-950 to-navy-900 rounded-3xl p-8 sm:p-12 text-white border border-navy-700/60 shadow-2xl space-y-8">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-navy-800 pb-6">
             <div>
-              <span class="px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/30">
+              <span class="px-2.5 py-0.5 rounded-md bg-indigo-500/20 text-sky-300 text-[10px] font-bold border border-indigo-500/30">
                 ⚡ Exchange Velocity Calculator
               </span>
               <h2 class="font-serif text-2xl sm:text-3xl font-bold mt-1">Calculate Your Value from Peer Barter</h2>
@@ -2355,7 +2355,7 @@
               <div>
                 <div class="flex justify-between text-xs font-bold uppercase tracking-wider text-cream-200 mb-2">
                   <span>Weekly Commitment:</span>
-                  <span class="text-amber-400">${calcHours} hours / week</span>
+                  <span class="text-sky-400">${calcHours} hours / week</span>
                 </div>
                 <input
                   type="range"
@@ -2363,7 +2363,7 @@
                   max="10"
                   value=${calcHours}
                   onChange=${e => setCalcHours(Number(e.target.value))}
-                  class="w-full h-2 bg-navy-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
+                  class="w-full h-2 bg-navy-700 rounded-lg appearance-none cursor-pointer accent-navy-700"
                 />
                 <div class="flex justify-between text-[10px] text-cream-200/60 mt-1">
                   <span>1 hr (Casual)</span>
@@ -2377,7 +2377,7 @@
             <div class="bg-navy-950 p-6 rounded-2xl border border-navy-800 text-center space-y-4">
               <div class="space-y-1">
                 <span class="text-[10px] uppercase font-bold text-cream-200/60 block">Equivalent Tutoring Value Earned For Free</span>
-                <span class="font-serif text-4xl sm:text-5xl font-extrabold text-amber-400">$${annualSaved.toLocaleString()}</span>
+                <span class="font-serif text-4xl sm:text-5xl font-extrabold text-sky-400">$${annualSaved.toLocaleString()}</span>
                 <span class="text-xs text-cream-200/80 block">per year ($${monthlySaved.toLocaleString()} / month)</span>
               </div>
               <div class="p-3 bg-navy-900 rounded-xl text-xs text-emerald-300 font-semibold border border-navy-800">

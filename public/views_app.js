@@ -45,10 +45,10 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 text-left animate-fadeIn">
         <!-- Welcome / Onboarding Hero Banner State -->
         ${!hasSkills ? html`
-          <div class="bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 rounded-3xl p-8 border border-amber-500/20 shadow-xl text-cream-100 relative overflow-hidden">
-            <div class="absolute -right-16 -top-16 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="bg-gradient-to-br from-navy-800 via-navy-900 to-navy-955 rounded-3xl p-8 border border-navy-700/40 shadow-xl text-cream-100 relative overflow-hidden">
+            <div class="absolute -right-16 -top-16 w-48 h-48 bg-navy-600/10 rounded-full blur-3xl pointer-events-none"></div>
             <div class="space-y-4 max-w-2xl relative z-10">
-              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-amber-500/40 text-amber-100 border border-amber-500/30">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-indigo-500/40 text-sky-100 border border-indigo-500/30">
                 Onboarding: Step 1 of 2 ⚡
               </div>
               <h2 class="font-serif text-2xl sm:text-3xl font-bold tracking-tight">Add your skills to unlock matchmaking!</h2>
@@ -60,12 +60,12 @@
                   <span>Profile Completion</span>
                   <span>50%</span>
                 </div>
-                <div class="w-full bg-amber-900/40 rounded-full h-2">
-                  <div class="bg-white h-2 rounded-full transition-all duration-300" style=${{ width: '50%' }}></div>
+                <div class="w-full bg-navy-950/50 rounded-full h-2">
+                  <div class="bg-indigo-500 h-2 rounded-full transition-all duration-300" style=${{ width: '50%' }}></div>
                 </div>
               </div>
               <div class="pt-2">
-                <button onClick=${() => setActiveTab('skills')} class="px-5 py-3 bg-white hover:bg-cream-100 text-amber-955 font-bold text-xs rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all">
+                <button onClick=${() => setActiveTab('skills')} class="px-5 py-3 bg-white hover:bg-cream-100 text-navy-950 font-bold text-xs rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all">
                   Configure Skill Matrix →
                 </button>
               </div>
@@ -86,7 +86,7 @@
               </div>
               <div class="space-y-1.5">
                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                  <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-navy-800 text-amber-300 border border-navy-700/80">
+                  <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-navy-800 text-sky-300 border border-navy-700/80">
                     Verified Swapper · 4.9★ Karma
                   </span>
                 </div>
@@ -162,10 +162,10 @@
                           </div>
                         </div>
                         <div>
-                          <span class="text-[9px] font-extrabold text-amber-900 uppercase tracking-wider block mb-1">Wants to Learn:</span>
+                          <span class="text-[9px] font-extrabold text-indigo-950 uppercase tracking-wider block mb-1">Wants to Learn:</span>
                           <div class="flex flex-wrap gap-1">
                             ${(m.user.learn_skills || []).slice(0, 3).map(s => html`
-                              <span key=${s.id} class="px-2 py-0.5 bg-amber-50 text-amber-900 border border-amber-200 rounded font-semibold text-[10px]">
+                              <span key=${s.id} class="px-2 py-0.5 bg-sky-50 text-indigo-950 border border-indigo-200 rounded font-semibold text-[10px]">
                                 ${s.skill_name}
                               </span>
                             `)}
@@ -491,10 +491,10 @@
                         </div>
 
                         <div>
-                          <span class="font-bold text-amber-900 text-[9px] uppercase tracking-wider block mb-1">Wants to Learn:</span>
+                          <span class="font-bold text-indigo-950 text-[9px] uppercase tracking-wider block mb-1">Wants to Learn:</span>
                           <div class="flex flex-wrap gap-1">
                             ${(m.user.learn_skills || []).map(s => html`
-                              <span key=${s.id} class="px-2 py-0.5 bg-amber-50 text-amber-900 border border-amber-200 rounded font-semibold text-[10px]">${s.skill_name}</span>
+                              <span key=${s.id} class="px-2 py-0.5 bg-sky-50 text-indigo-950 border border-indigo-200 rounded font-semibold text-[10px]">${s.skill_name}</span>
                             `)}
                           </div>
                         </div>
@@ -591,7 +591,7 @@
                 <label class="block font-bold text-navy-900 mb-1.5">Exchange Role</label>
                 <div class="grid grid-cols-2 gap-2">
                   <button type="button" onClick=${() => setType('TEACH')} class="py-2.5 rounded-xl font-bold transition-all ${type === 'TEACH' ? 'bg-navy-700 text-white shadow-sm' : 'bg-cream-100 text-warmgray-600 hover:bg-cream-200/50'}">I Can Teach</button>
-                  <button type="button" onClick=${() => setType('LEARN')} class="py-2.5 rounded-xl font-bold transition-all ${type === 'LEARN' ? 'bg-amber-700 text-white shadow-sm' : 'bg-cream-100 text-warmgray-600 hover:bg-cream-200/50'}">I Want to Learn</button>
+                  <button type="button" onClick=${() => setType('LEARN')} class="py-2.5 rounded-xl font-bold transition-all ${type === 'LEARN' ? 'bg-navy-700 text-white shadow-sm' : 'bg-cream-100 text-warmgray-600 hover:bg-cream-200/50'}">I Want to Learn</button>
 
                 </div>
               </div>
@@ -656,12 +656,12 @@
 
             <div class="bg-white p-6.5 rounded-3xl border border-cream-300 shadow-sm space-y-4">
               <h3 class="font-serif text-lg font-bold text-navy-955 flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Skills I Am Targeting to Learn (${myLearn.length})
+                <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span> Skills I Am Targeting to Learn (${myLearn.length})
               </h3>
               ${myLearn.length === 0 ? html`<p class="text-xs text-warmgray-500 py-2">Add subjects you want to master so others can propose swaps.</p>` : null}
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 ${myLearn.map(s => html`
-                  <div key=${s.id} class="p-4 bg-amber-50/20 rounded-2xl border border-amber-200/50 flex items-start justify-between shadow-sm hover:shadow-inner hover:bg-amber-50/30 transition-all duration-150 border-l-4 border-l-amber-500">
+                  <div key=${s.id} class="p-4 bg-indigo-50/20 rounded-2xl border border-indigo-200/50 flex items-start justify-between shadow-sm hover:shadow-inner hover:bg-indigo-50/30 transition-all duration-150 border-l-4 border-l-indigo-600">
                     <div class="space-y-1">
                       <h4 class="font-bold text-navy-955 text-xs sm:text-sm">${s.skill_name}</h4>
                       <p class="text-[11px] text-warmgray-500 font-semibold uppercase tracking-wider">Target Level: ${s.level}</p>
@@ -975,7 +975,7 @@
                         </div>
                         <span class="font-medium text-xs ${t.status === 'COMPLETED' ? 'line-through text-warmgray-400' : 'text-navy-900'}">${t.title}</span>
                       </div>
-                      <span class="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded ${t.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'}">${t.status}</span>
+                      <span class="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded ${t.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800' : 'bg-sky-50 text-indigo-900'}">${t.status}</span>
 
                     </div>
                   `)}
@@ -1589,7 +1589,7 @@
                     <span>Verification</span>
                   </div>
                   ${verifications.filter(v => v.status === 'PENDING').length > 0 ? html`
-                    <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-amber-500 text-white">
+                    <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-sky-500 text-white">
                       ${verifications.filter(v => v.status === 'PENDING').length}
                     </span>
                   ` : null}
@@ -1950,7 +1950,7 @@
                           ${u.completed_exchanges || 0}
                         </td>
 
-                        <td class="p-3.5 font-bold text-amber-800">
+                        <td class="p-3.5 font-bold text-indigo-900">
                           ★ ${u.avg_rating || '5.0'} (${u.reviews_count || 0})
                         </td>
 
@@ -2138,7 +2138,7 @@
                             <td class="p-3.5 space-x-1">
                               <button
                                 onClick=${() => handleToggleSkillFlag(sk, 'is_popular')}
-                                class="px-2 py-0.5 rounded text-[9px] font-bold border transition-colors ${sk.is_popular ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-cream-50 text-warmgray-500 border-cream-200'}"
+                                class="px-2 py-0.5 rounded text-[9px] font-bold border transition-colors ${sk.is_popular ? 'bg-sky-100 text-indigo-950 border-indigo-300' : 'bg-cream-50 text-warmgray-500 border-cream-200'}"
                               >
                                 Popular
                               </button>
@@ -2179,7 +2179,7 @@
                       </div>
                       <div class="flex items-center justify-between text-xs text-warmgray-600 pt-2 border-t border-cream-100">
                         <span>${cat.skill_count || 0} skills assigned</span>
-                        ${cat.is_featured ? html`<span class="text-amber-700 font-bold text-[10px]">★ Featured</span>` : null}
+                        ${cat.is_featured ? html`<span class="text-indigo-700 font-bold text-[10px]">★ Featured</span>` : null}
                       </div>
                     </div>
                   `)}
@@ -2364,7 +2364,7 @@
                           <td class="p-3.5 text-emerald-700 font-bold">${prop.offered_skill_name}</td>
                           <td class="p-3.5 text-warmgray-600 max-w-xs truncate">${prop.proposed_terms || 'Standard barter'}</td>
                           <td class="p-3.5">
-                            <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${prop.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'}">
+                            <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${prop.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-800' : 'bg-sky-50 text-indigo-900'}">
                               ${prop.status}
                             </span>
                           </td>
@@ -2457,7 +2457,7 @@
                   <div key=${r.id} class="p-5 bg-cream-50/50 rounded-2xl border border-cream-200 space-y-3 hover:shadow-xs transition-all ${r.is_flagged ? 'border-rose-300 bg-rose-50/20' : ''}">
                     <div class="flex items-start justify-between">
                       <div class="flex items-center gap-2">
-                        <span class="text-amber-500 font-bold text-sm">★ ${r.rating}.0</span>
+                        <span class="text-indigo-600 font-bold text-sm">★ ${r.rating}.0</span>
                         ${r.is_verified_exchange ? html`
                           <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                             ✓ Verified Exchange
@@ -2638,7 +2638,7 @@
                           <p class="text-[11px] text-warmgray-500">${v.user_email}</p>
                         </div>
                       </div>
-                      <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${v.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                      <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${v.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-sky-100 text-indigo-900'}">
                         ${v.status}
                       </span>
                     </div>
@@ -2701,7 +2701,7 @@
                           <h4 class="font-bold text-navy-950 text-sm">${c.name}</h4>
                           <p class="text-[11px] text-warmgray-600 mt-0.5">${c.description}</p>
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase ${c.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${c.status}</span>
+                        <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase ${c.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-sky-100 text-indigo-900'}">${c.status}</span>
                       </div>
                       <div class="flex items-center justify-between text-xs text-warmgray-500 pt-2 border-t border-cream-200">
                         <span>Created by: <strong>${c.creator_name}</strong></span>
@@ -3100,7 +3100,7 @@
             <div class="space-y-2.5 text-center md:text-left">
               <div class="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
                 <h1 class="font-serif text-3xl sm:text-4xl font-extrabold tracking-tight">${profile.name}</h1>
-                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-400/20 text-sky-300 border border-sky-400/30">
                   ★ ${profile.avg_rating || '4.9'} Double-Blind Karma
                 </span>
               </div>
@@ -3187,13 +3187,13 @@
                 </div>
 
                 <div>
-                  <span class="font-bold text-amber-800 text-[10px] uppercase tracking-wider block mb-2">Wants to Learn:</span>
+                  <span class="font-bold text-indigo-900 text-[10px] uppercase tracking-wider block mb-2">Wants to Learn:</span>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     ${(profile.learn_skills || []).map(s => html`
-                      <div key=${s.id} class="p-3.5 bg-amber-50/10 rounded-2xl border border-amber-200/50 border-l-4 border-l-amber-500">
+                      <div key=${s.id} class="p-3.5 bg-sky-50/10 rounded-2xl border border-indigo-200/50 border-l-4 border-l-indigo-600">
                         <div class="flex justify-between items-start">
                           <h4 class="font-bold text-navy-955 text-sm">${s.skill_name}</h4>
-                          <span class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[8px] font-bold uppercase tracking-wider">${s.level}</span>
+                          <span class="px-1.5 py-0.5 rounded bg-sky-50 text-indigo-900 border border-indigo-200 text-[8px] font-bold uppercase tracking-wider">${s.level}</span>
                         </div>
                       </div>
                     `)}
