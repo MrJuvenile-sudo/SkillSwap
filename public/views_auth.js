@@ -183,7 +183,7 @@
     return html`
       <div class="space-y-28 pb-24 text-center relative overflow-hidden bg-dots-pattern">
         <!-- Ambient Backdrop Glow -->
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[850px] h-[400px] bg-navy-500/8 blur-[140px] rounded-full pointer-events-none"></div>
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[850px] h-[400px] bg-navy-500/8 blur-[140px] rounded-full pointer-events-none"></div>
 
         <!-- 1. Hero Section with Live Search & Badges -->
         <section class="relative pt-16 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-8 animate-fadeIn">

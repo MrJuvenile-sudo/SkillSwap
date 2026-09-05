@@ -633,8 +633,8 @@
     };
 
     return html`
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-955/60 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-8 border border-cream-300 shadow-2xl space-y-6 text-left text-xs">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-navy-955/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-8 border border-cream-300 shadow-2xl space-y-6 text-left text-xs max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between border-b border-cream-200 pb-4">
             <div>
               <h3 class="font-serif font-bold text-xl text-navy-900">Propose Skill Swap</h3>
@@ -697,8 +697,8 @@
     if (!isOpen || !peer1 || !peer2) return null;
 
     return html`
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-955/60 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl max-w-3xl w-full p-8 border border-cream-300 shadow-2xl space-y-6 text-left text-xs">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-navy-955/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-8 border border-cream-300 shadow-2xl space-y-6 text-left text-xs max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between border-b border-cream-200 pb-4">
             <div>
               <h3 class="font-serif font-bold text-xl text-navy-900">Side-by-Side Peer Comparison</h3>
@@ -709,7 +709,7 @@
             </button>
           </div>
 
-          <div class="grid grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div class="p-5 bg-cream-50/50 rounded-2xl border border-cream-200 space-y-4 flex flex-col justify-between">
               <div class="space-y-3">
                 <div class="flex items-center gap-3">
