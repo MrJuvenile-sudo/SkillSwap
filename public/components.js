@@ -340,14 +340,14 @@
             <div class="flex items-center justify-between h-20">
             
             <!-- Brand Logo & Live Status Pill -->
-            <div class="flex items-center gap-3.5 cursor-pointer select-none group" onClick=${() => handleNavClick(user ? 'dashboard' : 'home')}>
-              <div class="relative">
-                <img src="/logo-icon.png" alt="SkillSwapX Logo" class="w-11 h-11 rounded-xl object-contain shadow-sm group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ring-2 ring-navy-600/15 bg-white p-0.5" />
-                <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-300 animate-pulse"></span>
+            <div class="flex items-center gap-2.5 sm:gap-3.5 cursor-pointer select-none group shrink-0" onClick=${() => handleNavClick(user ? 'dashboard' : 'home')}>
+              <div class="relative shrink-0 flex items-center justify-center">
+                <img src="/logo-icon.png" alt="SkillSwapX Logo" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain bg-white p-1 border border-cream-300 shadow-sm group-hover:scale-105 transition-transform duration-200" />
+                <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-300 animate-pulse"></span>
               </div>
-              <div class="flex flex-col">
-                <div class="flex items-center gap-1.5">
-                  <span class="font-serif text-xl sm:text-2xl font-extrabold text-navy-950 tracking-tight">SkillSwap<span class="text-indigo-600">X</span></span>
+              <div class="flex flex-col text-left">
+                <div class="flex items-center gap-1">
+                  <span class="font-serif text-lg sm:text-2xl font-extrabold text-navy-950 tracking-tight">SkillSwap<span class="text-indigo-600">X</span></span>
                   <span class="px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider bg-navy-50 text-navy-700 border border-navy-200/60 shadow-2xs">P2P</span>
                 </div>
                 <span class="text-[9.5px] font-semibold text-warmgray-500 hidden sm:inline -mt-0.5">Reciprocal Knowledge Barter</span>
@@ -393,18 +393,18 @@
             </nav>
 
             <!-- Right Controls / Auth / Profile Actions -->
-            <div class="flex items-center gap-2.5 sm:gap-3">
+            <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
               ${!user ? html`
-                <button onClick=${() => handleNavClick('skills-dir')} class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-xl transition-all">
+                <button onClick=${() => handleNavClick('skills-dir')} class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-xl transition-all">
                   <${Icon} name="search" class="w-3.5 h-3.5" />
                   <span>Explore</span>
                 </button>
-                <button onClick=${() => handleNavClick('login')} class="px-4 py-2 text-xs sm:text-sm font-bold text-navy-900 hover:text-navy-700 hover:bg-cream-100 rounded-xl transition-all">
+                <button onClick=${() => handleNavClick('login')} class="hidden sm:inline-flex px-3.5 py-2 text-xs sm:text-sm font-bold text-navy-900 hover:text-navy-700 hover:bg-cream-100 rounded-xl transition-all whitespace-nowrap">
                   Log In
                 </button>
-                <button onClick=${() => handleNavClick('signup')} class="px-5 py-2.5 text-xs sm:text-sm font-bold bg-gradient-to-r from-navy-700 to-navy-800 hover:from-navy-800 hover:to-navy-900 text-white rounded-xl shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-1.5">
+                <button onClick=${() => handleNavClick('signup')} class="px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-extrabold bg-navy-700 hover:bg-navy-800 text-white rounded-xl shadow-sm hover:shadow transition-all duration-200 flex items-center gap-1 whitespace-nowrap">
                   <span>Join Free</span>
-                  <${Icon} name="arrow-right" class="w-3.5 h-3.5" />
+                  <${Icon} name="arrow-right" class="w-3.5 h-3.5 hidden sm:inline" />
                 </button>
               ` : html`
                 <!-- Notification center dropdown toggle -->
