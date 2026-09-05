@@ -262,10 +262,12 @@
 
     const guestNavLinks = [
       { id: 'home', label: 'Home', icon: 'sparkles' },
-      { id: 'features', label: 'Features', icon: 'layers' },
+      { id: 'features', label: 'Platform Features', icon: 'layers' },
       { id: 'skills-dir', label: 'Skill Directory', icon: 'search' },
       { id: 'community', label: 'Community Feed', icon: 'message-square' },
-      { id: 'hub-browse', label: 'Learning Hub', icon: 'book-open' }
+      { id: 'hub-browse', label: 'Learning Hub', icon: 'book-open' },
+      { id: 'help', label: 'How It Works', icon: 'compass' },
+      { id: 'faq', label: 'FAQ & Help Center', icon: 'message-circle' }
     ];
 
     const authNavLinks = [
@@ -537,17 +539,27 @@
 
         <!-- Mobile Drawer Navigation -->
         ${mobileOpen ? html`
-          <div class="lg:hidden bg-white/95 backdrop-blur-xl border-t border-cream-200 px-4 py-4 space-y-2 animate-fadeIn shadow-xl">
+          <div class="lg:hidden bg-white/95 backdrop-blur-xl border-t border-cream-200 px-4 py-5 space-y-4 animate-fadeIn shadow-2xl rounded-b-3xl">
+            ${!user ? html`
+              <div class="p-3.5 bg-gradient-to-r from-navy-900 via-navy-950 to-navy-955 rounded-2xl text-white flex items-center justify-between shadow-sm">
+                <div class="space-y-0.5 text-left">
+                  <p class="font-serif font-bold text-sm">Welcome to SkillSwapX 👋</p>
+                  <p class="text-[10.5px] text-cream-200/80">Reciprocal Knowledge Barter Network</p>
+                </div>
+                <span class="px-2 py-0.5 bg-navy-800/80 text-sky-300 rounded-md text-[9px] font-black uppercase tracking-wider border border-sky-400/20">Zero Fees</span>
+              </div>
+            ` : null}
+
             <div class="space-y-1">
               ${(!user ? guestNavLinks : authNavLinks).map(link => html`
                 <button
                   key=${link.id}
                   onClick=${() => handleNavClick(link.id)}
-                  class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between transition-colors ${
-                    activeTab === link.id ? 'bg-navy-700 text-white' : 'text-warmgray-700 hover:bg-cream-100'
+                  class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between transition-all duration-200 ${
+                    activeTab === link.id ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-700 hover:bg-cream-100'
                   }"
                 >
-                  <span class="flex items-center gap-2.5">
+                  <span class="flex items-center gap-3">
                     <${Icon} name=${link.icon || 'circle'} class="w-4 h-4" />
                     ${link.label}
                   </span>
@@ -567,13 +579,16 @@
             </div>
 
             ${!user ? html`
-              <div class="pt-3 border-t border-cream-200 grid grid-cols-2 gap-2">
-                <button onClick=${() => handleNavClick('login')} class="w-full py-2.5 text-center font-bold text-navy-900 bg-cream-100 hover:bg-cream-200 rounded-xl text-xs">
-                  Log In
-                </button>
-                <button onClick=${() => handleNavClick('signup')} class="w-full py-2.5 text-center font-bold text-white bg-navy-700 hover:bg-navy-800 rounded-xl text-xs shadow-sm">
-                  Join Free →
-                </button>
+              <div class="pt-3 border-t border-cream-200 space-y-2">
+                <div class="grid grid-cols-2 gap-2.5">
+                  <button onClick=${() => handleNavClick('login')} class="w-full py-3 text-center font-bold text-navy-955 bg-cream-100 hover:bg-cream-200 border border-cream-300 rounded-xl text-xs shadow-2xs transition-all flex items-center justify-center">
+                    Log In
+                  </button>
+                  <button onClick=${() => handleNavClick('signup')} class="w-full py-3 text-center font-bold text-white bg-gradient-to-r from-navy-700 to-navy-800 hover:from-navy-800 hover:to-navy-900 rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1">
+                    <span>Join Free</span>
+                    <${Icon} name="arrow-right" class="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             ` : html`
               <div class="pt-3 border-t border-cream-200 space-y-1">
