@@ -74,37 +74,39 @@
           </div>
         ` : html`
           <!-- Regular Welcome Hero Banner with High Button Contrast & Enhanced Profile Picture -->
-          <div class="bg-gradient-to-br from-navy-800 via-navy-900 to-navy-955 rounded-3xl p-8 border border-navy-700/40 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 text-cream-100 relative overflow-hidden">
-            <div class="absolute -right-16 -top-16 w-48 h-48 bg-navy-600/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="bg-gradient-to-r from-navy-955 via-navy-900 to-navy-950 rounded-3xl p-6 sm:p-8 border border-navy-700/60 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 text-cream-100 relative overflow-hidden text-left">
+            <div class="absolute -right-16 -top-16 w-56 h-56 bg-navy-500/15 rounded-full blur-3xl pointer-events-none"></div>
             
-            <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4.5 relative z-10">
+            <div class="flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-4 sm:gap-5 relative z-10">
               <div class="relative shrink-0">
-                <img src=${user.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&h=160&fit=crop'} alt=${user.name} class="w-18 h-18 sm:w-20 sm:h-20 rounded-3xl object-cover ring-4 ring-navy-600/30 border-2 border-white/20 shadow-xl" />
-                <span class="absolute -bottom-1 -right-1 px-2 py-0.5 bg-emerald-500 text-white text-[9px] font-black uppercase rounded-full shadow-md border-2 border-navy-900 flex items-center gap-0.5">
+                <img src=${user.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&h=160&fit=crop'} alt=${user.name} class="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover ring-2 ring-indigo-400/40 border border-white/20 shadow-md" />
+                <span class="absolute -bottom-1 -right-1 px-2 py-0.5 bg-emerald-500 text-white text-[8.5px] font-black uppercase rounded-full shadow-md border-2 border-navy-955 flex items-center gap-0.5">
                   <span>✓</span>
                   <span>Active</span>
                 </span>
               </div>
-              <div class="space-y-1.5">
+              <div class="space-y-1">
                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                  <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-navy-800 text-sky-300 border border-navy-700/80">
-                    Verified Swapper · 4.9★ Karma
+                  <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[9.5px] font-extrabold uppercase tracking-wider bg-navy-800/90 text-sky-300 border border-sky-400/20 shadow-2xs">
+                    <span>Verified Swapper</span>
+                    <span class="text-navy-400">•</span>
+                    <span>4.9★ Karma</span>
                   </span>
                 </div>
-                <h1 class="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                <h1 class="font-serif text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-0.5">
                   Welcome back, ${user.name}! 👋
                 </h1>
-                <p class="text-xs sm:text-sm text-cream-200/80 max-w-xl leading-relaxed">
-                  Offering <strong class="text-white">${teachCount} skills</strong> to teach and targeting <strong class="text-white">${learnCount} subjects</strong> to learn.
+                <p class="text-xs sm:text-sm text-cream-200/85 max-w-xl leading-relaxed mt-1">
+                  Offering <strong class="text-white font-bold">${teachCount} ${teachCount === 1 ? 'skill' : 'skills'}</strong> to teach and targeting <strong class="text-white font-bold">${learnCount} ${learnCount === 1 ? 'subject' : 'subjects'}</strong> to learn.
                 </p>
               </div>
             </div>
 
-            <div class="flex items-center gap-3 shrink-0 relative z-10 font-bold text-xs">
-              <button onClick=${() => setActiveTab('matches')} class="px-5 py-3 bg-gradient-to-r from-navy-600 to-navy-700 hover:from-navy-700 hover:to-navy-800 text-white font-extrabold rounded-xl shadow-lg border border-navy-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
-                Discover Matches
+            <div class="flex items-center gap-3 shrink-0 relative z-10 font-bold text-xs sm:text-sm">
+              <button onClick=${() => setActiveTab('matches')} class="px-5 py-3 bg-navy-700 hover:bg-navy-600 text-white font-extrabold rounded-xl shadow-lg border border-navy-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5">
+                <span>Discover Matches</span>
               </button>
-              <button onClick=${() => setActiveTab('skills')} class="px-4 py-3 bg-white hover:bg-cream-50 text-navy-900 border border-cream-200 font-bold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+              <button onClick=${() => setActiveTab('skills')} class="px-4.5 py-3 bg-white hover:bg-cream-100 text-navy-950 font-bold rounded-xl shadow-sm border border-cream-200 hover:scale-[1.02] active:scale-[0.98] transition-all">
                 + Manage Skills
               </button>
             </div>
