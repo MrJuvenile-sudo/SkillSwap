@@ -133,32 +133,37 @@
     if (!currentUser) return null;
 
     return html`
-      <div class="fixed bottom-20 right-4 lg:bottom-5 lg:right-5 z-50 flex flex-col items-end font-sans">
+      <!-- Mobile Backdrop Overlay when AI Chat is Open -->
+      ${isOpen ? html`
+        <div class="sm:hidden fixed inset-0 z-40 bg-navy-955/50 backdrop-blur-xs transition-opacity animate-fadeIn" onClick=${() => setIsOpen(false)}></div>
+      ` : null}
+
+      <div class="fixed bottom-20 right-3.5 sm:bottom-5 sm:right-5 z-50 flex flex-col items-end font-sans">
         ${isOpen ? html`
-          <div class="w-96 max-w-[calc(100vw-2.5rem)] h-[520px] max-h-[calc(100vh-6rem)] bg-white border border-cream-300 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fadeIn mb-4">
+          <div class="w-[calc(100vw-1.75rem)] sm:w-96 h-[calc(100vh-9.5rem)] sm:h-[520px] max-h-[620px] bg-white border border-cream-300 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fadeIn mb-3.5 text-left">
             
             <!-- Header -->
-            <div class="bg-gradient-to-r from-navy-900 via-navy-950 to-indigo-950 text-white px-5 py-4 flex items-center justify-between shadow-sm shrink-0 border-b border-navy-800">
+            <div class="bg-gradient-to-r from-navy-900 via-navy-950 to-indigo-955 text-white px-4 sm:px-5 py-3.5 flex items-center justify-between shadow-sm shrink-0 border-b border-navy-800">
               <div class="flex items-center gap-3">
                 <img src="/ai-icon.png" alt="SkillSwap AI" class="w-8 h-8 rounded-full object-cover border border-sky-400/40 shadow-sm shrink-0 bg-white" />
                 <div>
-                  <h3 class="font-serif font-bold text-sm leading-tight flex items-center gap-1.5">
+                  <h3 class="font-serif font-bold text-xs sm:text-sm leading-tight flex items-center gap-1.5">
                     SkillSwap AI
-                    <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-extrabold uppercase border border-emerald-400/30">Assistant</span>
+                    <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[8.5px] font-extrabold uppercase border border-emerald-400/30">Assistant</span>
                   </h3>
                   <p class="text-[10px] text-navy-200">Context-aware platform guide</p>
                 </div>
               </div>
-              <button onClick=${() => setIsOpen(false)} class="p-1.5 rounded-xl hover:bg-white/10 text-white/80 hover:text-white transition-colors text-xs font-bold">
+              <button onClick=${() => setIsOpen(false)} class="p-2 rounded-xl hover:bg-white/10 text-white/80 hover:text-white transition-colors text-xs font-bold" aria-label="Close AI Assistant">
                 ✕
               </button>
             </div>
 
             <!-- Messages Container -->
-            <div class="flex-1 p-4 overflow-y-auto space-y-4 bg-cream-50/50">
+            <div class="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3.5 bg-cream-50/50">
               ${messages.map(m => html`
                 <div key=${m.id} class="flex flex-col ${m.role === 'USER' ? 'items-end' : 'items-start'} gap-1 space-y-1">
-                  <div class="max-w-[85%] px-4 py-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
+                  <div class="max-w-[90%] sm:max-w-[85%] px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
                     m.role === 'USER' 
                       ? 'bg-navy-700 text-white rounded-br-none' 
                       : 'bg-white text-navy-950 border border-cream-200 rounded-bl-none'
@@ -214,14 +219,14 @@
             </div>
 
             <!-- Input Bar -->
-            <div class="p-3 bg-white border-t border-cream-200 flex items-center gap-2 shrink-0">
+            <div class="p-2.5 sm:p-3 bg-white border-t border-cream-200 flex items-center gap-2 shrink-0">
               <input
                 type="text"
                 placeholder="Ask SkillSwap AI..."
                 value=${input}
                 onInput=${e => setInput(e.target.value)}
                 onKeyDown=${e => e.key === 'Enter' && sendMessage()}
-                class="flex-1 px-4 py-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-medium focus:outline-none focus:border-navy-500 focus:bg-white transition-all"
+                class="flex-1 px-3.5 sm:px-4 py-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-medium focus:outline-none focus:border-navy-500 focus:bg-white transition-all"
               />
               <button onClick=${() => sendMessage()} disabled=${!input.trim() || loading}
                 class="p-2.5 bg-navy-700 hover:bg-navy-800 disabled:opacity-40 text-white rounded-xl shadow-sm transition-all text-xs font-bold shrink-0">
@@ -237,7 +242,7 @@
           onClick=${() => setIsOpen(!isOpen)}
           aria-label="SkillSwap AI Assistant"
           title="SkillSwap AI Assistant"
-          class="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-white p-0.5 shadow-2xl hover:shadow-[0_8px_30px_rgba(0,122,255,0.45)] transition-all duration-300 scale-100 hover:scale-110 active:scale-95 border-2 border-sky-400/80 flex items-center justify-center relative group overflow-hidden"
+          class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white p-0.5 shadow-2xl hover:shadow-[0_8px_30px_rgba(0,122,255,0.45)] transition-all duration-300 scale-100 hover:scale-110 active:scale-95 border-2 border-sky-400/80 flex items-center justify-center relative group overflow-hidden"
         >
           ${isOpen ? html`
             <span class="text-xl sm:text-2xl text-navy-950 font-bold transition-transform duration-200 rotate-90">✕</span>
