@@ -78,7 +78,7 @@ export default async function (req, res) {
         `INSERT INTO user_skills (user_id, skill_id, type, level, is_verified)
          VALUES ($1, $2, 'TEACH', $3, false)
          ON CONFLICT DO NOTHING`,
-        [userId, skill_id, level_can_teach || 'Intermediate']
+        [userId, Number(targetSkillId), level_can_teach || 'Intermediate']
       ).catch(() => {});
 
       return res.json({ success: true, preference: rows[0] });

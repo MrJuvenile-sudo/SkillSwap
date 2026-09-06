@@ -282,6 +282,7 @@
     const authNavLinks = [
       { id: 'dashboard', label: 'Dashboard', icon: 'activity' },
       { id: 'exchange', label: 'Exchange Hub', badge: 'Hub', icon: 'book-open' },
+      { id: 'hub-browse', label: 'Learning Hub', icon: 'book-open' },
       { id: 'community', label: 'Community Feed', icon: 'message-square' },
       { id: 'requests', label: 'Requests', count: pendingRequestsCount, icon: 'inbox' },
       { id: 'chat', label: 'Chat', icon: 'message-circle' }
@@ -440,6 +441,13 @@
                         <div>
                           <p class="font-bold text-navy-950">Problems</p>
                           <p class="text-[10px] text-warmgray-500 font-normal">Real problem cases seeking solutions</p>
+                        </div>
+                      </button>
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('hub-browse'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="book-open" class="w-4 h-4 text-indigo-600 shrink-0" />
+                        <div>
+                          <p class="font-bold text-navy-950">Learning Hub</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Academic resources & courses</p>
                         </div>
                       </button>
                       <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('exchange'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
