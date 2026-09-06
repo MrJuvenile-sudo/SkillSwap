@@ -1091,4 +1091,819 @@
   }
   window.SkillSwap.ExamModeView = ExamModeView;
 
+  // -------------------------------------------------------
+  // 8. Exchange Hub Unified View Component (Learn / Teach)
+  // -------------------------------------------------------
+  function ExchangeHubView({ user, setActiveTab, onProposeSwap, onViewProfile }) {
+    const getInitialMode = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('mode') === 'teach' ? 'teach' : 'learn';
+      } catch (e) {
+        return 'learn';
+      }
+    };
+
+    const [mode, setMode] = useState(getInitialMode);
+
+    const handleModeChange = (newMode) => {
+      setMode(newMode);
+      try {
+        const url = new URL(window.location);
+        url.searchParams.set('mode', newMode);
+        window.history.replaceState({}, '', url.toString());
+      } catch (e) {}
+    };
+
+    // State for Learn Mode
+    const [goals, setGoals] = useState([]);
+    const [matches, setMatches] = useState([]);
+    const [expandedWhy, setExpandedWhy] = useState({});
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // AI Decide Modal State
+    const [aiDecideOpen, setAiDecideOpen] = useState(false);
+    const [aiPromptText, setAiPromptText] = useState('');
+    const [aiDecideLoading, setAiDecideLoading] = useState(false);
+    const [aiDecideResult, setAiDecideResult] = useState(null);
+
+    // Add Goal Modal State
+    const [addGoalOpen, setAddGoalOpen] = useState(false);
+    const [goalSkillName, setGoalSkillName] = useState('');
+    const [goalCurrentLevel, setGoalCurrentLevel] = useState('BEGINNER');
+    const [goalTargetLevel, setGoalTargetLevel] = useState('INTERMEDIATE');
+    const [goalText, setGoalText] = useState('');
+
+    // State for Teach Mode
+    const [teachSkills, setTeachSkills] = useState([]);
+    const [aiTeachOpen, setAiTeachOpen] = useState(false);
+    const [aiTeachLoading, setAiTeachLoading] = useState(false);
+    const [aiTeachSuggestions, setAiTeachSuggestions] = useState([]);
+
+    // Add Teach Skill Modal
+    const [addTeachOpen, setAddTeachOpen] = useState(false);
+    const [teachSkillName, setTeachSkillName] = useState('');
+    const [teachLevel, setTeachLevel] = useState('ADVANCED');
+    const [teachExp, setTeachExp] = useState('2 years');
+
+    // Progress data
+    const [progressData, setProgressData] = useState([]);
+
+    const loadHubData = useCallback(async () => {
+      if (!user) return;
+      try {
+        const goalsRes = await api('/api/exchange/goals').catch(() => ({ goals: [] }));
+        setGoals(goalsRes.goals || []);
+
+        const teachRes = await api('/api/exchange/teaching-prefs').catch(() => ({ preferences: [] }));
+        setTeachSkills(teachRes.preferences || []);
+
+        const matchesRes = await api('/api/matches').catch(() => ({ matches: [] }));
+        setMatches(matchesRes.matches || []);
+
+        const progRes = await api('/api/exchange/progress').catch(() => ({ progress: [] }));
+        setProgressData(progRes.progress || []);
+      } catch (e) {
+        console.error('Hub load error:', e);
+      }
+    }, [user]);
+
+    useEffect(() => { loadHubData(); }, [loadHubData]);
+
+    const handleCreateGoal = async (e) => {
+      e.preventDefault();
+      if (!goalSkillName.trim()) return;
+      try {
+        await api('/api/exchange/goals', {
+          method: 'POST',
+          body: JSON.stringify({
+            skill_name: goalSkillName,
+            current_level: goalCurrentLevel,
+            target_level: goalTargetLevel,
+            goal_text: goalText
+          })
+        });
+        setAddGoalOpen(false);
+        setGoalSkillName('');
+        setGoalText('');
+        loadHubData();
+      } catch (e) { alert(e.message); }
+    };
+
+    const handleCreateTeachPref = async (e) => {
+      e.preventDefault();
+      if (!teachSkillName.trim()) return;
+      try {
+        await api('/api/exchange/teaching-prefs', {
+          method: 'POST',
+          body: JSON.stringify({
+            skill_name: teachSkillName,
+            level_can_teach: teachLevel,
+            experience_years: teachExp
+          })
+        });
+        setAddTeachOpen(false);
+        setTeachSkillName('');
+        loadHubData();
+      } catch (e) { alert(e.message); }
+    };
+
+    const handleRunAiDecide = async (e) => {
+      e.preventDefault();
+      if (!aiPromptText.trim()) return;
+      setAiDecideLoading(true);
+      try {
+        const res = await api('/api/exchange/ai-decide', {
+          method: 'POST',
+          body: JSON.stringify({ prompt: aiPromptText })
+        });
+        setAiDecideResult(res);
+      } catch (e) { alert(e.message); }
+      finally { setAiDecideLoading(false); }
+    };
+
+    const handleRunAiTeachSuggest = async () => {
+      setAiTeachOpen(true);
+      setAiTeachLoading(true);
+      try {
+        const res = await api('/api/exchange/ai-teach-suggest', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: user.id })
+        });
+        setAiTeachSuggestions(res.suggestions || []);
+      } catch (e) { console.error(e); }
+      finally { setAiTeachLoading(false); }
+    };
+
+    const topMatch = matches[0];
+
+    return html`
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn text-left">
+        <!-- Segmented Mode Toggle Header -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-cream-200 pb-6">
+          <div>
+            <span class="text-[10px] font-black uppercase tracking-widest text-indigo-600">Bilateral Skill Exchange Shell</span>
+            <h1 class="font-serif text-3xl font-extrabold text-navy-950">Exchange Hub</h1>
+            <p class="text-xs text-warmgray-500 mt-0.5">Manage learning goals, teaching inventory, and reciprocal barter matches</p>
+          </div>
+
+          <!-- Minimal Segmented Control Header -->
+          <div class="bg-cream-200/80 p-1.5 rounded-2xl flex items-center gap-1 border border-cream-300 shadow-inner">
+            <button
+              onClick=${() => handleModeChange('learn')}
+              class="px-6 py-2.5 rounded-xl text-xs transition-all duration-200 flex items-center gap-2 ${
+                mode === 'learn'
+                  ? 'bg-navy-700 text-white font-extrabold shadow-md'
+                  : 'text-warmgray-600 hover:text-navy-900 font-bold'
+              }"
+            >
+              <span>📖 Learn Mode</span>
+              ${goals.length > 0 ? html`<span class="px-1.5 py-0.2 text-[9px] rounded-full ${mode === 'learn' ? 'bg-white/20 text-white' : 'bg-cream-300 text-navy-800'}">${goals.length}</span>` : null}
+            </button>
+
+            <button
+              onClick=${() => handleModeChange('teach')}
+              class="px-6 py-2.5 rounded-xl text-xs transition-all duration-200 flex items-center gap-2 ${
+                mode === 'teach'
+                  ? 'bg-navy-700 text-white font-extrabold shadow-md'
+                  : 'text-warmgray-600 hover:text-navy-900 font-bold'
+              }"
+            >
+              <span>🎓 Teach Mode</span>
+              ${teachSkills.length > 0 ? html`<span class="px-1.5 py-0.2 text-[9px] rounded-full ${mode === 'teach' ? 'bg-white/20 text-white' : 'bg-cream-300 text-navy-800'}">${teachSkills.length}</span>` : null}
+            </button>
+          </div>
+        </div>
+
+        <!-- Smart Exchange Summary Card -->
+        ${topMatch ? html`
+          <div class="bg-gradient-to-r from-navy-900 via-navy-850 to-navy-955 rounded-3xl p-6 border border-navy-700 shadow-xl text-white flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+            <div class="space-y-2 max-w-2xl z-10">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Top Reciprocal 1:1 Match</span>
+              </div>
+              <h2 class="font-serif text-xl sm:text-2xl font-bold tracking-tight">
+                Swap with ${topMatch.user.name}
+              </h2>
+              <p class="text-xs sm:text-sm text-cream-200/90 leading-relaxed">
+                You teach <strong class="text-white font-bold">${topMatch.offer_skill || 'Your expertise'}</strong> ↔ ${topMatch.user.name} teaches <strong class="text-white font-bold">${topMatch.teach_skill || 'Target skill'}</strong>
+              </p>
+              <div class="flex items-center gap-4 text-[11px] text-cream-200/70 pt-1">
+                <span class="font-bold text-sky-300">★ ${topMatch.score || 94}% Compatibility Score</span>
+                <span>•</span>
+                <span>Zero fees • 1:1 Bilateral Exchange</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 shrink-0 z-10">
+              <button
+                onClick=${() => onViewProfile && onViewProfile(topMatch.user.username || topMatch.user.id)}
+                class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition-all"
+              >
+                View Profile
+              </button>
+              <button
+                onClick=${() => onProposeSwap && onProposeSwap(topMatch)}
+                class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all"
+              >
+                Propose Swap →
+              </button>
+            </div>
+          </div>
+        ` : null}
+
+        <!-- MODE 1: LEARN MODE LAYOUT -->
+        ${mode === 'learn' ? html`
+          <div class="space-y-10">
+            <!-- 1. Hero Learning Search + Category Pills + AI Decide -->
+            <div class="bg-white rounded-3xl p-6 border border-cream-300 shadow-sm space-y-4">
+              <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="relative flex-1 w-full">
+                  <input
+                    type="text"
+                    value=${searchQuery}
+                    onInput=${e => setSearchQuery(e.target.value)}
+                    placeholder="What skill or topic do you want to learn today?"
+                    class="w-full pl-11 pr-4 py-3.5 bg-cream-50 border border-cream-300 rounded-2xl text-xs font-semibold focus:outline-none focus:border-navy-600 transition-all"
+                  />
+                  <${Icon} name="search" class="w-5 h-5 text-warmgray-400 absolute left-3.5 top-3.5" />
+                </div>
+                <button
+                  onClick=${() => setAiDecideOpen(true)}
+                  class="w-full md:w-auto px-5 py-3.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs rounded-2xl border border-indigo-200 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  <span>✦ Help Me Decide</span>
+                </button>
+              </div>
+
+              <!-- Quick Skill Category Pills -->
+              <div class="flex flex-wrap gap-2 text-xs">
+                ${['React & Frontend', 'Python Data Science', 'UI/UX Design', 'System Design', 'Mobile Dev', 'DevOps & Cloud'].map(cat => html`
+                  <button
+                    key=${cat}
+                    onClick=${() => setSearchQuery(cat)}
+                    class="px-3 py-1.5 rounded-full bg-cream-50 hover:bg-cream-100 text-warmgray-700 font-semibold border border-cream-300 transition-colors"
+                  >
+                    ${cat}
+                  </button>
+                `)}
+              </div>
+            </div>
+
+            <!-- 2. Your Learning Goals -->
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="font-serif text-xl font-bold text-navy-950">Your Learning Goals</h2>
+                  <p class="text-xs text-warmgray-500">Track current to target skill levels</p>
+                </div>
+                <button
+                  onClick=${() => setAddGoalOpen(true)}
+                  class="px-4 py-2 bg-navy-700 hover:bg-navy-800 text-white font-bold text-xs rounded-xl shadow transition-all"
+                >
+                  + Add Learning Goal
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                ${goals.map(g => html`
+                  <div key=${g.id} class="bg-white rounded-2xl p-5 border border-cream-300 shadow-sm space-y-3 flex flex-col justify-between hover:shadow-md transition-all">
+                    <div class="space-y-2">
+                      <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-navy-50 text-navy-700 border border-navy-200">
+                          ${g.current_level || 'BEGINNER'} → ${g.target_level || 'INTERMEDIATE'}
+                        </span>
+                        <span class="text-[10px] text-emerald-600 font-bold">Active Goal</span>
+                      </div>
+                      <h3 class="font-serif font-bold text-navy-950 text-base">${g.skill_name || 'Learning Goal'}</h3>
+                      ${g.goal_text ? html`<p class="text-xs text-warmgray-600 line-clamp-2 leading-relaxed">${g.goal_text}</p>` : null}
+                    </div>
+
+                    <div class="pt-3 border-t border-cream-100 flex items-center justify-between">
+                      <button
+                        onClick=${() => setSearchQuery(g.skill_name)}
+                        class="text-xs font-bold text-navy-700 hover:underline flex items-center gap-1"
+                      >
+                        Find Matches →
+                      </button>
+                    </div>
+                  </div>
+                `)}
+
+                ${goals.length === 0 ? html`
+                  <div class="col-span-full p-8 bg-cream-50/60 rounded-3xl border border-dashed border-cream-300 text-center space-y-3">
+                    <p class="text-3xl">🎯</p>
+                    <h4 class="font-bold text-navy-950 text-sm">No Active Learning Goals Set</h4>
+                    <p class="text-xs text-warmgray-500 max-w-sm mx-auto">Set a targeted goal to automatically trigger bilateral synergy matching with expert peer teachers.</p>
+                    <button onClick=${() => setAddGoalOpen(true)} class="px-5 py-2.5 bg-navy-700 text-white font-bold text-xs rounded-xl shadow-sm">
+                      Set Your First Learning Goal
+                    </button>
+                  </div>
+                ` : null}
+              </div>
+            </div>
+
+            <!-- 3. Recommended Teachers (AI Matches) -->
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="font-serif text-xl font-bold text-navy-950">Recommended Teachers (AI Synergy Matches)</h2>
+                  <p class="text-xs text-warmgray-500">Peer instructors matching your target learning goals</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {matches.slice(0, 4).map(m => html`
+                  <div key=${m.user.id} class="bg-white rounded-3xl p-6 border border-cream-300 shadow-sm space-y-4 hover:shadow-md transition-all">
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="flex items-center gap-3">
+                        <img src=${m.user.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop'} class="w-12 h-12 rounded-2xl object-cover border border-cream-200" />
+                        <div>
+                          <h4 class="font-bold text-navy-950 text-sm">${m.user.name}</h4>
+                          <p class="text-[10px] text-warmgray-500 font-semibold">${m.user.location || 'Remote'}</p>
+                        </div>
+                      </div>
+                      <span class="px-3 py-1 bg-navy-50 text-navy-700 font-serif font-bold text-xs rounded-xl border border-navy-200">
+                        ${m.score || 90}% Match
+                      </span>
+                    </div>
+
+                    <div class="p-3 bg-cream-50 rounded-xl text-xs space-y-1">
+                      <p class="font-semibold text-navy-950">Teaches: <span class="font-bold text-indigo-700">${m.teach_skill || 'Target Skill'}</span></p>
+                      <p class="text-warmgray-600">Wants: <span class="font-bold text-navy-800">${m.offer_skill || 'Your Skill'}</span></p>
+                    </div>
+
+                    <!-- Progressive Disclosure: Why This Match? -->
+                    <div>
+                      <button
+                        onClick=${() => setExpandedWhy({ ...expandedWhy, [m.user.id]: !expandedWhy[m.user.id] })}
+                        class="text-[11px] font-bold text-indigo-600 hover:underline flex items-center gap-1"
+                      >
+                        <span>Why this match?</span>
+                        <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform ${expandedWhy[m.user.id] ? 'rotate-180' : ''}" />
+                      </button>
+
+                      ${expandedWhy[m.user.id] ? html`
+                        <div class="mt-2.5 p-3 bg-navy-50/80 rounded-xl text-[11px] text-navy-900 space-y-1.5 animate-fadeIn border border-navy-200/60">
+                          <p class="font-bold text-indigo-900">✦ AI Bilateral Compatibility Analysis:</p>
+                          <ul class="space-y-1 text-[10.5px] text-warmgray-700">
+                            <li>• <strong>Skill Synergy (40%)</strong>: High overlap between requested and offered skills.</li>
+                            <li>• <strong>Goal Alignment (35%)</strong>: Reciprocal level targets match your timeline.</li>
+                            <li>• <strong>Karma & Trust (25%)</strong>: Peer maintains 4.9★ rating with 100% completion rate.</li>
+                          </ul>
+                        </div>
+                      ` : null}
+                    </div>
+
+                    <div class="flex items-center gap-3 pt-2">
+                      <button
+                        onClick=${() => onViewProfile && onViewProfile(m.user.username || m.user.id)}
+                        class="flex-1 py-2.5 bg-white border border-cream-300 hover:bg-cream-100 text-navy-900 font-bold text-xs rounded-xl transition-all"
+                      >
+                        View Profile
+                      </button>
+                      <button
+                        onClick=${() => onProposeSwap && onProposeSwap(m)}
+                        class="flex-1 py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-bold text-xs rounded-xl shadow transition-all"
+                      >
+                        Propose Swap →
+                      </button>
+                    </div>
+                  </div>
+                `)}
+              </div>
+            </div>
+
+            <!-- 4. Open Learning Requests & Circles -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="bg-white rounded-3xl p-6 border border-cream-300 shadow-sm space-y-4">
+                <h3 class="font-serif font-bold text-navy-950 text-lg">Community Learning Requests</h3>
+                <p class="text-xs text-warmgray-500">Explore active requests from peers needing guidance</p>
+                <div class="space-y-3">
+                  ${[
+                    { topic: 'React Server Components', requestedBy: 'Elena R.', time: '2 hours ago' },
+                    { topic: 'Docker Containerization', requestedBy: 'Michael K.', time: '5 hours ago' }
+                  ].map(req => html`
+                    <div key=${req.topic} class="p-3.5 bg-cream-50 rounded-2xl border border-cream-200 flex items-center justify-between">
+                      <div>
+                        <p class="font-bold text-navy-950 text-xs">${req.topic}</p>
+                        <p class="text-[10px] text-warmgray-500">${req.requestedBy} • ${req.time}</p>
+                      </div>
+                      <button onClick=${() => setActiveTab('community')} class="px-3 py-1.5 bg-white text-navy-800 border border-cream-300 font-bold text-[11px] rounded-xl hover:bg-cream-100">
+                        Help Peer
+                      </button>
+                    </div>
+                  `)}
+                </div>
+              </div>
+
+              <div class="bg-white rounded-3xl p-6 border border-cream-300 shadow-sm space-y-4">
+                <h3 class="font-serif font-bold text-navy-950 text-lg">Skill Circles (Cohort Study)</h3>
+                <p class="text-xs text-warmgray-500">Join small peer cohorts for subjects without direct 1:1 matches</p>
+                <div class="space-y-3">
+                  ${[
+                    { name: 'Frontend Architecture Circle', members: '8 members', active: 'Weekly Meetups' },
+                    { name: 'AI & LLM Fine-Tuning Study', members: '12 members', active: 'Active' }
+                  ].map(circle => html`
+                    <div key=${circle.name} class="p-3.5 bg-cream-50 rounded-2xl border border-cream-200 flex items-center justify-between">
+                      <div>
+                        <p class="font-bold text-navy-950 text-xs">${circle.name}</p>
+                        <p class="text-[10px] text-warmgray-500">${circle.members} • ${circle.active}</p>
+                      </div>
+                      <button onClick=${() => setActiveTab('community')} class="px-3 py-1.5 bg-navy-700 text-white font-bold text-[11px] rounded-xl hover:bg-navy-800">
+                        Join Circle
+                      </button>
+                    </div>
+                  `)}
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Skill Progress Tracker -->
+            <div class="bg-white rounded-3xl p-6 border border-cream-300 shadow-sm space-y-4">
+              <h3 class="font-serif font-bold text-navy-950 text-lg">Skill Progress & Subskills Checklist</h3>
+              <div class="space-y-3">
+                <div class="p-4 bg-cream-50 rounded-2xl border border-cream-200 space-y-3">
+                  <div class="flex items-center justify-between text-xs font-bold text-navy-950">
+                    <span>Target: Full-Stack Web Development</span>
+                    <span class="text-indigo-600">65% Completed</span>
+                  </div>
+                  <div class="w-full bg-cream-200 rounded-full h-2.5">
+                    <div class="bg-indigo-600 h-2.5 rounded-full" style=${{ width: '65%' }}></div>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked readOnly class="rounded text-indigo-600" />
+                      <span class="font-medium text-navy-900">RESTful API Design</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked readOnly class="rounded text-indigo-600" />
+                      <span class="font-medium text-navy-900">Database Indexing</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" class="rounded text-indigo-600" />
+                      <span class="font-medium text-warmgray-600">Docker Deployment</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ` : null}
+
+        <!-- MODE 2: TEACH MODE LAYOUT -->
+        ${mode === 'teach' ? html`
+          <div class="space-y-10">
+            <!-- 1. Search / Add Teaching Skill + AI Scanner -->
+            <div class="bg-white rounded-3xl p-6 border border-cream-300 shadow-sm space-y-4">
+              <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="relative flex-1 w-full">
+                  <input
+                    type="text"
+                    placeholder="Search or add skills you can teach peers..."
+                    class="w-full pl-11 pr-4 py-3.5 bg-cream-50 border border-cream-300 rounded-2xl text-xs font-semibold focus:outline-none focus:border-navy-600 transition-all"
+                  />
+                  <${Icon} name="search" class="w-5 h-5 text-warmgray-400 absolute left-3.5 top-3.5" />
+                </div>
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                  <button
+                    onClick=${handleRunAiTeachSuggest}
+                    class="flex-1 md:flex-initial px-5 py-3.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs rounded-2xl border border-indigo-200 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                  >
+                    <span>✦ Teach This (AI Scan)</span>
+                  </button>
+                  <button
+                    onClick=${() => setAddTeachOpen(true)}
+                    class="flex-1 md:flex-initial px-5 py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-extrabold text-xs rounded-2xl shadow transition-all whitespace-nowrap"
+                  >
+                    + Add Skill
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Your Teaching Inventory -->
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="font-serif text-xl font-bold text-navy-950">Your Teaching Inventory</h2>
+                  <p class="text-xs text-warmgray-500">Skills you are offering to teach on the network</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                ${teachSkills.map(s => html`
+                  <div key=${s.id} class="bg-white rounded-2xl p-5 border border-cream-300 shadow-sm space-y-3 flex flex-col justify-between">
+                    <div class="space-y-2">
+                      <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          ${s.level_can_teach || 'ADVANCED'}
+                        </span>
+                        <span class="text-[10px] text-warmgray-500 font-semibold">${s.experience_years || '2 yrs exp'}</span>
+                      </div>
+                      <h3 class="font-serif font-bold text-navy-950 text-base">${s.skill_name || 'Teaching Skill'}</h3>
+                    </div>
+                    <div class="pt-3 border-t border-cream-100 flex items-center justify-between text-xs text-warmgray-500">
+                      <span>Verification: Verified</span>
+                      <button class="text-navy-700 font-bold hover:underline">Edit</button>
+                    </div>
+                  </div>
+                `)}
+
+                ${teachSkills.length === 0 ? html`
+                  <div class="col-span-full p-8 bg-cream-50/60 rounded-3xl border border-dashed border-cream-300 text-center space-y-3">
+                    <p class="text-3xl">🎓</p>
+                    <h4 class="font-bold text-navy-950 text-sm">No Teaching Skills Added Yet</h4>
+                    <p class="text-xs text-warmgray-500 max-w-sm mx-auto">Add skills you know best to receive inbound barter requests from learners.</p>
+                    <button onClick=${() => setAddTeachOpen(true)} class="px-5 py-2.5 bg-navy-700 text-white font-bold text-xs rounded-xl shadow-sm">
+                      Add Your Teaching Skill
+                    </button>
+                  </div>
+                ` : null}
+              </div>
+            </div>
+
+            <!-- 3. People Who Need You (Demand-Based Matches) -->
+            <div class="space-y-4">
+              <div>
+                <h2 class="font-serif text-xl font-bold text-navy-950">People Who Need You</h2>
+                <p class="text-xs text-warmgray-500">Learners seeking the exact skills in your teaching inventory</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                ${matches.slice(0, 2).map(m => html`
+                  <div key=${m.user.id} class="bg-white rounded-3xl p-6 border border-cream-300 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <img src=${m.user.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop'} class="w-12 h-12 rounded-2xl object-cover border border-cream-200" />
+                        <div>
+                          <h4 class="font-bold text-navy-950 text-sm">${m.user.name}</h4>
+                          <p class="text-[10px] text-warmgray-500 font-semibold">Wants to learn: <span class="text-indigo-700 font-bold">${m.offer_skill || 'Your Skill'}</span></p>
+                        </div>
+                      </div>
+                      <span class="px-2.5 py-1 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-200">
+                        ${m.score || 95}% Match
+                      </span>
+                    </div>
+
+                    <div class="flex items-center gap-3 pt-2">
+                      <button onClick=${() => onViewProfile && onViewProfile(m.user.username || m.user.id)} class="flex-1 py-2.5 bg-white border border-cream-300 hover:bg-cream-100 text-navy-900 font-bold text-xs rounded-xl">
+                        View Profile
+                      </button>
+                      <button onClick=${() => onProposeSwap && onProposeSwap(m)} class="flex-1 py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-bold text-xs rounded-xl shadow">
+                        Offer Teaching →
+                      </button>
+                    </div>
+                  </div>
+                `)}
+              </div>
+            </div>
+
+            <!-- 4. Contribution & Reputation Stats -->
+            <div class="bg-gradient-to-r from-navy-955 via-navy-900 to-navy-955 text-white rounded-3xl p-6 border border-navy-800 shadow-xl space-y-4">
+              <h3 class="font-serif font-bold text-lg text-white">Your Teaching Contribution & Karma Stats</h3>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                <div class="bg-navy-900/80 p-4 rounded-2xl border border-navy-800">
+                  <p class="font-serif font-extrabold text-2xl text-sky-400">12</p>
+                  <p class="text-[10px] text-cream-200/70 font-semibold uppercase tracking-wider mt-1">Sessions Taught</p>
+                </div>
+                <div class="bg-navy-900/80 p-4 rounded-2xl border border-navy-800">
+                  <p class="font-serif font-extrabold text-2xl text-emerald-400">24h</p>
+                  <p class="text-[10px] text-cream-200/70 font-semibold uppercase tracking-wider mt-1">Hours Shared</p>
+                </div>
+                <div class="bg-navy-900/80 p-4 rounded-2xl border border-navy-800">
+                  <p class="font-serif font-extrabold text-2xl text-indigo-300">8</p>
+                  <p class="text-[10px] text-cream-200/70 font-semibold uppercase tracking-wider mt-1">Learners Helped</p>
+                </div>
+                <div class="bg-navy-900/80 p-4 rounded-2xl border border-navy-800">
+                  <p class="font-serif font-extrabold text-2xl text-amber-300">4.9★</p>
+                  <p class="text-[10px] text-cream-200/70 font-semibold uppercase tracking-wider mt-1">Karma Rating</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ` : null}
+
+        <!-- MODAL 1: ✦ Help Me Decide (AI Goal Assistant) -->
+        ${aiDecideOpen ? html`
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-955/60 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl max-w-lg w-full p-6 border border-cream-300 shadow-2xl space-y-5 text-left text-xs">
+              <div class="flex items-center justify-between border-b border-cream-200 pb-3">
+                <h3 class="font-serif font-bold text-lg text-navy-950 flex items-center gap-2">
+                  <span>✦ Help Me Decide</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-extrabold border border-indigo-200">AI Goal Scraper</span>
+                </h3>
+                <button onClick=${() => setAiDecideOpen(false)} class="p-1 text-warmgray-500 hover:bg-cream-100 rounded-lg">
+                  <${Icon} name="x" class="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit=${handleRunAiDecide} class="space-y-4">
+                <div>
+                  <label class="block font-bold text-navy-950 mb-1.5">Describe what you want to achieve in plain words:</label>
+                  <textarea
+                    rows="3"
+                    value=${aiPromptText}
+                    onChange=${e => setAiPromptText(e.target.value)}
+                    placeholder="e.g., I want to build full-stack web apps using React and Express but I get stuck when designing SQL databases..."
+                    class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl text-xs font-medium focus:outline-none focus:border-navy-600"
+                  ></textarea>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled=${aiDecideLoading}
+                  class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition-all"
+                >
+                  ${aiDecideLoading ? 'Analyzing Goals with AI...' : '✦ Generate Structured Learning Plan'}
+                </button>
+              </form>
+
+              ${aiDecideResult ? html`
+                <div class="p-4 bg-indigo-50/80 rounded-2xl border border-indigo-200 space-y-3 animate-fadeIn">
+                  <p class="font-bold text-indigo-950 text-xs">Recommended Structured Goal:</p>
+                  <p class="font-serif font-bold text-navy-950">${aiDecideResult.suggested_goal_title}</p>
+                  <p class="text-warmgray-600 leading-relaxed text-[11px]">${aiDecideResult.suggested_goal_description}</p>
+                  <button
+                    onClick=${() => {
+                      setGoalSkillName(aiDecideResult.suggested_goal_title || '');
+                      setGoalText(aiDecideResult.suggested_goal_description || '');
+                      setAiDecideOpen(false);
+                      setAddGoalOpen(true);
+                    }}
+                    class="w-full py-2 bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm"
+                  >
+                    Save as Active Learning Goal →
+                  </button>
+                </div>
+              ` : null}
+            </div>
+          </div>
+        ` : null}
+
+        <!-- MODAL 2: Add Learning Goal -->
+        ${addGoalOpen ? html`
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-955/60 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl max-w-md w-full p-6 border border-cream-300 shadow-2xl space-y-4 text-left text-xs">
+              <div class="flex items-center justify-between border-b border-cream-200 pb-3">
+                <h3 class="font-serif font-bold text-lg text-navy-950">Add Learning Goal</h3>
+                <button onClick=${() => setAddGoalOpen(false)} class="p-1 text-warmgray-500 hover:bg-cream-100 rounded-lg">
+                  <${Icon} name="x" class="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit=${handleCreateGoal} class="space-y-4">
+                <div>
+                  <label class="block font-bold text-navy-950 mb-1">Target Skill Name</label>
+                  <input
+                    type="text"
+                    required
+                    value=${goalSkillName}
+                    onChange=${e => setGoalSkillName(e.target.value)}
+                    placeholder="e.g. System Design & Microservices"
+                    class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-navy-600"
+                  />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-bold text-navy-950 mb-1">Current Level</label>
+                    <select value=${goalCurrentLevel} onChange=${e => setGoalCurrentLevel(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold">
+                      <option value="NOVICE">Novice</option>
+                      <option value="BEGINNER">Beginner</option>
+                      <option value="INTERMEDIATE">Intermediate</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-navy-950 mb-1">Target Level</label>
+                    <select value=${goalTargetLevel} onChange=${e => setGoalTargetLevel(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold">
+                      <option value="INTERMEDIATE">Intermediate</option>
+                      <option value="ADVANCED">Advanced</option>
+                      <option value="EXPERT">Expert</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block font-bold text-navy-950 mb-1">Goal Description / Context</label>
+                  <textarea
+                    rows="3"
+                    value=${goalText}
+                    onChange=${e => setGoalText(e.target.value)}
+                    placeholder="Briefly describe what project or knowledge level you aim to reach..."
+                    class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl text-xs font-medium focus:outline-none focus:border-navy-600"
+                  ></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold text-xs rounded-xl shadow">
+                  Save Learning Goal →
+                </button>
+              </form>
+            </div>
+          </div>
+        ` : null}
+
+        <!-- MODAL 3: Add Teaching Skill -->
+        ${addTeachOpen ? html`
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-955/60 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl max-w-md w-full p-6 border border-cream-300 shadow-2xl space-y-4 text-left text-xs">
+              <div class="flex items-center justify-between border-b border-cream-200 pb-3">
+                <h3 class="font-serif font-bold text-lg text-navy-950">Add Teaching Skill</h3>
+                <button onClick=${() => setAddTeachOpen(false)} class="p-1 text-warmgray-500 hover:bg-cream-100 rounded-lg">
+                  <${Icon} name="x" class="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit=${handleCreateTeachPref} class="space-y-4">
+                <div>
+                  <label class="block font-bold text-navy-950 mb-1">Skill Name You Can Teach</label>
+                  <input
+                    type="text"
+                    required
+                    value=${teachSkillName}
+                    onChange=${e => setTeachSkillName(e.target.value)}
+                    placeholder="e.g. Python for Data Science"
+                    class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-navy-600"
+                  />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-bold text-navy-950 mb-1">Teaching Proficiency</label>
+                    <select value=${teachLevel} onChange=${e => setTeachLevel(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold">
+                      <option value="INTERMEDIATE">Intermediate</option>
+                      <option value="ADVANCED">Advanced</option>
+                      <option value="EXPERT">Expert</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-navy-950 mb-1">Experience</label>
+                    <input
+                      type="text"
+                      value=${teachExp}
+                      onChange=${e => setTeachExp(e.target.value)}
+                      placeholder="e.g. 3 years"
+                      class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold text-xs rounded-xl shadow">
+                  Add to Teaching Inventory →
+                </button>
+              </form>
+            </div>
+          </div>
+        ` : null}
+
+        <!-- MODAL 4: ✦ Teach This (AI Scanner Suggestions) -->
+        ${aiTeachOpen ? html`
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-955/60 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl max-w-md w-full p-6 border border-cream-300 shadow-2xl space-y-4 text-left text-xs">
+              <div class="flex items-center justify-between border-b border-cream-200 pb-3">
+                <h3 class="font-serif font-bold text-lg text-navy-950 flex items-center gap-2">
+                  <span>✦ Teach This</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-extrabold border border-indigo-200">AI Profile Scanner</span>
+                </h3>
+                <button onClick=${() => setAiTeachOpen(false)} class="p-1 text-warmgray-500 hover:bg-cream-100 rounded-lg">
+                  <${Icon} name="x" class="w-4 h-4" />
+                </button>
+              </div>
+
+              ${aiTeachLoading ? html`
+                <p class="text-center text-warmgray-400 py-8 italic">Scanning profile skills & experience...</p>
+              ` : html`
+                <div class="space-y-3">
+                  <p class="text-warmgray-600">Based on your profile, AI suggests offering these teaching skills:</p>
+                  ${aiTeachSuggestions.map(s => html`
+                    <div key=${s.skill_name} class="p-3.5 bg-indigo-50/70 rounded-2xl border border-indigo-200 flex items-center justify-between">
+                      <div>
+                        <p class="font-bold text-navy-950 text-xs">${s.skill_name}</p>
+                        <p class="text-[10px] text-indigo-700 font-semibold">${s.suggested_level} • High Demand</p>
+                      </div>
+                      <button
+                        onClick=${() => {
+                          setTeachSkillName(s.skill_name);
+                          setTeachLevel(s.suggested_level || 'ADVANCED');
+                          setAiTeachOpen(false);
+                          setAddTeachOpen(true);
+                        }}
+                        class="px-3 py-1.5 bg-indigo-600 text-white font-bold text-xs rounded-xl"
+                      >
+                        Add Skill
+                      </button>
+                    </div>
+                  `)}
+                </div>
+              `}
+            </div>
+          </div>
+        ` : null}
+      </div>
+    `;
+  }
+
+  window.SkillSwap.ExchangeHubView = ExchangeHubView;
 })();
+

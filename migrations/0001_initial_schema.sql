@@ -101,10 +101,10 @@ CREATE TABLE IF NOT EXISTS exchange_workspaces (
 
 CREATE TABLE IF NOT EXISTS learning_goals (
   id BIGSERIAL PRIMARY KEY,
-  workspace_id BIGINT NOT NULL REFERENCES exchange_workspaces(id) ON DELETE CASCADE,
+  workspace_id BIGINT REFERENCES exchange_workspaces(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL,
   skill_id BIGINT REFERENCES skills(id) ON DELETE SET NULL,
-  goal_description TEXT NOT NULL,
+  goal_description TEXT DEFAULT '',
   status TEXT NOT NULL DEFAULT 'PENDING', -- 'PENDING', 'IN_PROGRESS', 'DONE'
   target_date DATE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()

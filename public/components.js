@@ -281,12 +281,9 @@
 
     const authNavLinks = [
       { id: 'dashboard', label: 'Dashboard', icon: 'activity' },
-      { id: 'matches', label: 'Matches', badge: 'AI', icon: 'sparkles' },
-      { id: 'hub-browse', label: 'Learning Hub', icon: 'book-open' },
+      { id: 'exchange', label: 'Exchange Hub', badge: 'Hub', icon: 'book-open' },
       { id: 'community', label: 'Community Feed', icon: 'message-square' },
-      { id: 'skills', label: 'My Skills', icon: 'layers' },
       { id: 'requests', label: 'Requests', count: pendingRequestsCount, icon: 'inbox' },
-      { id: 'workspaces', label: 'Workspace', icon: 'folder' },
       { id: 'chat', label: 'Chat', icon: 'message-circle' }
     ];
 
@@ -412,25 +409,93 @@
                   ` : null}
                 </div>
               ` : html`
-                ${authNavLinks.map(link => html`
-                  <button
-                    key=${link.id}
-                    onClick=${() => handleNavClick(link.id)}
-                    class="px-3 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 relative ${
-                      activeTab === link.id
-                        ? 'bg-navy-700 text-white shadow-sm font-extrabold'
-                        : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'
-                    }"
-                  >
-                    <span>${link.label}</span>
-                    ${link.badge ? html`
-                      <span class="px-1 py-0.2 text-[8px] font-black rounded-md ${activeTab === link.id ? 'bg-white/20 text-white' : 'bg-navy-100 text-navy-700'}">${link.badge}</span>
-                    ` : null}
-                    ${link.count > 0 ? html`
-                      <span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-500 text-white shadow-xs">${link.count}</span>
-                    ` : null}
+                <button onClick=${() => handleNavClick('dashboard')} class="px-3 py-2 rounded-xl transition-all duration-200 ${activeTab === 'dashboard' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                  Dashboard
+                </button>
+
+                <!-- Exchange Hub Top Level Nav Item -->
+                <button onClick=${() => handleNavClick('exchange')} class="px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'exchange' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                  <${Icon} name="book-open" class="w-4 h-4" />
+                  <span>Exchange</span>
+                  <span class="px-1 py-0.2 text-[8px] font-black rounded-md ${activeTab === 'exchange' ? 'bg-white/20 text-white' : 'bg-navy-100 text-navy-700'}">Hub</span>
+                </button>
+
+                <!-- Discover Dropdown (People, Problems, Circles) -->
+                <div class="relative text-left" id="explore-dropdown-container">
+                  <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['skills-dir', 'problems', 'circles'].includes(activeTab) ? 'bg-navy-700 text-white font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                    <span>Discover</span>
+                    <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${exploreDropdownOpen ? 'rotate-180' : ''}" />
                   </button>
-                `)}
+                  ${exploreDropdownOpen ? html`
+                    <div class="absolute left-0 top-full mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cream-300 py-2 z-50 text-xs text-left animate-fadeIn ring-1 ring-black/5 space-y-0.5">
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('skills-dir'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="users" class="w-4 h-4 text-navy-600 shrink-0" />
+                        <div>
+                          <p class="font-bold text-navy-950">People (Directory)</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Browse verified skill swappers</p>
+                        </div>
+                      </button>
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('community'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="layers" class="w-4 h-4 text-navy-600 shrink-0" />
+                        <div>
+                          <p class="font-bold text-navy-950">Problems</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Real problem cases seeking solutions</p>
+                        </div>
+                      </button>
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('exchange'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="sparkles" class="w-4 h-4 text-indigo-600 shrink-0" />
+                        <div>
+                          <p class="font-bold text-navy-950">Skill Circles</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Group peer learning cohorts</p>
+                        </div>
+                      </button>
+                    </div>
+                  ` : null}
+                </div>
+
+                <!-- Workspace Dropdown (Matches, Exchanges, Sessions) -->
+                <div class="relative text-left" id="resources-dropdown-container">
+                  <button onClick=${() => setResourcesDropdownOpen(!resourcesDropdownOpen)} class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['matches', 'workspaces', 'requests'].includes(activeTab) ? 'bg-navy-700 text-white font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                    <span>Workspace</span>
+                    <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${resourcesDropdownOpen ? 'rotate-180' : ''}" />
+                  </button>
+                  ${resourcesDropdownOpen ? html`
+                    <div class="absolute left-0 top-full mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cream-300 py-2 z-50 text-xs text-left animate-fadeIn ring-1 ring-black/5 space-y-0.5">
+                      <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('matches'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="sparkles" class="w-4 h-4 text-navy-600 shrink-0" />
+                        <div>
+                          <p class="font-bold text-navy-950">Reciprocal Matches</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">AI scored 1:1 bilateral matches</p>
+                        </div>
+                      </button>
+                      <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('workspaces'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="folder" class="w-4 h-4 text-navy-600 shrink-0" />
+                        <div>
+                          <p class="font-bold text-navy-950">Active Exchanges</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Ongoing agreement workspaces</p>
+                        </div>
+                      </button>
+                      <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('requests'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="clock" class="w-4 h-4 text-navy-600 shrink-0" />
+                        <div>
+                          <p class="font-bold text-navy-950">Scheduled Sessions</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Upcoming 1:1 barter sessions</p>
+                        </div>
+                      </button>
+                    </div>
+                  ` : null}
+                </div>
+
+                <button onClick=${() => handleNavClick('community')} class="px-3 py-2 rounded-xl transition-all duration-200 ${activeTab === 'community' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                  Community
+                </button>
+                <button onClick=${() => handleNavClick('requests')} class="px-3 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 relative ${activeTab === 'requests' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                  <span>Requests</span>
+                  ${pendingRequestsCount > 0 ? html`<span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-500 text-white shadow-xs">${pendingRequestsCount}</span>` : null}
+                </button>
+                <button onClick=${() => handleNavClick('chat')} class="px-3 py-2 rounded-xl transition-all duration-200 ${activeTab === 'chat' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                  Chat
+                </button>
               `}
             </nav>
 
@@ -587,12 +652,12 @@
           { id: 'menu', label: 'Account', icon: 'user', isMenu: true }
         ] : [
           { id: 'dashboard', label: 'Dash', icon: 'layout-grid' },
-          { id: 'matches', label: 'Matches', icon: 'sparkles', badge: 'AI' },
-          { id: 'hub-browse', label: 'Hub', icon: 'book-open' },
+          { id: 'exchange', label: 'Exchange', icon: 'book-open', badge: 'Hub' },
+          { id: 'skills-dir', label: 'Discover', icon: 'compass' },
           { id: 'community', label: 'Feed', icon: 'message-square' },
           { id: 'menu', label: 'Menu', icon: 'menu', isMenu: true, count: pendingRequestsCount }
         ]).map(tab => {
-          const isActive = tab.isMenu ? mobileOpen : (activeTab === tab.id || (tab.id === 'hub-browse' && activeTab.startsWith('hub')));
+          const isActive = tab.isMenu ? mobileOpen : (activeTab === tab.id || (tab.id === 'exchange' && activeTab === 'exchange'));
           return html`
             <button
               key=${tab.id}
@@ -758,8 +823,23 @@
     const [message, setMessage] = useState('');
     const [duration, setDuration] = useState(4);
     const [cadence, setCadence] = useState('Weekly (1-2 hrs)');
-
     const [submitting, setSubmitting] = useState(false);
+    const [balanceInfo, setBalanceInfo] = useState(null);
+
+    useEffect(() => {
+      if (isOpen && targetMatch) {
+        const estHrs = duration * (cadence.includes('2-3') ? 2.5 : 1.5);
+        apiFetch('/api/exchange/balance', {
+          method: 'POST',
+          body: JSON.stringify({
+            offer_hours: estHrs,
+            receive_hours: estHrs,
+            offer_skill_name: targetMatch.offer_skill || 'Offered Skill',
+            receive_skill_name: targetMatch.teach_skill || 'Requested Skill'
+          })
+        }).then(setBalanceInfo).catch(console.error);
+      }
+    }, [isOpen, targetMatch, duration, cadence]);
 
     const handleSubmit = async (e) => {
       e.preventDefault();
@@ -819,6 +899,22 @@
               </div>
             </div>
 
+            <!-- Effort Balance Bar -->
+            ${balanceInfo ? html`
+              <div class="p-3.5 bg-navy-50/90 rounded-2xl border border-navy-200 text-navy-950 space-y-1">
+                <div class="flex items-center justify-between font-bold text-xs">
+                  <span class="inline-flex items-center gap-1.5 text-navy-900">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>${balanceInfo.status_label}</span>
+                  </span>
+                  <span class="text-indigo-600 font-serif">⚡ ${balanceInfo.offer_hours} hrs ↔ ${balanceInfo.receive_hours} hrs</span>
+                </div>
+                ${balanceInfo.ai_suggestion ? html`
+                  <p class="text-[11px] text-warmgray-600 leading-snug">${balanceInfo.ai_suggestion}</p>
+                ` : null}
+              </div>
+            ` : null}
+
             <div>
               <label class="block font-bold text-navy-955 mb-1.5">Personalized Introduction Message</label>
               <textarea
@@ -833,7 +929,6 @@
 
             <button type="submit" disabled=${submitting} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-bold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
               ${submitting ? 'Sending Proposal...' : 'Send Reciprocal Exchange Proposal →'}
-
             </button>
           </form>
         </div>

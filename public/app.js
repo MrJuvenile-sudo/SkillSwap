@@ -48,6 +48,7 @@
     LearningHubMyView,
     LearningHubRequestsView,
     ExamModeView,
+    ExchangeHubView,
     SkillSwapAIWidget
 
   } = window.SkillSwap;
@@ -150,6 +151,7 @@
           ${activeTab === 'community' && html`<${CommunityFeedView} currentUser=${user} onProposeSwap=${handleOpenProposal} setActiveTab=${setActiveTab} />`}
           ${activeTab === 'public-profile' && html`<${PublicProfileView} username=${viewingUsername} currentUser=${user} onProposeSwap=${handleOpenProposal} setActiveTab=${setActiveTab} onOpenReport=${handleOpenReportAbuse} />`}
           ${activeTab === 'dashboard' && user && html`<${DashboardView} user=${user} setActiveTab=${setActiveTab} onProposeSwap=${handleOpenProposal} onViewProfile=${handleViewProfile} />`}
+          ${activeTab === 'exchange' && html`<${ExchangeHubView} user=${user} setActiveTab=${setActiveTab} onProposeSwap=${handleOpenProposal} onViewProfile=${handleViewProfile} />`}
 
           ${activeTab === 'matches' && html`<${MatchesView} currentUser=${user} onProposeSwap=${handleOpenProposal} onComparePeers=${handleOpenCompare} onViewProfile=${handleViewProfile} />`}
           ${activeTab === 'skills' && user && html`<${MySkillsView} user=${user} onRefresh=${checkSession} />`}

@@ -56,6 +56,7 @@ function main() {
     'migrations/0002_update_features_schema.sql',
     'migrations/0003_admin_suite_schema.sql',
     'migrations/0004_learning_hub_ai_schema.sql',
+    'migrations/0005_exchange_hub_schema.sql',
     'seed.sql'
   ];
 
