@@ -201,6 +201,8 @@
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [exploreDropdownOpen, setExploreDropdownOpen] = useState(false);
+    const [resourcesDropdownOpen, setResourcesDropdownOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
@@ -220,11 +222,20 @@
       const handleOutsideClick = (e) => {
         const userContainer = document.getElementById('user-menu-container');
         const notifContainer = document.getElementById('notif-menu-container');
+        const exploreContainer = document.getElementById('explore-dropdown-container');
+        const resourcesContainer = document.getElementById('resources-dropdown-container');
+
         if (userContainer && !userContainer.contains(e.target)) {
           setUserMenuOpen(false);
         }
         if (notifContainer && !notifContainer.contains(e.target)) {
           setNotifOpen(false);
+        }
+        if (exploreContainer && !exploreContainer.contains(e.target)) {
+          setExploreDropdownOpen(false);
+        }
+        if (resourcesContainer && !resourcesContainer.contains(e.target)) {
+          setResourcesDropdownOpen(false);
         }
       };
       document.addEventListener('mousedown', handleOutsideClick);
@@ -354,21 +365,75 @@
               </div>
             </div>
 
-            <!-- Desktop Navigation Bar -->
+            <!-- Desktop Navigation Bar with Interactive Dropdowns -->
             <nav class="hidden lg:flex items-center gap-1.5 text-xs font-bold tracking-tight">
-              ${!user ? guestNavLinks.map(link => html`
-                <button
-                  key=${link.id}
-                  onClick=${() => handleNavClick(link.id)}
-                  class="px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-1.5 relative ${
-                    activeTab === link.id
-                      ? 'bg-navy-700 text-white shadow-sm font-extrabold'
-                      : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'
-                  }"
-                >
-                  <span>${link.label}</span>
+              ${!user ? html`
+                <button onClick=${() => handleNavClick('home')} class="px-3.5 py-2.5 rounded-xl transition-all ${activeTab === 'home' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                  Home
                 </button>
-              `) : html`
+                <button onClick=${() => handleNavClick('features')} class="px-3.5 py-2.5 rounded-xl transition-all ${activeTab === 'features' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                  Features
+                </button>
+
+                <!-- Explore Dropdown -->
+                <div class="relative" id="explore-dropdown-container">
+                  <button onClick=${() => { setExploreDropdownOpen(!exploreDropdownOpen); setResourcesDropdownOpen(false); }} class="px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1 hover:bg-cream-200/60 text-warmgray-700 hover:text-navy-900">
+                    <span>Explore</span>
+                    <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform ${exploreDropdownOpen ? 'rotate-180' : ''}" />
+                  </button>
+                  ${exploreDropdownOpen ? html`
+                    <div class="absolute left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-cream-300 py-2.5 z-50 text-xs text-left animate-fadeIn ring-1 ring-black/5 space-y-1">
+                      <button onClick=${() => handleNavClick('skills-dir')} class="w-full px-4 py-2.5 hover:bg-cream-100 flex items-center gap-2.5 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="search" class="w-4 h-4 text-navy-600" />
+                        <div>
+                          <p class="font-bold">Skill Directory</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Browse 120+ verified subjects</p>
+                        </div>
+                      </button>
+                      <button onClick=${() => handleNavClick('community')} class="w-full px-4 py-2.5 hover:bg-cream-100 flex items-center gap-2.5 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="message-square" class="w-4 h-4 text-navy-600" />
+                        <div>
+                          <p class="font-bold">Community Knowledge Board</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Public announcements & logs</p>
+                        </div>
+                      </button>
+                      <button onClick=${() => handleNavClick('hub-browse')} class="w-full px-4 py-2.5 hover:bg-cream-100 flex items-center gap-2.5 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="book-open" class="w-4 h-4 text-navy-600" />
+                        <div>
+                          <p class="font-bold">Learning Hub Resources</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Peer notes, PYQs & exam prep</p>
+                        </div>
+                      </button>
+                    </div>
+                  ` : null}
+                </div>
+
+                <!-- Resources Dropdown -->
+                <div class="relative" id="resources-dropdown-container">
+                  <button onClick=${() => { setResourcesDropdownOpen(!resourcesDropdownOpen); setExploreDropdownOpen(false); }} class="px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1 hover:bg-cream-200/60 text-warmgray-700 hover:text-navy-900">
+                    <span>Resources</span>
+                    <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform ${resourcesDropdownOpen ? 'rotate-180' : ''}" />
+                  </button>
+                  ${resourcesDropdownOpen ? html`
+                    <div class="absolute left-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-cream-300 py-2.5 z-50 text-xs text-left animate-fadeIn ring-1 ring-black/5 space-y-1">
+                      <button onClick=${() => handleNavClick('help')} class="w-full px-4 py-2.5 hover:bg-cream-100 flex items-center gap-2.5 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="compass" class="w-4 h-4 text-navy-600" />
+                        <div>
+                          <p class="font-bold">How It Works</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">P2P Barter Guide & Escrow</p>
+                        </div>
+                      </button>
+                      <button onClick=${() => handleNavClick('faq')} class="w-full px-4 py-2.5 hover:bg-cream-100 flex items-center gap-2.5 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="message-circle" class="w-4 h-4 text-navy-600" />
+                        <div>
+                          <p class="font-bold">FAQ & Support</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Frequently Asked Questions</p>
+                        </div>
+                      </button>
+                    </div>
+                  ` : null}
+                </div>
+              ` : html`
                 ${authNavLinks.map(link => html`
                   <button
                     key=${link.id}
@@ -388,7 +453,6 @@
                     ` : null}
                   </button>
                 `)}
-                <!-- (Admin Panel link moved inside Admin Profile dropdown) -->
               `}
             </nav>
 
