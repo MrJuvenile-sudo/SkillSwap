@@ -365,25 +365,25 @@
               </div>
             </div>
 
-            <!-- Desktop Navigation Bar with Interactive Left-Aligned Dropdowns -->
+            <!-- Desktop Navigation Bar -->
             <nav class="hidden lg:flex items-center gap-1.5 text-xs font-bold tracking-tight">
               ${!user ? html`
-                <button onClick=${() => handleNavClick('home')} class="px-3 py-2.5 rounded-xl transition-all ${activeTab === 'home' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                <button onClick=${() => handleNavClick('home')} class="px-3.5 py-2.5 rounded-xl transition-all ${activeTab === 'home' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
                   Home
                 </button>
-                <button onClick=${() => handleNavClick('features')} class="px-3 py-2.5 rounded-xl transition-all ${activeTab === 'features' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                <button onClick=${() => handleNavClick('features')} class="px-3.5 py-2.5 rounded-xl transition-all ${activeTab === 'features' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
                   Features
                 </button>
-                <button onClick=${() => handleNavClick('hub-browse')} class="px-3 py-2.5 rounded-xl transition-all flex items-center gap-1 ${activeTab === 'hub-browse' || activeTab.startsWith('hub') ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                <button onClick=${() => handleNavClick('hub-browse')} class="px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1 ${activeTab === 'hub-browse' || activeTab.startsWith('hub') ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
                   <span>Learning Hub</span>
                 </button>
-                <button onClick=${() => handleNavClick('community')} class="px-3 py-2.5 rounded-xl transition-all flex items-center gap-1 ${activeTab === 'community' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                <button onClick=${() => handleNavClick('community')} class="px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1 ${activeTab === 'community' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
                   <span>Community Feed</span>
                 </button>
 
                 <!-- Explore Dropdown (Left Aligned) -->
                 <div class="relative text-left" id="explore-dropdown-container">
-                  <button onClick=${() => { setExploreDropdownOpen(!exploreDropdownOpen); setResourcesDropdownOpen(false); }} class="px-3 py-2.5 rounded-xl transition-all flex items-center gap-1 hover:bg-cream-200/60 text-warmgray-700 hover:text-navy-900">
+                  <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1 hover:bg-cream-200/60 text-warmgray-700 hover:text-navy-900">
                     <span>Explore</span>
                     <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${exploreDropdownOpen ? 'rotate-180' : ''}" />
                   </button>
@@ -396,32 +396,6 @@
                           <p class="text-[10px] text-warmgray-500 font-normal">Browse 120+ verified subjects</p>
                         </div>
                       </button>
-                      <button onClick=${() => handleNavClick('hub-browse')} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="book-open" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">Learning Hub Resources</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Peer notes, PYQs & exam prep</p>
-                        </div>
-                      </button>
-                      <button onClick=${() => handleNavClick('community')} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="message-square" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">Community Knowledge Board</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Public announcements & logs</p>
-                        </div>
-                      </button>
-                    </div>
-                  ` : null}
-                </div>
-
-                <!-- Resources Dropdown (Left Aligned) -->
-                <div class="relative text-left" id="resources-dropdown-container">
-                  <button onClick=${() => { setResourcesDropdownOpen(!resourcesDropdownOpen); setExploreDropdownOpen(false); }} class="px-3 py-2.5 rounded-xl transition-all flex items-center gap-1 hover:bg-cream-200/60 text-warmgray-700 hover:text-navy-900">
-                    <span>Resources</span>
-                    <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${resourcesDropdownOpen ? 'rotate-180' : ''}" />
-                  </button>
-                  ${resourcesDropdownOpen ? html`
-                    <div class="absolute left-0 top-full mt-2 w-60 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cream-300 py-2 z-50 text-xs text-left animate-fadeIn ring-1 ring-black/5 space-y-0.5">
                       <button onClick=${() => handleNavClick('help')} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
                         <${Icon} name="compass" class="w-4 h-4 text-navy-600 shrink-0" />
                         <div>
