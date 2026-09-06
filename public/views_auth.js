@@ -9,7 +9,8 @@
 
   const { useState, useEffect, useMemo } = React;
   const html = htm.bind(React.createElement);
-  const { api, Icon } = window.SkillSwap;
+  const Icon = window.SkillSwap.Icon;
+  const api = (...args) => window.SkillSwap.api(...args);
 
   // ----------------------------------------------------
   // Home Landing Page View (Pristine Hero, FAQ, Roadmap)

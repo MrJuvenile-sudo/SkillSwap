@@ -6,7 +6,7 @@
   if (!React || !htm) return;
   const { useState, useEffect, useRef } = React;
   const html = htm.bind(React.createElement);
-  const { api } = window.SkillSwap;
+  const api = (...args) => window.SkillSwap.api(...args);
 
   const INTENT_PAGE_CHIPS = {
     'dashboard': [
@@ -133,7 +133,7 @@
     if (!currentUser) return null;
 
     return html`
-      <div class="fixed bottom-5 right-5 z-50 flex flex-col items-end font-sans">
+      <div class="fixed bottom-20 right-4 lg:bottom-5 lg:right-5 z-50 flex flex-col items-end font-sans">
         ${isOpen ? html`
           <div class="w-96 max-w-[calc(100vw-2.5rem)] h-[520px] max-h-[calc(100vh-6rem)] bg-white border border-cream-300 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fadeIn mb-4">
             

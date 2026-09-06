@@ -136,7 +136,7 @@
           />
         ` : null}
 
-        <main class="flex-1">
+        <main class="flex-1 pb-20 lg:pb-0">
           ${activeTab === 'home' && html`<${HomeLandingView} setActiveTab=${setActiveTab} />`}
           ${activeTab === 'signup' && html`<${SignupView} setActiveTab=${setActiveTab} onAuthSuccess=${async (u) => { await checkSession(); setActiveTab('onboarding'); }} />`}
           ${activeTab === 'login' && html`<${LoginView} setActiveTab=${setActiveTab} onAuthSuccess=${async (u) => { await checkSession(); setActiveTab(u.role && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(u.role) ? 'admin' : 'dashboard'); }} />`}

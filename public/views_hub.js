@@ -6,7 +6,8 @@
   if (!React || !htm) return;
   const { useState, useEffect, useCallback } = React;
   const html = htm.bind(React.createElement);
-  const { api, Icon } = window.SkillSwap;
+  const Icon = window.SkillSwap.Icon;
+  const api = (...args) => window.SkillSwap.api(...args);
 
   const RESOURCE_TYPES = [
     { value: 'NOTES', label: 'Notes', icon: '📝', color: 'blue' },
