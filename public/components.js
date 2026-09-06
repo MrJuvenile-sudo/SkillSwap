@@ -624,97 +624,124 @@
         })}
       </nav>
 
-      <!-- Mobile Drawer Bottom Sheet Overlay -->
+      <!-- Solid Mobile Sidebar Drawer (Solid Color - No Transparency) -->
       ${mobileOpen ? html`
-        <div class="lg:hidden fixed inset-0 z-40 bg-navy-955/60 backdrop-blur-xs transition-opacity animate-fadeIn" onClick=${() => setMobileOpen(false)}></div>
-        <div class="lg:hidden fixed bottom-16 inset-x-0 z-50 bg-white/98 backdrop-blur-2xl rounded-t-3xl border-t border-cream-300 shadow-[0_-8px_30px_rgba(0,0,0,0.18)] p-5 max-h-[80vh] overflow-y-auto animate-slideUp space-y-4 text-left">
-          <div class="w-12 h-1 bg-cream-300 rounded-full mx-auto -mt-1 mb-2"></div>
-          <div class="flex items-center justify-between border-b border-cream-200 pb-3">
-            <div class="flex items-center gap-2">
-              <img src="/logo-icon.png" alt="SkillSwapX" class="w-7 h-7 rounded-lg object-contain bg-white border border-cream-200" />
-              <span class="font-serif text-lg font-extrabold text-navy-950">SkillSwap<span class="text-indigo-600">X</span></span>
+        <div
+          class="lg:hidden fixed inset-0 z-40 bg-black/60 opacity-100 transition-opacity animate-fadeIn"
+          onClick=${() => setMobileOpen(false)}
+        ></div>
+
+        <aside class="lg:hidden fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 bg-[#0B1E36] text-white p-6 shadow-[10px_0_35px_rgba(0,0,0,0.6)] flex flex-col justify-between overflow-y-auto animate-slideRight border-r border-navy-800 opacity-100 select-none">
+          <div class="space-y-6">
+            <!-- Sidebar Header -->
+            <div class="flex items-center justify-between border-b border-navy-800 pb-4">
+              <div class="flex items-center gap-2.5 cursor-pointer" onClick=${() => handleNavClick(user ? 'dashboard' : 'home')}>
+                <img src="/logo-icon.png" alt="SkillSwapX Logo" class="w-9 h-9 rounded-xl object-contain bg-white p-1 border border-navy-700 shadow-sm" />
+                <span class="font-serif text-xl font-extrabold text-white tracking-tight">SkillSwap<span class="text-indigo-400">X</span></span>
+              </div>
+              <button
+                onClick=${() => setMobileOpen(false)}
+                class="p-2 rounded-xl bg-navy-900 text-cream-200 hover:text-white hover:bg-navy-800 border border-navy-700 transition-colors"
+                aria-label="Close Sidebar"
+              >
+                <${Icon} name="x" class="w-5 h-5" />
+              </button>
             </div>
-            <button onClick=${() => setMobileOpen(false)} class="p-1.5 rounded-xl hover:bg-cream-200 text-warmgray-600 transition-colors">
-              <${Icon} name="x" class="w-5 h-5" />
-            </button>
+
+            <!-- User Info / Welcome Banner -->
+            ${!user ? html`
+              <div class="p-4 bg-navy-900 rounded-2xl border border-navy-800 text-white space-y-1">
+                <div class="flex items-center justify-between">
+                  <p class="font-serif font-bold text-sm">Welcome 👋</p>
+                  <span class="px-2 py-0.5 bg-navy-800 text-sky-300 rounded text-[9px] font-black uppercase border border-sky-400/20">Zero Fees</span>
+                </div>
+                <p class="text-[11px] text-cream-200/70">Reciprocal Knowledge Barter Network</p>
+              </div>
+            ` : html`
+              <div class="p-4 bg-navy-900 rounded-2xl border border-navy-800 flex items-center gap-3.5 shadow-sm">
+                <div class="relative shrink-0">
+                  <img src=${user.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop'} alt=${user.name} class="w-11 h-11 rounded-full object-cover ring-2 ring-indigo-500" />
+                  <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-navy-950"></span>
+                </div>
+                <div class="flex-1 min-w-0 text-left">
+                  <p class="font-bold text-white text-sm truncate flex items-center gap-1">
+                    <span>${user.name}</span>
+                    <span class="text-emerald-400 font-black text-xs">✓</span>
+                  </p>
+                  <p class="text-cream-200/70 truncate text-[11px]">@${user.username || 'user'}</p>
+                </div>
+                <span class="px-2 py-1 rounded-lg bg-navy-800 text-sky-300 text-[10px] font-extrabold border border-navy-700">4.9★</span>
+              </div>
+            `}
+
+            <!-- Navigation Links -->
+            <nav class="space-y-1.5 text-left">
+              <p class="text-[10px] font-extrabold uppercase tracking-widest text-navy-400 px-2 pb-1">Navigation Menu</p>
+              ${(!user ? guestNavLinks : authNavLinks).map(link => {
+                const isActive = activeTab === link.id || (link.id === 'hub-browse' && activeTab.startsWith('hub'));
+                return html`
+                  <button
+                    key=${link.id}
+                    onClick=${() => handleNavClick(link.id)}
+                    class="w-full text-left px-4 py-3 rounded-xl text-xs font-bold flex items-center justify-between transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-navy-700 text-white shadow-md font-extrabold border border-indigo-400/40' 
+                        : 'text-cream-200/90 hover:bg-navy-900 hover:text-white'
+                    }"
+                  >
+                    <span class="flex items-center gap-3">
+                      <${Icon} name=${link.icon || 'circle'} class="w-4.5 h-4.5 ${isActive ? 'text-white' : 'text-navy-400'}" />
+                      ${link.label}
+                    </span>
+                    ${link.badge ? html`
+                      <span class="px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase ${isActive ? 'bg-white/20 text-white' : 'bg-navy-800 text-sky-300'}">${link.badge}</span>
+                    ` : null}
+                    ${link.count > 0 ? html`
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-500 text-white shadow-xs">${link.count}</span>
+                    ` : null}
+                  </button>
+                `;
+              })}
+
+              ${user && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role) ? html`
+                <button
+                  onClick=${() => handleNavClick('admin')}
+                  class="w-full text-left px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-3 text-indigo-200 bg-indigo-950/80 border border-indigo-500/40 hover:bg-indigo-900 transition-colors"
+                >
+                  <span class="text-base leading-none">🛡️</span>
+                  <span>Admin Console</span>
+                </button>
+              ` : null}
+            </nav>
           </div>
 
-          ${!user ? html`
-            <div class="p-3.5 bg-gradient-to-r from-navy-900 via-navy-950 to-navy-955 rounded-2xl text-white flex items-center justify-between shadow-sm">
-              <div class="space-y-0.5 text-left">
-                <p class="font-serif font-bold text-sm">Welcome to SkillSwapX 👋</p>
-                <p class="text-[10.5px] text-cream-200/80">Reciprocal Knowledge Barter Network</p>
-              </div>
-              <span class="px-2 py-0.5 bg-navy-800/80 text-sky-300 rounded-md text-[9px] font-black uppercase tracking-wider border border-sky-400/20">Zero Fees</span>
-            </div>
-          ` : html`
-            <div class="p-3.5 bg-gradient-to-br from-navy-50 to-cream-50 rounded-2xl border border-cream-300 flex items-center gap-3.5">
-              <img src=${user.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop'} alt=${user.name} class="w-11 h-11 rounded-full object-cover ring-2 ring-navy-600" />
-              <div class="flex-1 min-w-0">
-                <p class="font-bold text-navy-950 text-sm truncate flex items-center gap-1">
-                  <span>${user.name}</span>
-                  <span class="text-emerald-600 font-black text-xs">✓</span>
-                </p>
-                <p class="text-warmgray-500 truncate text-[11px]">@${user.username || 'user'}</p>
-              </div>
-              <span class="px-2 py-1 rounded-lg bg-white text-navy-800 text-[10px] font-extrabold border border-cream-200 shadow-2xs">4.9★</span>
-            </div>
-          `}
-
-          <div class="space-y-1">
-            ${(!user ? guestNavLinks : authNavLinks).map(link => html`
-              <button
-                key=${link.id}
-                onClick=${() => handleNavClick(link.id)}
-                class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between transition-all duration-200 ${
-                  activeTab === link.id ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-700 hover:bg-cream-100'
-                }"
-              >
-                <span class="flex items-center gap-3">
-                  <${Icon} name=${link.icon || 'circle'} class="w-4 h-4" />
-                  ${link.label}
-                </span>
-                ${link.count > 0 ? html`
-                  <span class="px-2 py-0.5 rounded-full text-xs font-extrabold bg-sky-500 text-white">${link.count}</span>
-                ` : null}
-              </button>
-            `)}
-            ${user && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role) ? html`
-              <button
-                onClick=${() => handleNavClick('admin')}
-                class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-2.5 text-indigo-900 bg-sky-50 border border-indigo-200"
-              >
-                🛡️ Admin Console
-              </button>
-            ` : null}
-          </div>
-
-          ${!user ? html`
-            <div class="pt-3 border-t border-cream-200 space-y-2">
+          <!-- Bottom Footer -->
+          <div class="pt-6 border-t border-navy-800 space-y-2 text-left mt-6">
+            ${!user ? html`
               <div class="grid grid-cols-2 gap-2.5">
-                <button onClick=${() => handleNavClick('login')} class="w-full py-3 text-center font-bold text-navy-955 bg-cream-100 hover:bg-cream-200 border border-cream-300 rounded-xl text-xs shadow-2xs transition-all flex items-center justify-center">
+                <button onClick=${() => handleNavClick('login')} class="w-full py-3 text-center font-bold text-white bg-navy-900 hover:bg-navy-800 border border-navy-700 rounded-xl text-xs shadow-2xs transition-all">
                   Log In
                 </button>
-                <button onClick=${() => handleNavClick('signup')} class="w-full py-3 text-center font-bold text-white bg-gradient-to-r from-navy-700 to-navy-800 hover:from-navy-800 hover:to-navy-900 rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1">
+                <button onClick=${() => handleNavClick('signup')} class="w-full py-3 text-center font-bold text-white bg-navy-700 hover:bg-navy-800 rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1">
                   <span>Join Free</span>
                   <${Icon} name="arrow-right" class="w-3.5 h-3.5" />
                 </button>
               </div>
-            </div>
-          ` : html`
-            <div class="pt-3 border-t border-cream-200 space-y-1">
-              <button onClick=${() => { setMobileOpen(false); if (onViewProfile && user) { onViewProfile(user.username || user.id); } else { handleNavClick('public-profile'); } }} class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-warmgray-700 hover:bg-cream-100 flex items-center gap-2.5">
-                <${Icon} name="user" class="w-4 h-4 text-navy-600" /> View Public Profile
-              </button>
-              <button onClick=${() => { setMobileOpen(false); handleNavClick('settings'); }} class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-warmgray-700 hover:bg-cream-100 flex items-center gap-2.5">
-                <${Icon} name="settings" class="w-4 h-4 text-navy-600" /> Account & Preferences
-              </button>
-              <button onClick=${() => { setMobileOpen(false); onLogout(); }} class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-rose-700 hover:bg-rose-50 flex items-center gap-2.5">
-                <${Icon} name="log-out" class="w-4 h-4 text-rose-500" /> Log Out
-              </button>
-            </div>
-          `}
-        </div>
+            ` : html`
+              <div class="space-y-1.5">
+                <button onClick=${() => { setMobileOpen(false); if (onViewProfile && user) { onViewProfile(user.username || user.id); } else { handleNavClick('public-profile'); } }} class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-cream-200/90 hover:bg-navy-900 hover:text-white flex items-center gap-3">
+                  <${Icon} name="user" class="w-4 h-4 text-navy-400" /> View Public Profile
+                </button>
+                <button onClick=${() => { setMobileOpen(false); handleNavClick('settings'); }} class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-cream-200/90 hover:bg-navy-900 hover:text-white flex items-center gap-3">
+                  <${Icon} name="settings" class="w-4 h-4 text-navy-400" /> Account Preferences
+                </button>
+                <button onClick=${() => { setMobileOpen(false); onLogout(); }} class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-rose-300 hover:bg-rose-600 hover:text-white flex items-center gap-3 transition-colors border border-rose-500/30 rounded-xl">
+                  <${Icon} name="log-out" class="w-4 h-4 text-rose-400" /> Log Out
+                </button>
+              </div>
+            `}
+          </div>
+        </aside>
       ` : null}
 
     `;
