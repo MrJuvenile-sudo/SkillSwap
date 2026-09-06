@@ -439,10 +439,6 @@
             <!-- Right Controls / Auth / Profile Actions -->
             <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
               ${!user ? html`
-                <button onClick=${() => handleNavClick('skills-dir')} class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-xl transition-all">
-                  <${Icon} name="search" class="w-3.5 h-3.5" />
-                  <span>Explore</span>
-                </button>
                 <button onClick=${() => handleNavClick('login')} class="hidden sm:inline-flex px-3.5 py-2 text-xs sm:text-sm font-bold text-navy-900 hover:text-navy-700 hover:bg-cream-100 rounded-xl transition-all whitespace-nowrap">
                   Log In
                 </button>
