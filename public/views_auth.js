@@ -811,15 +811,6 @@
 
               ${loading ? 'Signing In...' : 'Sign In'}
             </button>
-          </form>
-
-          <div class="p-4 bg-cream-50 rounded-2xl border border-cream-200 space-y-2.5 text-xs">
-            <p class="font-bold text-navy-900">System Admin Quick Fill:</p>
-            <button onClick=${() => { setIdentifier('admin@skillswap.io'); setPassword('Admin123!'); }} class="w-full py-2.5 bg-white border border-indigo-200 text-indigo-900 rounded-xl font-bold hover:bg-sky-50 transition-colors shadow-2xs">
-              ⚡ Fill Admin Credentials (admin@skillswap.io / Admin123!)
-            </button>
-          </div>
-
           <div class="text-center pt-4 border-t border-cream-200 text-xs text-warmgray-600">
 
             Don't have an account? <button onClick=${() => setActiveTab('signup')} class="font-bold text-navy-700 hover:underline">Sign up free</button>
