@@ -182,19 +182,30 @@
 
     return html`
       <div class="space-y-28 pb-24 text-center relative overflow-hidden bg-dots-pattern">
-        <!-- Ambient Backdrop Glow -->
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[850px] h-[400px] bg-navy-500/8 blur-[140px] rounded-full pointer-events-none"></div>
+        <!-- Ambient Animated Backdrop Orbs -->
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[850px] h-[450px] bg-indigo-500/10 blur-[150px] rounded-full pointer-events-none animate-pulseGlow"></div>
+        <div class="absolute top-20 right-10 w-72 h-72 bg-sky-400/10 blur-[120px] rounded-full pointer-events-none animate-float"></div>
 
         <!-- 1. Hero Section with Live Search & Badges -->
         <section class="relative pt-16 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-8 animate-fadeIn">
-          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-navy-50/90 border border-navy-200/80 text-navy-800 text-xs font-extrabold tracking-wider shadow-xs">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          
+          <!-- Floating Live Match Preview Badge (Desktop decorative) -->
+          <div class="hidden lg:flex items-center gap-3 p-3.5 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-cream-300 animate-float pointer-events-none absolute -right-4 top-12 text-left z-20">
+            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop" class="w-9 h-9 rounded-xl object-cover ring-2 ring-emerald-500/40" />
+            <div>
+              <p class="font-bold text-navy-950 text-xs">Alice Chen <span class="text-emerald-600">✓</span></p>
+              <span class="text-[9.5px] font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-200">⚡ 98% Reciprocal Synergy</span>
+            </div>
+          </div>
+
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm border border-cream-300 text-navy-800 text-xs font-extrabold tracking-wider shadow-sm animate-floatBadge">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
             Verified Reciprocal Peer-to-Peer Learning Network
           </div>
           
           <h1 class="font-serif text-5xl sm:text-6xl lg:text-7xl font-extrabold text-navy-950 tracking-tight leading-[1.1] max-w-4xl mx-auto">
             Teach what you know.<br />
-            <span class="italic text-navy-600 bg-gradient-to-r from-navy-700 via-navy-600 to-navy-900 bg-clip-text text-transparent">Master what you need next.</span>
+            <span class="italic text-navy-600 bg-gradient-to-r from-navy-700 via-indigo-600 to-navy-900 bg-clip-text text-transparent">Master what you need next.</span>
           </h1>
           
           <p class="text-base sm:text-lg text-warmgray-600 max-w-2xl mx-auto leading-relaxed font-semibold">
@@ -204,8 +215,7 @@
           <form onSubmit=${handleSearchSubmit} class="max-w-2xl mx-auto pt-2">
             <div class="flex items-center bg-white p-2.5 rounded-2xl border border-cream-300 shadow-xl focus-within:border-navy-600 focus-within:ring-2 focus-within:ring-navy-100 transition-all duration-200">
               <div class="pl-3.5 text-warmgray-400">
-                <${Icon} name="search" class="w-5.5 h-5.5" />
-
+                <${Icon} name="search" class="w-5.5 h-5.5 text-navy-600" />
               </div>
               <input
                 type="text"
@@ -214,7 +224,7 @@
                 placeholder="What do you want to learn? (e.g. Python, UI/UX, Rust, Spanish)..."
                 class="w-full px-3.5 py-3 text-sm sm:text-base text-navy-955 placeholder-warmgray-400 focus:outline-none bg-transparent"
               />
-              <button type="submit" class="px-7 py-3.5 bg-gradient-to-r from-navy-700 to-navy-800 hover:from-navy-800 hover:to-navy-900 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all shrink-0">
+              <button type="submit" class="px-7 py-3.5 bg-gradient-to-r from-navy-700 to-navy-800 hover:from-navy-800 hover:to-navy-900 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0">
                 Find Matches
               </button>
             </div>
@@ -227,7 +237,7 @@
                   type="button"
                   key=${tag}
                   onClick=${() => { setSearchVal(tag); setActiveTab('skills-dir'); }}
-                  class="px-3 py-1.5 bg-cream-50 hover:bg-cream-200/60 border border-cream-300 rounded-lg text-navy-900 transition-colors shadow-2xs font-semibold"
+                  class="px-3 py-1.5 bg-white hover:bg-cream-200/80 border border-cream-300 rounded-lg text-navy-900 transition-all shadow-2xs font-semibold hover:scale-[1.03] active:scale-[0.97]"
                 >
                   ${tag}
                 </button>
@@ -235,20 +245,19 @@
             </div>
           </form>
 
-          <!-- Metrics Ticker -->
+          <!-- Animated Metrics Ticker -->
           <div class="pt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-14 text-warmgray-600 text-xs sm:text-sm font-semibold border-t border-cream-300/70 max-w-3xl mx-auto">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 hover:-translate-y-1 transition-transform duration-200 cursor-default">
               <span class="font-extrabold text-navy-900 text-lg sm:text-xl font-serif">14,200+</span> Swaps Completed
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 hover:-translate-y-1 transition-transform duration-200 cursor-default">
               <span class="font-extrabold text-navy-900 text-lg sm:text-xl font-serif">99.4%</span> Synergy Match Accuracy
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 hover:-translate-y-1 transition-transform duration-200 cursor-default">
               <span class="font-extrabold text-navy-900 text-lg sm:text-xl font-serif">★ 4.9 / 5</span> Average Karma
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 hover:-translate-y-1 transition-transform duration-200 cursor-default">
               <span class="font-extrabold text-navy-900 text-lg sm:text-xl font-serif">$0</span> Cost Forever
-
             </div>
           </div>
         </section>
