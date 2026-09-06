@@ -814,19 +814,10 @@
           </form>
 
           <div class="p-4 bg-cream-50 rounded-2xl border border-cream-200 space-y-2.5 text-xs">
-            <p class="font-bold text-navy-900">Quick Test Personas:</p>
-            <div class="flex flex-wrap gap-2">
-              <button onClick=${() => handleQuickLogin('alice@skillswap.io')} class="px-3 py-1.5 bg-white border border-cream-300 rounded-lg text-warmgray-700 hover:bg-cream-100 font-semibold transition-colors">
-                Alice (Python/React)
-              </button>
-              <button onClick=${() => handleQuickLogin('bob@skillswap.io')} class="px-3 py-1.5 bg-white border border-cream-300 rounded-lg text-warmgray-700 hover:bg-cream-100 font-semibold transition-colors">
-                Bob (Photoshop/Design)
-              </button>
-              <button onClick=${() => handleQuickLogin('admin@skillswap.io')} class="px-3 py-1.5 bg-white border border-cream-300 rounded-lg text-indigo-900 border-indigo-200 font-bold hover:bg-sky-50 transition-colors">
-
-                Admin
-              </button>
-            </div>
+            <p class="font-bold text-navy-900">System Admin Quick Fill:</p>
+            <button onClick=${() => { setIdentifier('admin@skillswap.io'); setPassword('Admin123!'); }} class="w-full py-2.5 bg-white border border-indigo-200 text-indigo-900 rounded-xl font-bold hover:bg-sky-50 transition-colors shadow-2xs">
+              ⚡ Fill Admin Credentials (admin@skillswap.io / Admin123!)
+            </button>
           </div>
 
           <div class="text-center pt-4 border-t border-cream-200 text-xs text-warmgray-600">
