@@ -138,11 +138,9 @@
           <div class="w-96 max-w-[calc(100vw-2.5rem)] h-[520px] max-h-[calc(100vh-6rem)] bg-white border border-cream-300 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fadeIn mb-4">
             
             <!-- Header -->
-            <div class="bg-gradient-to-r from-navy-900 to-indigo-900 text-white px-5 py-4 flex items-center justify-between shadow-sm shrink-0">
+            <div class="bg-gradient-to-r from-navy-900 via-navy-950 to-indigo-950 text-white px-5 py-4 flex items-center justify-between shadow-sm shrink-0 border-b border-navy-800">
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-indigo-600/50 border border-indigo-400/40 flex items-center justify-center text-base">
-                  🤖
-                </div>
+                <img src="/ai-icon.png" alt="SkillSwap AI" class="w-8 h-8 rounded-full object-cover border border-sky-400/40 shadow-sm shrink-0 bg-white" />
                 <div>
                   <h3 class="font-serif font-bold text-sm leading-tight flex items-center gap-1.5">
                     SkillSwap AI
@@ -239,15 +237,17 @@
           onClick=${() => setIsOpen(!isOpen)}
           aria-label="SkillSwap AI Assistant"
           title="SkillSwap AI Assistant"
-          class="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-navy-900 via-indigo-900 to-navy-955 text-white shadow-2xl hover:shadow-[0_8px_25px_rgba(99,102,241,0.45)] transition-all duration-300 scale-100 hover:scale-110 active:scale-95 border-2 border-indigo-400/50 flex items-center justify-center relative group"
+          class="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-white p-0.5 shadow-2xl hover:shadow-[0_8px_30px_rgba(0,122,255,0.45)] transition-all duration-300 scale-100 hover:scale-110 active:scale-95 border-2 border-sky-400/80 flex items-center justify-center relative group overflow-hidden"
         >
-          <span class="text-xl sm:text-2xl transition-transform duration-200 ${isOpen ? 'rotate-90 text-sky-300 font-bold' : ''}">
-            ${isOpen ? '✕' : '🤖'}
-          </span>
+          ${isOpen ? html`
+            <span class="text-xl sm:text-2xl text-navy-950 font-bold transition-transform duration-200 rotate-90">✕</span>
+          ` : html`
+            <img src="/ai-icon.png" alt="SkillSwap AI" class="w-full h-full rounded-full object-cover transform group-hover:scale-105 transition-transform duration-300" />
+          `}
           ${!isOpen ? html`
-            <span class="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300 animate-pulse"></span>
+            <span class="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300 animate-pulse z-10"></span>
           ` : null}
-          <span class="hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-200 absolute right-16 px-3 py-1.5 bg-navy-950/90 backdrop-blur-md text-white text-[11px] font-bold rounded-xl shadow-xl border border-indigo-400/30 whitespace-nowrap pointer-events-none">
+          <span class="hidden sm:block opacity-0 group-hover:opacity-100 transition-all duration-200 absolute right-16 px-3 py-1.5 bg-navy-950/95 backdrop-blur-md text-white text-[11px] font-bold rounded-xl shadow-xl border border-sky-400/30 whitespace-nowrap pointer-events-none">
             SkillSwap AI
           </span>
         </button>
