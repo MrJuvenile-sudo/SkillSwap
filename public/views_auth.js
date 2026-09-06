@@ -811,6 +811,8 @@
 
               ${loading ? 'Signing In...' : 'Sign In'}
             </button>
+          </form>
+
           <div class="text-center pt-4 border-t border-cream-200 text-xs text-warmgray-600">
 
             Don't have an account? <button onClick=${() => setActiveTab('signup')} class="font-bold text-navy-700 hover:underline">Sign up free</button>
