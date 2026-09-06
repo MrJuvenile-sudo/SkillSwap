@@ -1414,7 +1414,7 @@
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {matches.slice(0, 4).map(m => html`
+                ${matches.slice(0, 4).map(m => html`
                   <div key=${m.user.id} class="bg-white rounded-3xl p-6 border border-cream-300 shadow-sm space-y-4 hover:shadow-md transition-all">
                     <div class="flex items-start justify-between gap-3">
                       <div class="flex items-center gap-3">
