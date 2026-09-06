@@ -1002,7 +1002,7 @@
                   <input required type="text" value=${sessTitle} onChange=${e => setSessTitle(e.target.value)} placeholder="e.g. Python API Setup call" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label class="block font-bold text-navy-950 mb-1">Date</label>
                     <input required type="date" value=${sessDate} onChange=${e => setSessDate(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold text-navy-950" />
@@ -1013,7 +1013,7 @@
                   </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label class="block font-bold text-navy-950 mb-1">Duration (Min)</label>
                     <input required type="number" min="15" max="180" step="15" value=${sessDuration} onChange=${e => setSessDuration(Number(e.target.value))} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />

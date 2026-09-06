@@ -1240,18 +1240,18 @@
     return html`
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn text-left">
         <!-- Segmented Mode Toggle Header -->
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-cream-200 pb-6">
-          <div>
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-cream-200 pb-6">
+          <div class="text-left">
             <span class="text-[10px] font-black uppercase tracking-widest text-indigo-600">Bilateral Skill Exchange Shell</span>
-            <h1 class="font-serif text-3xl font-extrabold text-navy-950">Exchange Hub</h1>
+            <h1 class="font-serif text-2xl sm:text-3xl font-extrabold text-navy-950">Exchange Hub</h1>
             <p class="text-xs text-warmgray-500 mt-0.5">Manage learning goals, teaching inventory, and reciprocal barter matches</p>
           </div>
 
-          <!-- Minimal Segmented Control Header -->
-          <div class="bg-cream-200/80 p-1.5 rounded-2xl flex items-center gap-1 border border-cream-300 shadow-inner">
+          <!-- Minimal Segmented Control Header (Mobile Full Width Touch Target) -->
+          <div class="w-full sm:w-auto bg-cream-200/80 p-1.5 rounded-2xl flex items-center gap-1 border border-cream-300 shadow-inner">
             <button
               onClick=${() => handleModeChange('learn')}
-              class="px-6 py-2.5 rounded-xl text-xs transition-all duration-200 flex items-center gap-2 ${
+              class="flex-1 sm:flex-initial justify-center px-4 sm:px-6 py-2.5 rounded-xl text-xs transition-all duration-200 flex items-center gap-2 ${
                 mode === 'learn'
                   ? 'bg-navy-700 text-white font-extrabold shadow-md'
                   : 'text-warmgray-600 hover:text-navy-900 font-bold'
@@ -1263,7 +1263,7 @@
 
             <button
               onClick=${() => handleModeChange('teach')}
-              class="px-6 py-2.5 rounded-xl text-xs transition-all duration-200 flex items-center gap-2 ${
+              class="flex-1 sm:flex-initial justify-center px-4 sm:px-6 py-2.5 rounded-xl text-xs transition-all duration-200 flex items-center gap-2 ${
                 mode === 'teach'
                   ? 'bg-navy-700 text-white font-extrabold shadow-md'
                   : 'text-warmgray-600 hover:text-navy-900 font-bold'
@@ -1277,8 +1277,8 @@
 
         <!-- Smart Exchange Summary Card -->
         ${topMatch ? html`
-          <div class="bg-gradient-to-r from-navy-900 via-navy-850 to-navy-955 rounded-3xl p-6 border border-navy-700 shadow-xl text-white flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-            <div class="space-y-2 max-w-2xl z-10">
+          <div class="bg-gradient-to-r from-navy-900 via-navy-850 to-navy-955 rounded-3xl p-5 sm:p-6 border border-navy-700 shadow-xl text-white flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 relative overflow-hidden">
+            <div class="space-y-2 max-w-2xl z-10 text-left">
               <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span>Top Reciprocal 1:1 Match</span>
@@ -1289,23 +1289,23 @@
               <p class="text-xs sm:text-sm text-cream-200/90 leading-relaxed">
                 You teach <strong class="text-white font-bold">${topMatch.offer_skill || 'Your expertise'}</strong> ↔ ${topMatch.user.name} teaches <strong class="text-white font-bold">${topMatch.teach_skill || 'Target skill'}</strong>
               </p>
-              <div class="flex items-center gap-4 text-[11px] text-cream-200/70 pt-1">
+              <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] text-cream-200/70 pt-1">
                 <span class="font-bold text-sky-300">★ ${topMatch.score || 94}% Compatibility Score</span>
-                <span>•</span>
-                <span>Zero fees • 1:1 Bilateral Exchange</span>
+                <span class="hidden sm:inline">•</span>
+                <span>Zero fees • 1:1 Exchange</span>
               </div>
             </div>
 
-            <div class="flex items-center gap-3 shrink-0 z-10">
+            <div class="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 shrink-0 z-10 pt-2 md:pt-0">
               <button
                 onClick=${() => onViewProfile && onViewProfile(topMatch.user.username || topMatch.user.id)}
-                class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition-all"
+                class="w-full sm:w-auto text-center px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition-all"
               >
                 View Profile
               </button>
               <button
                 onClick=${() => onProposeSwap && onProposeSwap(topMatch)}
-                class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all"
+                class="w-full sm:w-auto text-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all"
               >
                 Propose Swap →
               </button>
@@ -1766,7 +1766,7 @@
                   />
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label class="block font-bold text-navy-950 mb-1">Current Level</label>
                     <select value=${goalCurrentLevel} onChange=${e => setGoalCurrentLevel(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold">
@@ -1828,7 +1828,7 @@
                   />
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label class="block font-bold text-navy-950 mb-1">Teaching Proficiency</label>
                     <select value=${teachLevel} onChange=${e => setTeachLevel(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold">
