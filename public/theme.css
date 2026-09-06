@@ -80,43 +80,57 @@ html, body {
   animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Hero Section Animations */
-@keyframes floatSlow {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
+/* Animated Shimmer & Staggered Hero Text Effects */
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.06); }
+@keyframes gradientShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
-@keyframes floatBadge {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+@keyframes floatSoft {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+.animate-hero-badge {
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards, floatSoft 4s ease-in-out infinite 0.6s;
 }
 
-.animate-float {
-  animation: floatSlow 5s ease-in-out infinite;
+.animate-hero-title-1 {
+  animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+  opacity: 0;
 }
 
-.animate-pulseGlow {
-  animation: pulseGlow 4s ease-in-out infinite;
+.animate-hero-title-2 {
+  background-size: 200% 200%;
+  animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards, gradientShimmer 6s ease infinite 1s;
+  opacity: 0;
 }
 
-.animate-floatBadge {
-  animation: floatBadge 3.5s ease-in-out infinite;
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 2.5s infinite;
+.animate-hero-subtitle {
+  animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.45s forwards;
+  opacity: 0;
 }
 
 /* Touch target optimizations for mobile */
