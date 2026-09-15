@@ -7,7 +7,7 @@
   const htm = window.htm || self.htm;
   if (!React || !htm) return;
 
-  const { useState, useEffect, useMemo } = React;
+  const { useState, useEffect, useMemo, useRef, useCallback } = React;
   const html = htm.bind(React.createElement);
   const Icon = window.SkillSwap.Icon;
   const api = (...args) => window.SkillSwap.api(...args);
@@ -643,6 +643,18 @@
   window.SkillSwap.HomeLandingView = HomeLandingView;
 
   // ----------------------------------------------------
+  // Password Policy Helper
+  // ----------------------------------------------------
+  function checkPasswordRules(pwd) {
+    const p = pwd || '';
+    return {
+      hasLength: p.length >= 8,
+      hasCapStart: /^[A-Z]/.test(p),
+      hasSymbol: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(p)
+    };
+  }
+
+  // ----------------------------------------------------
   // Signup View
   // ----------------------------------------------------
   function SignupView({ setActiveTab, onAuthSuccess }) {
@@ -650,12 +662,21 @@
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [headline, setHeadline] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const rules = useMemo(() => checkPasswordRules(password), [password]);
+    const isPasswordValid = rules.hasLength && rules.hasCapStart && rules.hasSymbol;
+
     const handleSignup = async (e) => {
       e.preventDefault();
+      if (!isPasswordValid) {
+        setError('Please ensure your password satisfies all security requirements: 8+ digits/chars, starts with a Capital letter, and contains at least 1 symbol.');
+        return;
+      }
+
       try {
         setLoading(true);
         setError('');
@@ -693,38 +714,68 @@
 
           <form onSubmit=${handleSignup} class="space-y-4 text-xs">
             <div>
-              <label class="block font-bold text-navy-955 mb-1">Full Name</label>
-              <input required type="text" value=${name} onChange=${e => setName(e.target.value)} placeholder="e.g. Jordan Smith" class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
+              <label class="block font-bold text-navy-950 mb-1">Full Name</label>
+              <input required type="text" value=${name} onInput=${e => setName(e.target.value)} class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
             </div>
 
             <div>
-              <label class="block font-bold text-navy-955 mb-1">Username</label>
-              <input required type="text" value=${username} onChange=${e => setUsername(e.target.value)} placeholder="jordansmith" class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
+              <label class="block font-bold text-navy-950 mb-1">Username</label>
+              <input required type="text" value=${username} onInput=${e => setUsername(e.target.value)} class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
             </div>
 
             <div>
-              <label class="block font-bold text-navy-955 mb-1">Email Address</label>
-              <input required type="email" value=${email} onChange=${e => setEmail(e.target.value)} placeholder="jordan@example.com" class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
+              <label class="block font-bold text-navy-950 mb-1">Email Address</label>
+              <input required type="email" value=${email} onInput=${e => setEmail(e.target.value)} class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
             </div>
 
             <div>
-              <label class="block font-bold text-navy-955 mb-1">Password</label>
-              <input required type="password" minlength="6" value=${password} onChange=${e => setPassword(e.target.value)} placeholder="At least 6 characters" class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
+              <label class="block font-bold text-navy-950 mb-1">Password</label>
+              <div class="relative flex items-center">
+                <input
+                  required
+                  type=${showPassword ? "text" : "password"}
+                  value=${password}
+                  onInput=${e => setPassword(e.target.value)}
+                  class="w-full pr-11 px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold"
+                />
+                <button
+                  type="button"
+                  onClick=${() => setShowPassword(!showPassword)}
+                  class="absolute right-3 p-1 text-warmgray-500 hover:text-navy-800 transition-colors focus:outline-none"
+                  title=${showPassword ? "Hide password" : "Show password"}
+                >
+                  <${Icon} name=${showPassword ? "eye-off" : "eye"} class="w-4 h-4" />
+                </button>
+              </div>
+
+              <!-- Password Policy Real-time Requirements Indicator -->
+              <div class="mt-2.5 p-3 bg-cream-50/80 rounded-xl border border-cream-200/80 space-y-1.5 text-[11px]">
+                <div class="flex items-center gap-2 ${rules.hasLength ? 'text-emerald-700 font-bold' : 'text-warmgray-500'}">
+                  <span>${rules.hasLength ? '✓' : '○'}</span>
+                  <span>Minimum 8 characters length</span>
+                </div>
+                <div class="flex items-center gap-2 ${rules.hasCapStart ? 'text-emerald-700 font-bold' : 'text-warmgray-500'}">
+                  <span>${rules.hasCapStart ? '✓' : '○'}</span>
+                  <span>First letter must be Capital (A-Z)</span>
+                </div>
+                <div class="flex items-center gap-2 ${rules.hasSymbol ? 'text-emerald-700 font-bold' : 'text-warmgray-500'}">
+                  <span>${rules.hasSymbol ? '✓' : '○'}</span>
+                  <span>Must include at least 1 symbol (!@#$%...)</span>
+                </div>
+              </div>
             </div>
 
             <div>
-              <label class="block font-bold text-navy-955 mb-1">Professional Headline</label>
-              <input type="text" value=${headline} onChange=${e => setHeadline(e.target.value)} placeholder="e.g. Full-Stack Developer & Guitar Hobbyist" class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
+              <label class="block font-bold text-navy-950 mb-1">Professional Headline</label>
+              <input type="text" value=${headline} onInput=${e => setHeadline(e.target.value)} class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
             </div>
 
-            <button type="submit" disabled=${loading} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-lg transition-all duration-200 text-sm mt-2">
-
+            <button type="submit" disabled=${loading || (password.length > 0 && !isPasswordValid)} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 disabled:opacity-60 text-white font-bold rounded-xl shadow-lg transition-all duration-200 text-sm mt-2">
               ${loading ? 'Creating Account...' : 'Complete & Launch Onboarding →'}
             </button>
           </form>
 
           <div class="text-center pt-4 border-t border-cream-200 text-xs text-warmgray-600">
-
             Already have an account? <button onClick=${() => setActiveTab('login')} class="font-bold text-navy-700 hover:underline">Log in</button>
           </div>
         </div>
@@ -737,42 +788,46 @@
   // Login View
   // ----------------------------------------------------
   function LoginView({ setActiveTab, onAuthSuccess }) {
+    const [showPassword, setShowPassword] = useState(false);
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleLogin = async (e) => {
-      e.preventDefault();
+    const handleLogin = async (e, overrideId, overridePass) => {
+      if (e && e.preventDefault) e.preventDefault();
+      const loginId = overrideId !== undefined ? overrideId : identifier;
+      const loginPass = overridePass !== undefined ? overridePass : password;
+
+      if (!loginId || !loginPass) {
+        setError('Please enter your email/username and password.');
+        return;
+      }
+
       try {
         setLoading(true);
         setError('');
         const res = await api('/api/account/login', {
           method: 'POST',
-          body: JSON.stringify({ email: identifier, password, rememberMe: true })
+          body: JSON.stringify({ email: loginId, password: loginPass, rememberMe: true })
         });
         if (res.user) {
           onAuthSuccess(res.user);
-          setActiveTab(res.user.role === 'ADMIN' ? 'admin' : 'dashboard');
-
+          const isAdmin = res.user.role === 'ADMIN' || res.user.role === 'SUPER_ADMIN';
+          setActiveTab(isAdmin ? 'admin' : 'dashboard');
         }
       } catch (err) {
-        setError(err.message);
+        setError(err.message || 'Invalid email or password.');
       } finally {
         setLoading(false);
       }
-    };
-
-    const handleQuickLogin = (emailStr) => {
-      setIdentifier(emailStr);
-      setPassword('password123');
     };
 
     return html`
       <div class="max-w-md mx-auto my-16 px-4 text-left animate-fadeIn">
         <div class="bg-white rounded-3xl p-8 border border-cream-300 shadow-xl space-y-6">
           <div class="space-y-2 text-center">
-            <img src="/logo-icon.png" alt="SkillSwapX Logo" class="w-13 h-13 rounded-2xl object-contain mx-auto shadow-sm bg-white p-1 border border-cream-200" />
+            <img src="/logo-icon.png" alt="SkillSwapX Logo" class="w-14 h-14 rounded-2xl object-contain mx-auto shadow-sm bg-white p-1 border border-cream-200" />
             <h2 class="font-serif text-2xl font-bold text-navy-950 mt-3">Welcome Back</h2>
             <p class="text-xs text-warmgray-500">Sign in to your SkillSwapX account</p>
           </div>
@@ -781,40 +836,52 @@
 
           <form onSubmit=${handleLogin} class="space-y-4 text-xs">
             <div>
-              <label class="block font-bold text-navy-955 mb-1">Email or Username</label>
-
+              <label class="block font-bold text-navy-950 mb-1">Email or Username</label>
               <input
                 required
                 type="text"
                 value=${identifier}
-                onChange=${e => setIdentifier(e.target.value)}
-                placeholder="alice@skillswap.io or alice"
+                onInput=${e => setIdentifier(e.target.value)}
                 class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold"
-
               />
             </div>
 
             <div>
-              <label class="block font-bold text-navy-955 mb-1">Password</label>
-
-              <input
-                required
-                type="password"
-                value=${password}
-                onChange=${e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold"
-              />
+              <div class="flex items-center justify-between mb-1">
+                <label class="block font-bold text-navy-950">Password</label>
+                <button
+                  type="button"
+                  onClick=${() => setActiveTab('forgot-password')}
+                  class="font-semibold text-navy-700 hover:text-navy-900 hover:underline text-[11px]"
+                >
+                  Forgot password?
+                </button>
+              </div>
+              <div class="relative flex items-center">
+                <input
+                  required
+                  type=${showPassword ? "text" : "password"}
+                  value=${password}
+                  onInput=${e => setPassword(e.target.value)}
+                  class="w-full pr-11 px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold"
+                />
+                <button
+                  type="button"
+                  onClick=${() => setShowPassword(!showPassword)}
+                  class="absolute right-3 p-1 text-warmgray-500 hover:text-navy-800 transition-colors focus:outline-none"
+                  title=${showPassword ? "Hide password" : "Show password"}
+                >
+                  <${Icon} name=${showPassword ? "eye-off" : "eye"} class="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <button type="submit" disabled=${loading} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-lg transition-all duration-200 text-sm">
-
               ${loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 
           <div class="text-center pt-4 border-t border-cream-200 text-xs text-warmgray-600">
-
             Don't have an account? <button onClick=${() => setActiveTab('signup')} class="font-bold text-navy-700 hover:underline">Sign up free</button>
           </div>
         </div>
@@ -824,11 +891,248 @@
   window.SkillSwap.LoginView = LoginView;
 
   // ----------------------------------------------------
+  // Forgot Password View
+  // ----------------------------------------------------
+  function ForgotPasswordView({ setActiveTab }) {
+    const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
+    const [debugToken, setDebugToken] = useState('');
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+        setLoading(true);
+        setError('');
+        setMessage('');
+        const res = await api('/api/account/forgot-password', {
+          method: 'POST',
+          body: JSON.stringify({ email })
+        });
+        setMessage(res.message || 'If an account exists with that email, a password reset link has been dispatched.');
+        if (res.debug_reset_token) {
+          setDebugToken(res.debug_reset_token);
+        }
+      } catch (err) {
+        setError(err.message || 'Failed to submit password reset request.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return html`
+      <div class="max-w-md mx-auto my-16 px-4 text-left animate-fadeIn">
+        <div class="bg-white rounded-3xl p-8 border border-cream-300 shadow-xl space-y-6">
+          <div class="space-y-2 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-navy-50 border border-navy-200 flex items-center justify-center mx-auto shadow-sm">
+              <span class="text-2xl">🔐</span>
+            </div>
+            <h2 class="font-serif text-2xl font-bold text-navy-950 mt-3">Reset Password</h2>
+            <p class="text-xs text-warmgray-500">Enter your registered email address to receive reset instructions</p>
+          </div>
+
+          ${error ? html`<div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold">${error}</div>` : null}
+          ${message ? html`
+            <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs space-y-3">
+              <p class="font-semibold">${message}</p>
+              ${debugToken ? html`
+                <div class="p-3 bg-white rounded-lg border border-emerald-300 text-navy-900 space-y-1.5">
+                  <span class="text-[10px] font-bold text-warmgray-500 uppercase tracking-wider block">Security Reset Token:</span>
+                  <code class="text-xs font-mono font-bold select-all bg-cream-100 px-2 py-0.5 rounded">${debugToken}</code>
+                  <div class="pt-2">
+                    <button
+                      type="button"
+                      onClick=${() => {
+                        window._presetResetToken = debugToken;
+                        setActiveTab('reset-password');
+                      }}
+                      class="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg text-xs transition-colors"
+                    >
+                      Continue to Set New Password →
+                    </button>
+                  </div>
+                </div>
+              ` : null}
+            </div>
+          ` : null}
+
+          <form onSubmit=${handleSubmit} class="space-y-4 text-xs">
+            <div>
+              <label class="block font-bold text-navy-950 mb-1">Registered Email Address</label>
+              <input
+                required
+                type="email"
+                value=${email}
+                onInput=${e => setEmail(e.target.value)}
+                class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold"
+              />
+            </div>
+
+            <button type="submit" disabled=${loading} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-lg transition-all duration-200 text-sm">
+              ${loading ? 'Sending Instructions...' : 'Send Password Reset Token'}
+            </button>
+          </form>
+
+          <div class="flex items-center justify-between pt-4 border-t border-cream-200 text-xs text-warmgray-600">
+            <button onClick=${() => setActiveTab('login')} class="font-bold text-navy-700 hover:underline">← Back to Login</button>
+            <button onClick=${() => setActiveTab('reset-password')} class="font-semibold text-warmgray-500 hover:text-navy-700">Have a token? Reset here →</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  window.SkillSwap.ForgotPasswordView = ForgotPasswordView;
+
+  // ----------------------------------------------------
+  // Reset Password View
+  // ----------------------------------------------------
+  function ResetPasswordView({ setActiveTab }) {
+    const [token, setToken] = useState(window._presetResetToken || '');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
+
+    const rules = useMemo(() => checkPasswordRules(newPassword), [newPassword]);
+    const isPasswordValid = rules.hasLength && rules.hasCapStart && rules.hasSymbol;
+
+    const handleReset = async (e) => {
+      e.preventDefault();
+      if (!isPasswordValid) {
+        setError('Password must satisfy security policies: 8+ chars, start with a Capital letter, and contain at least 1 symbol.');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setError('New passwords do not match. Please re-check.');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError('');
+        const res = await api('/api/account/reset-password', {
+          method: 'POST',
+          body: JSON.stringify({ token, newPassword })
+        });
+        setSuccess(true);
+      } catch (err) {
+        setError(err.message || 'Failed to reset password. Token may be invalid or expired.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return html`
+      <div class="max-w-md mx-auto my-16 px-4 text-left animate-fadeIn">
+        <div class="bg-white rounded-3xl p-8 border border-cream-300 shadow-xl space-y-6">
+          <div class="space-y-2 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center mx-auto shadow-sm">
+              <span class="text-2xl">✨</span>
+            </div>
+            <h2 class="font-serif text-2xl font-bold text-navy-950 mt-3">Set New Password</h2>
+            <p class="text-xs text-warmgray-500">Enter your reset token and new secure password</p>
+          </div>
+
+          ${error ? html`<div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold">${error}</div>` : null}
+          ${success ? html`
+            <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs space-y-3 text-center">
+              <p class="font-bold text-sm">🎉 Password successfully updated!</p>
+              <p class="text-emerald-700">You can now sign in using your new password credentials.</p>
+              <button
+                type="button"
+                onClick=${() => setActiveTab('login')}
+                class="w-full py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl text-xs transition-colors"
+              >
+                Proceed to Login →
+              </button>
+            </div>
+          ` : html`
+            <form onSubmit=${handleReset} class="space-y-4 text-xs">
+              <div>
+                <label class="block font-bold text-navy-950 mb-1">Reset Token</label>
+                <input
+                  required
+                  type="text"
+                  value=${token}
+                  onInput=${e => setToken(e.target.value)}
+                  class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl font-mono focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold"
+                />
+              </div>
+
+              <div>
+                <label class="block font-bold text-navy-950 mb-1">New Password</label>
+                <div class="relative flex items-center">
+                  <input
+                    required
+                    type=${showPassword ? "text" : "password"}
+                    value=${newPassword}
+                    onInput=${e => setNewPassword(e.target.value)}
+                    class="w-full pr-11 px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold"
+                  />
+                  <button
+                    type="button"
+                    onClick=${() => setShowPassword(!showPassword)}
+                    class="absolute right-3 p-1 text-warmgray-500 hover:text-navy-800 transition-colors focus:outline-none"
+                    title=${showPassword ? "Hide password" : "Show password"}
+                  >
+                    <${Icon} name=${showPassword ? "eye-off" : "eye"} class="w-4 h-4" />
+                  </button>
+                </div>
+
+                <!-- Password Policy Real-time Requirements Indicator -->
+                <div class="mt-2.5 p-3 bg-cream-50/80 rounded-xl border border-cream-200/80 space-y-1.5 text-[11px]">
+                  <div class="flex items-center gap-2 ${rules.hasLength ? 'text-emerald-700 font-bold' : 'text-warmgray-500'}">
+                    <span>${rules.hasLength ? '✓' : '○'}</span>
+                    <span>Minimum 8 characters length</span>
+                  </div>
+                  <div class="flex items-center gap-2 ${rules.hasCapStart ? 'text-emerald-700 font-bold' : 'text-warmgray-500'}">
+                    <span>${rules.hasCapStart ? '✓' : '○'}</span>
+                    <span>First letter must be Capital (A-Z)</span>
+                  </div>
+                  <div class="flex items-center gap-2 ${rules.hasSymbol ? 'text-emerald-700 font-bold' : 'text-warmgray-500'}">
+                    <span>${rules.hasSymbol ? '✓' : '○'}</span>
+                    <span>Must include at least 1 symbol (!@#$%...)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-bold text-navy-950 mb-1">Confirm New Password</label>
+                <input
+                  required
+                  type="password"
+                  value=${confirmPassword}
+                  onInput=${e => setConfirmPassword(e.target.value)}
+                  class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold"
+                />
+              </div>
+
+              <button type="submit" disabled=${loading || (newPassword.length > 0 && !isPasswordValid)} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 disabled:opacity-60 text-white font-bold rounded-xl shadow-lg transition-all duration-200 text-sm">
+                ${loading ? 'Updating Password...' : 'Save New Password'}
+              </button>
+            </form>
+          `}
+
+          <div class="text-center pt-4 border-t border-cream-200 text-xs text-warmgray-600">
+            Remember your credentials? <button onClick=${() => setActiveTab('login')} class="font-bold text-navy-700 hover:underline">Back to Login</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  window.SkillSwap.ResetPasswordView = ResetPasswordView;
+
+  // ----------------------------------------------------
   // Onboarding Wizard View - Step 1: Profile Params
 
   // ----------------------------------------------------
   function OnboardingWizardView({ user, setActiveTab, onComplete }) {
-    const [timezone, setTimezone] = useState('PST (UTC-8)');
+    const [timezone, setTimezone] = useState('IST (UTC+5:30)');
+    const [location, setLocation] = useState('Bengaluru, Karnataka, India');
+    const [preferredLanguage, setPreferredLanguage] = useState('English');
     const [weeklyHours, setWeeklyHours] = useState(4);
     const [bio, setBio] = useState('');
 
@@ -838,9 +1142,10 @@
         method: 'POST',
         body: JSON.stringify({
           timezone,
+          location,
           weekly_hours: weeklyHours,
-          bio: bio.trim() || 'Excited to exchange skills with motivated peers!',
-          preferred_language: 'English',
+          bio: bio.trim() || 'Excited to exchange skills with motivated peers across India!',
+          preferred_language: preferredLanguage,
           availability_schedule: { monday: ['evening'], saturday: ['morning'] }
         })
       });
@@ -854,7 +1159,7 @@
           <div class="flex items-center justify-between border-b border-cream-200 pb-3">
             <div>
               <h2 class="font-serif text-2xl font-bold text-navy-900">Onboarding: Profile Setup (Step 1/2)</h2>
-              <p class="text-xs text-warmgray-500 mt-1">Configure timezone, learning capacity, and a brief biography.</p>
+              <p class="text-xs text-warmgray-500 mt-1">Configure your location, timezone, learning capacity, and a brief biography.</p>
             </div>
             <span class="px-3 py-1 rounded-full text-xs font-bold bg-navy-50 text-navy-700 border border-navy-100">Step 1</span>
 
@@ -863,21 +1168,55 @@
           <form onSubmit=${handleSave} class="space-y-6 text-xs">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block font-bold text-navy-950 mb-1.5">Your Local Timezone</label>
-                <select value=${timezone} onChange=${e => setTimezone(e.target.value)} class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900">
-
-                  <option value="PST (UTC-8)">PST (UTC-8) - US Pacific</option>
-                  <option value="EST (UTC-5)">EST (UTC-5) - US Eastern</option>
-                  <option value="GMT (UTC+0)">GMT (UTC+0) - London</option>
-                  <option value="CET (UTC+1)">CET (UTC+1) - Central Europe</option>
-                  <option value="IST (UTC+5:30)">IST (UTC+5:30) - India</option>
+                <label class="block font-bold text-navy-950 mb-1.5">Your Location / City (India)</label>
+                <select value=${location} onChange=${e => setLocation(e.target.value)} class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900">
+                  <option value="Bengaluru, Karnataka, India">Bengaluru, Karnataka</option>
+                  <option value="Mumbai, Maharashtra, India">Mumbai, Maharashtra</option>
+                  <option value="Delhi NCR, India">Delhi NCR</option>
+                  <option value="Hyderabad, Telangana, India">Hyderabad, Telangana</option>
+                  <option value="Pune, Maharashtra, India">Pune, Maharashtra</option>
+                  <option value="Chennai, Tamil Nadu, India">Chennai, Tamil Nadu</option>
+                  <option value="Kolkata, West Bengal, India">Kolkata, West Bengal</option>
+                  <option value="Ahmedabad, Gujarat, India">Ahmedabad, Gujarat</option>
+                  <option value="Jaipur, Rajasthan, India">Jaipur, Rajasthan</option>
+                  <option value="Chandigarh, India">Chandigarh</option>
+                  <option value="Kochi, Kerala, India">Kochi, Kerala</option>
+                  <option value="Indore, Madhya Pradesh, India">Indore, Madhya Pradesh</option>
+                  <option value="Remote, India">Remote (India)</option>
                 </select>
               </div>
 
               <div>
+                <label class="block font-bold text-navy-950 mb-1.5">Your Local Timezone</label>
+                <select value=${timezone} onChange=${e => setTimezone(e.target.value)} class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900">
+                  <option value="IST (UTC+5:30)">IST (UTC+5:30) - India Standard Time</option>
+                  <option value="GMT (UTC+0)">GMT (UTC+0) - London</option>
+                  <option value="CET (UTC+1)">CET (UTC+1) - Central Europe</option>
+                  <option value="EST (UTC-5)">EST (UTC-5) - US Eastern</option>
+                  <option value="PST (UTC-8)">PST (UTC-8) - US Pacific</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
                 <label class="block font-bold text-navy-955 mb-1.5">Max Target Weekly Swap Hours</label>
                 <input type="number" min="1" max="20" value=${weeklyHours} onChange=${e => setWeeklyHours(Number(e.target.value))} class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900" />
+              </div>
 
+              <div>
+                <label class="block font-bold text-navy-950 mb-1.5">Preferred Language</label>
+                <select value=${preferredLanguage} onChange=${e => setPreferredLanguage(e.target.value)} class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900">
+                  <option value="English">English</option>
+                  <option value="Hindi">Hindi (हिंदी)</option>
+                  <option value="Tamil">Tamil (தமிழ்)</option>
+                  <option value="Telugu">Telugu (తెలుగు)</option>
+                  <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                  <option value="Bengali">Bengali (বাংলা)</option>
+                  <option value="Marathi">Marathi (मराठी)</option>
+                  <option value="Gujarati">Gujarati (ગુજરાતી)</option>
+                  <option value="Malayalam">Malayalam (മലയാളം)</option>
+                </select>
               </div>
             </div>
 
@@ -1638,25 +1977,56 @@
   window.SkillSwap.ReportAbuseView = ReportAbuseView;
 
   // ----------------------------------------------------
-  // Community Feed Page (Detailed Comments and Filtering)
   // ----------------------------------------------------
-  function CommunityFeedView({ currentUser, onProposeSwap, setActiveTab }) {
+  // Community Feed Page (Rich Multi-Media Posts, Images, Videos, Blogs & Code)
+  // ----------------------------------------------------
+  function CommunityFeedView({ currentUser, onProposeSwap, onOpenChat, setActiveTab, onViewProfile }) {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    
+    // Post Composer State
+    const [postType, setPostType] = useState('POST'); // 'POST', 'IMAGE', 'VIDEO', 'BLOG', 'CODE', 'SWAP_OFFER'
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
+    const [mediaUrl, setMediaUrl] = useState('');
+    const [coverImage, setCoverImage] = useState('');
+    const [readTime, setReadTime] = useState('4 min read');
+    const [codeLang, setCodeLang] = useState('javascript');
+    const [tags, setTags] = useState('');
     const [teachSkillId, setTeachSkillId] = useState('');
     const [learnSkillId, setLearnSkillId] = useState('');
-    const [channelCategory, setChannelCategory] = useState('SWAP_REQUESTS');
-    
-    const [commentTexts, setCommentTexts] = useState({});
+    const [composerOpen, setComposerOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+
+    // Comments & Engagement State
+    const [commentTexts, setCommentTexts] = useState({});
     const [commentSubmitting, setCommentSubmitting] = useState({});
+    const [openComments, setOpenComments] = useState({});
+    const [activeChannel, setActiveChannel] = useState('ALL'); // 'ALL', 'BLOG', 'VIDEO', 'IMAGE', 'CODE', 'SWAP_OFFER'
+    const [selectedTag, setSelectedTag] = useState('ALL');
+    const [readingArticle, setReadingArticle] = useState(null);
+    const [viewingImageModal, setViewingImageModal] = useState(null);
     const [allSkills, setAllSkills] = useState([]);
-    
-    // Quick channel filtering state
-    const [activeChannel, setActiveChannel] = useState('ALL');
-    const [cheers, setCheers] = useState({});
+
+    // Sample Image Presets
+    const IMAGE_PRESETS = [
+      { label: 'UPI Architecture', url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop' },
+      { label: 'React UI System', url: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop' },
+      { label: 'AI & Data Science', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop' },
+      { label: 'Cloud Infrastructure', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop' }
+    ];
+
+    // Sample Video Presets
+    const VIDEO_PRESETS = [
+      { label: 'High-Scale Concurrency Tutorial', url: 'https://www.youtube.com/watch?v=yyUHQIec83I' },
+      { label: 'React 19 Architecture Deep Dive', url: 'https://www.youtube.com/watch?v=8pDqJVdNa44' },
+      { label: 'System Design Interview Blueprint', url: 'https://www.youtube.com/watch?v=SqcXvc3ZmRU' }
+    ];
+
+    // Trending Tags in India Tech Community
+    const TRENDING_TAGS = [
+      '#SystemDesign', '#ReactJS', '#PythonAI', '#UPI_Fintech', '#DSA_Algo', '#DevOps', '#GoLang', '#GATE_CS', '#Web3'
+    ];
 
     useEffect(() => {
       loadPosts();
@@ -1669,7 +2039,7 @@
         const data = await api('/api/posts');
         setPosts(data.posts || []);
       } catch (err) {
-        console.error(err);
+        console.error('Failed to load posts:', err);
       } finally {
         setLoading(false);
       }
@@ -1686,19 +2056,47 @@
           body: JSON.stringify({
             title: title.trim(),
             content: content.trim(),
+            post_type: postType,
+            media_url: mediaUrl ? mediaUrl.trim() : null,
+            cover_image: coverImage ? coverImage.trim() : (postType === 'BLOG' ? mediaUrl : null),
+            read_time: readTime,
+            tags: tags.trim() || (postType === 'BLOG' ? '#TechBlog, #Engineering' : postType === 'VIDEO' ? '#Tutorial, #Video' : postType === 'IMAGE' ? '#Showcase, #Design' : null),
             teach_skill_id: teachSkillId ? Number(teachSkillId) : null,
             learn_skill_id: learnSkillId ? Number(learnSkillId) : null
           })
         });
+
+        // Reset form
         setTitle('');
         setContent('');
+        setMediaUrl('');
+        setCoverImage('');
+        setTags('');
         setTeachSkillId('');
         setLearnSkillId('');
-        loadPosts();
+        setComposerOpen(false);
+        await loadPosts();
       } catch (err) {
         alert(err.message);
       } finally {
         setSubmitting(false);
+      }
+    };
+
+    const handleToggleLike = async (postId) => {
+      try {
+        const res = await api('/api/posts', {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'like',
+            post_id: postId
+          })
+        });
+        if (res.success) {
+          setPosts(prev => prev.map(p => p.id === postId ? { ...p, user_liked: res.liked, likes_count: res.likes_count } : p));
+        }
+      } catch (err) {
+        alert(err.message);
       }
     };
 
@@ -1718,7 +2116,7 @@
           })
         });
         setCommentTexts(prev => ({ ...prev, [postId]: '' }));
-        loadPosts();
+        await loadPosts();
       } catch (err) {
         alert(err.message);
       } finally {
@@ -1726,100 +2124,353 @@
       }
     };
 
-    const handleCommentChange = (postId, value) => {
-      setCommentTexts(prev => ({
-        ...prev,
-        [postId]: value
-      }));
+    const handleDeletePost = async (postId) => {
+      if (!confirm('Are you sure you want to delete this post?')) return;
+      try {
+        await api('/api/posts', {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'delete',
+            post_id: postId
+          })
+        });
+        setPosts(prev => prev.filter(p => p.id !== postId));
+      } catch (err) {
+        alert(err.message);
+      }
     };
 
-    const handleCheer = (postId) => {
-      setCheers(prev => ({
-        ...prev,
-        [postId]: (prev[postId] || 0) + 1
-      }));
+    const copyPostLink = (post) => {
+      const shareUrl = `${window.location.origin}/#community?post=${post.id}`;
+      navigator.clipboard.writeText(shareUrl);
+      alert('Post link copied to clipboard! 🔗');
     };
 
+    const getVideoEmbedUrl = (url) => {
+      if (!url) return null;
+      try {
+        if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
+          let videoId = '';
+          if (url.includes('youtu.be/')) {
+            videoId = url.split('youtu.be/')[1]?.split('?')[0];
+          } else {
+            const urlObj = new URL(url);
+            videoId = urlObj.searchParams.get('v');
+          }
+          return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0` : url;
+        }
+        if (url.includes('vimeo.com/')) {
+          const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+          return videoId ? `https://player.vimeo.com/video/${videoId}` : url;
+        }
+        return url;
+      } catch {
+        return url;
+      }
+    };
+
+    // Filter Posts by Channel and Tag
     const filteredPosts = useMemo(() => {
-      if (activeChannel === 'TEACH') {
-        return posts.filter(p => !!p.teach_skill);
+      let list = posts;
+
+      if (activeChannel !== 'ALL') {
+        if (activeChannel === 'SWAP_OFFER') {
+          list = list.filter(p => p.post_type === 'SWAP_OFFER' || (!!p.teach_skill || !!p.learn_skill));
+        } else {
+          list = list.filter(p => (p.post_type || 'POST') === activeChannel);
+        }
       }
-      if (activeChannel === 'LEARN') {
-        return posts.filter(p => !!p.learn_skill);
+
+      if (selectedTag !== 'ALL') {
+        list = list.filter(p => (p.tags || '').toLowerCase().includes(selectedTag.toLowerCase()));
       }
-      return posts;
-    }, [posts, activeChannel]);
+
+      return list;
+    }, [posts, activeChannel, selectedTag]);
 
     const studyCircles = [
-      { name: "LeetCode Daily Pairing", host: "Alex Chen", time: "Daily 6:00 PM UTC", members: 42, icon: "💻", tag: "Engineering" },
-      { name: "Figma UI/UX Challenge", host: "Sophia Lin", time: "Tue & Thu 4:00 PM UTC", members: 38, icon: "🎨", tag: "Design" },
-      { name: "Spanish Conversational Lab", host: "Carlos Mendez", time: "Mon & Fri 7:00 PM UTC", members: 29, icon: "🗣️", tag: "Languages" },
-      { name: "System Design Mock Sprints", host: "Devon Reed", time: "Sat 2:00 PM UTC", members: 34, icon: "🏗️", tag: "Architecture" }
+      { name: "Bengaluru Web3 & Scalability", host: "Rahul Sharma", members: 84, icon: "🇮🇳", tag: "Architecture" },
+      { name: "GATE CS & LeetCode Daily", host: "Priya Patel", members: 62, icon: "💻", tag: "Algorithms" },
+      { name: "React 19 & Fullstack India", host: "Amit Verma", members: 48, icon: "⚛️", tag: "Fullstack" },
+      { name: "Indic AI & LLM Builders", host: "Vikram Malhotra", members: 39, icon: "🤖", tag: "AI / ML" }
     ];
 
     const weeklyLeaderboard = [
-      { rank: 1, name: "Marcus Vance", karma: "4.99★", swaps: 28, badge: "Master Mentor", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop" },
-      { rank: 2, name: "Elena Rostova", karma: "4.98★", swaps: 24, badge: "Design Pioneer", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop" },
-      { rank: 3, name: "Tariq Al-Mansoor", karma: "4.96★", swaps: 21, badge: "Cloud Architect", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop" }
+      { rank: 1, name: "Priya Sharma", karma: "4.99★", swaps: 34, badge: "Staff Architect", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=PriyaSharma" },
+      { rank: 2, name: "Rahul Sharma", karma: "4.98★", swaps: 28, badge: "Lead Fullstack", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=RahulSharma" },
+      { rank: 3, name: "Vikram Malhotra", karma: "4.95★", swaps: 22, badge: "AI Researcher", avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=VikramMalhotra" }
     ];
 
     return html`
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-left animate-fadeIn">
         
         <!-- Header Banner -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-cream-300 pb-6">
-          <div>
-            <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-navy-50 text-navy-800 text-[10px] font-bold border border-navy-200 mb-1.5">
-              <span>Public Feed & Discussions</span>
+        <div class="bg-gradient-to-r from-navy-950 via-navy-900 to-indigo-950 text-white p-6 sm:p-8 rounded-3xl shadow-xl border border-navy-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+          <div class="space-y-2 z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-bold border border-emerald-500/30">
+              <span>🇮🇳 India Knowledge & Multi-Media Feed</span>
             </div>
-            <h1 class="font-serif text-3xl sm:text-4xl font-extrabold text-navy-950 tracking-tight">Community Knowledge Board</h1>
-            <p class="text-warmgray-600 text-xs sm:text-sm mt-1">Browse public skill swap announcements, learning logs, and study circles published by verified peers.</p>
+            <h1 class="font-serif text-2xl sm:text-4xl font-extrabold tracking-tight">Community Feed & Tech Blog</h1>
+            <p class="text-xs sm:text-sm text-cream-200 max-w-xl">
+              Share posts, project images, video demos, technical blogs, and code snippets with fellow peer engineers across India.
+            </p>
           </div>
 
-          <!-- Channel Filter Tabs -->
-          <div class="flex items-center gap-1 text-[11px] font-bold text-warmgray-600 bg-white border border-cream-300 p-1.5 rounded-2xl shadow-xs">
-            <button onClick=${() => setActiveChannel('ALL')} class="px-3.5 py-1.5 rounded-xl transition-all ${activeChannel === 'ALL' ? 'bg-navy-700 text-white font-bold shadow-xs' : 'hover:bg-cream-100 text-navy-950'}">All Posts</button>
-            <button onClick=${() => setActiveChannel('TEACH')} class="px-3.5 py-1.5 rounded-xl transition-all ${activeChannel === 'TEACH' ? 'bg-navy-700 text-white font-bold shadow-xs' : 'hover:bg-cream-100 text-navy-950'}">🌱 Offering to Teach</button>
-            <button onClick=${() => setActiveChannel('LEARN')} class="px-3.5 py-1.5 rounded-xl transition-all ${activeChannel === 'LEARN' ? 'bg-navy-700 text-white font-bold shadow-xs' : 'hover:bg-cream-100 text-navy-950'}">🎯 Looking to Learn</button>
+          <div class="z-10 shrink-0">
+            ${currentUser ? html`
+              <button
+                onClick=${() => setComposerOpen(!composerOpen)}
+                class="px-6 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-2xl shadow-lg hover:shadow-emerald-900/40 text-xs sm:text-sm flex items-center gap-2 transition-all"
+              >
+                <span>✍️</span> ${composerOpen ? 'Close Composer' : '+ Create New Post / Media'}
+              </button>
+            ` : html`
+              <button onClick=${() => setActiveTab('signup')} class="px-6 py-3.5 bg-white hover:bg-cream-100 text-navy-950 font-bold rounded-2xl shadow-md text-xs sm:text-sm transition-all">
+                Join Community Free →
+              </button>
+            `}
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Channel Filter Tabs -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-cream-300 text-xs font-bold scrollbar-none">
+          <button
+            onClick=${() => { setActiveChannel('ALL'); setSelectedTag('ALL'); }}
+            class="px-4 py-2.5 rounded-xl transition-all shrink-0 ${activeChannel === 'ALL' && selectedTag === 'ALL' ? 'bg-navy-900 text-white shadow-sm' : 'bg-white text-navy-800 hover:bg-cream-100 border border-cream-200'}"
+          >
+            🌐 All Feed
+          </button>
+          <button
+            onClick=${() => setActiveChannel('BLOG')}
+            class="px-4 py-2.5 rounded-xl transition-all shrink-0 ${activeChannel === 'BLOG' ? 'bg-navy-900 text-white shadow-sm' : 'bg-white text-navy-800 hover:bg-cream-100 border border-cream-200'}"
+          >
+            📰 Tech Blogs & Articles
+          </button>
+          <button
+            onClick=${() => setActiveChannel('VIDEO')}
+            class="px-4 py-2.5 rounded-xl transition-all shrink-0 ${activeChannel === 'VIDEO' ? 'bg-navy-900 text-white shadow-sm' : 'bg-white text-navy-800 hover:bg-cream-100 border border-cream-200'}"
+          >
+            🎥 Video Tutorials & Demos
+          </button>
+          <button
+            onClick=${() => setActiveChannel('IMAGE')}
+            class="px-4 py-2.5 rounded-xl transition-all shrink-0 ${activeChannel === 'IMAGE' ? 'bg-navy-900 text-white shadow-sm' : 'bg-white text-navy-800 hover:bg-cream-100 border border-cream-200'}"
+          >
+            🖼️ Image & Design Showcases
+          </button>
+          <button
+            onClick=${() => setActiveChannel('CODE')}
+            class="px-4 py-2.5 rounded-xl transition-all shrink-0 ${activeChannel === 'CODE' ? 'bg-navy-900 text-white shadow-sm' : 'bg-white text-navy-800 hover:bg-cream-100 border border-cream-200'}"
+          >
+            💻 Code Snippets
+          </button>
+          <button
+            onClick=${() => setActiveChannel('SWAP_OFFER')}
+            class="px-4 py-2.5 rounded-xl transition-all shrink-0 ${activeChannel === 'SWAP_OFFER' ? 'bg-navy-900 text-white shadow-sm' : 'bg-white text-navy-800 hover:bg-cream-100 border border-cream-200'}"
+          >
+            🌱 Skill Swap Offers
+          </button>
+        </div>
+
+        <!-- Tag Filter Pills Bar -->
+        <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] pb-1 scrollbar-none">
+          <span class="text-warmgray-500 font-bold text-xs mr-1">Trending Tags:</span>
+          ${TRENDING_TAGS.map(t => html`
+            <button
+              key=${t}
+              onClick=${() => setSelectedTag(selectedTag === t ? 'ALL' : t)}
+              class="px-3 py-1 rounded-full border transition-all font-semibold shrink-0 ${selectedTag === t ? 'bg-navy-800 text-white border-navy-800 shadow-xs' : 'bg-white text-navy-900 border-cream-300 hover:bg-cream-50'}"
+            >
+              ${t}
+            </button>
+          `)}
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
           <!-- Main Feed Column (2 Cols) -->
           <div class="lg:col-span-2 space-y-6">
-            <!-- Post Composer Card -->
-            ${currentUser ? html`
-              <div class="bg-white rounded-3xl p-6 border border-cream-300 shadow-md space-y-4 text-xs">
-                <div class="flex items-center justify-between border-b border-cream-100 pb-3">
-                  <h3 class="font-serif text-base font-bold text-navy-950 flex items-center gap-2">
-                    <span>✍️ Publish Swap Announcement</span>
+
+            <!-- ---------------------------------------------------- -->
+            <!-- MULTI-FORMAT POST COMPOSER MODAL / DRAWER -->
+            <!-- ---------------------------------------------------- -->
+            ${currentUser && composerOpen ? html`
+              <div class="bg-white rounded-3xl p-6 sm:p-7 border border-cream-300 shadow-xl space-y-5 text-xs animate-fadeIn">
+                <div class="flex items-center justify-between border-b border-cream-200 pb-3">
+                  <h3 class="font-serif text-lg font-bold text-navy-950 flex items-center gap-2">
+                    <span>✍️ Publish to Community Feed</span>
                   </h3>
-                  <span class="text-[10px] font-semibold text-warmgray-500">Public Community Board</span>
+                  <button onClick=${() => setComposerOpen(false)} class="p-1.5 text-warmgray-500 hover:bg-cream-100 rounded-xl">✕</button>
                 </div>
 
-                <form onSubmit=${handleCreatePost} class="space-y-3.5">
-                  <input
-                    type="text"
-                    required
-                    value=${title}
-                    onChange=${e => setTitle(e.target.value)}
-                    placeholder="Headline / Swap Title (e.g. Offering React state hooks mentoring for Python FastAPI)..."
-                    class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900"
-                  />
+                <!-- Post Format Selector -->
+                <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 p-1.5 bg-cream-50 rounded-2xl border border-cream-200 text-center font-bold text-[11px]">
+                  <button
+                    type="button"
+                    onClick=${() => setPostType('POST')}
+                    class="py-2 px-1 rounded-xl transition-all ${postType === 'POST' ? 'bg-navy-900 text-white shadow-xs' : 'text-navy-800 hover:bg-white'}"
+                  >
+                    📝 Discussion
+                  </button>
+                  <button
+                    type="button"
+                    onClick=${() => setPostType('IMAGE')}
+                    class="py-2 px-1 rounded-xl transition-all ${postType === 'IMAGE' ? 'bg-navy-900 text-white shadow-xs' : 'text-navy-800 hover:bg-white'}"
+                  >
+                    🖼️ Image
+                  </button>
+                  <button
+                    type="button"
+                    onClick=${() => setPostType('VIDEO')}
+                    class="py-2 px-1 rounded-xl transition-all ${postType === 'VIDEO' ? 'bg-navy-900 text-white shadow-xs' : 'text-navy-800 hover:bg-white'}"
+                  >
+                    🎥 Video
+                  </button>
+                  <button
+                    type="button"
+                    onClick=${() => setPostType('BLOG')}
+                    class="py-2 px-1 rounded-xl transition-all ${postType === 'BLOG' ? 'bg-navy-900 text-white shadow-xs' : 'text-navy-800 hover:bg-white'}"
+                  >
+                    📰 Tech Blog
+                  </button>
+                  <button
+                    type="button"
+                    onClick=${() => setPostType('CODE')}
+                    class="py-2 px-1 rounded-xl transition-all ${postType === 'CODE' ? 'bg-navy-900 text-white shadow-xs' : 'text-navy-800 hover:bg-white'}"
+                  >
+                    💻 Code
+                  </button>
+                </div>
 
-                  <textarea
-                    required
-                    rows="3"
-                    value=${content}
-                    onChange=${e => setContent(e.target.value)}
-                    placeholder="Describe what you want to practice, your availability schedule, and what projects you want to build..."
-                    class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-medium text-navy-900 leading-relaxed"
-                  ></textarea>
+                <form onSubmit=${handleCreatePost} class="space-y-4">
+                  <!-- Title Input -->
+                  <div>
+                    <label class="block font-bold text-navy-950 mb-1">
+                      ${postType === 'BLOG' ? 'Article Title / Headline' : postType === 'VIDEO' ? 'Video Tutorial Title' : postType === 'IMAGE' ? 'Showcase / Project Title' : 'Post Title'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value=${title}
+                      onChange=${e => setTitle(e.target.value)}
+                      placeholder=${postType === 'BLOG' ? 'e.g. Scaling UPI Webhook Engine to 50,000 req/sec with Go & Redis' : postType === 'VIDEO' ? 'e.g. React 19 State Management & Server Actions Walkthrough' : 'Enter a clear headline...'}
+                      class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900"
+                    />
+                  </div>
 
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <!-- Media URL / Video Link / Image Preset Inputs -->
+                  ${postType === 'IMAGE' && html`
+                    <div class="space-y-2 p-3 bg-cream-50/70 rounded-2xl border border-cream-200">
+                      <label class="block font-bold text-navy-950">Image URL (or select preset)</label>
+                      <input
+                        type="url"
+                        value=${mediaUrl}
+                        onChange=${e => setMediaUrl(e.target.value)}
+                        placeholder="https://images.unsplash.com/... or paste image direct URL"
+                        class="w-full p-2.5 bg-white border border-cream-300 rounded-xl text-xs font-medium"
+                      />
+                      <div class="flex items-center gap-1.5 flex-wrap pt-1 text-[10px]">
+                        <span class="text-warmgray-500 font-bold">Presets:</span>
+                        ${IMAGE_PRESETS.map(p => html`
+                          <button
+                            type="button"
+                            key=${p.label}
+                            onClick=${() => setMediaUrl(p.url)}
+                            class="px-2 py-0.5 bg-white hover:bg-cream-100 border border-cream-300 rounded text-navy-800 font-medium"
+                          >
+                            ${p.label}
+                          </button>
+                        `)}
+                      </div>
+                      ${mediaUrl ? html`
+                        <div class="mt-2 rounded-xl overflow-hidden max-h-48 border border-cream-300">
+                          <img src=${mediaUrl} alt="Preview" class="w-full h-48 object-cover" onError=${e => e.target.style.display = 'none'} />
+                        </div>
+                      ` : null}
+                    </div>
+                  `}
+
+                  ${postType === 'VIDEO' && html`
+                    <div class="space-y-2 p-3 bg-cream-50/70 rounded-2xl border border-cream-200">
+                      <label class="block font-bold text-navy-950">Video URL (YouTube, Vimeo, MP4)</label>
+                      <input
+                        type="url"
+                        value=${mediaUrl}
+                        onChange=${e => setMediaUrl(e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=... or Loom/Vimeo link"
+                        class="w-full p-2.5 bg-white border border-cream-300 rounded-xl text-xs font-medium"
+                      />
+                      <div class="flex items-center gap-1.5 flex-wrap pt-1 text-[10px]">
+                        <span class="text-warmgray-500 font-bold">Presets:</span>
+                        ${VIDEO_PRESETS.map(p => html`
+                          <button
+                            type="button"
+                            key=${p.label}
+                            onClick=${() => setMediaUrl(p.url)}
+                            class="px-2 py-0.5 bg-white hover:bg-cream-100 border border-cream-300 rounded text-navy-800 font-medium"
+                          >
+                            ${p.label}
+                          </button>
+                        `)}
+                      </div>
+                    </div>
+                  `}
+
+                  ${postType === 'BLOG' && html`
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block font-bold text-navy-950 mb-1">Cover Image URL (Optional)</label>
+                        <input
+                          type="url"
+                          value=${coverImage}
+                          onChange=${e => setCoverImage(e.target.value)}
+                          placeholder="https://images.unsplash.com/..."
+                          class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <label class="block font-bold text-navy-950 mb-1">Estimated Read Time</label>
+                        <select value=${readTime} onChange=${e => setReadTime(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold">
+                          <option value="3 min read">3 min read</option>
+                          <option value="5 min read">5 min read</option>
+                          <option value="8 min read">8 min read</option>
+                          <option value="12 min read">12 min read (Deep Dive)</option>
+                        </select>
+                      </div>
+                    </div>
+                  `}
+
+                  <!-- Content / Description / Article Textarea -->
+                  <div>
+                    <label class="block font-bold text-navy-950 mb-1">
+                      ${postType === 'BLOG' ? 'Full Article Markdown Content' : postType === 'CODE' ? 'Code Snippet & Explanation' : 'Post Content / Description'}
+                    </label>
+                    <textarea
+                      required
+                      rows=${postType === 'BLOG' ? '8' : '4'}
+                      value=${content}
+                      onChange=${e => setContent(e.target.value)}
+                      placeholder=${postType === 'BLOG' ? 'Write your complete technical guide, architectural breakdowns, code blocks, and takeaways using markdown...' : 'Share details, background context, or learning goals...'}
+                      class="w-full p-3.5 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-medium text-navy-900 leading-relaxed font-sans"
+                    ></textarea>
+                  </div>
+
+                  <!-- Tags Input -->
+                  <div>
+                    <label class="block font-bold text-navy-950 mb-1">Topic Tags (comma-separated)</label>
+                    <input
+                      type="text"
+                      value=${tags}
+                      onChange=${e => setTags(e.target.value)}
+                      placeholder="#SystemDesign, #ReactJS, #UPI_Fintech, #GoLang"
+                      class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl"
+                    />
+                  </div>
+
+                  <!-- Optional Attached Skills -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div>
-                      <label class="block font-bold text-emerald-800 text-[10px] uppercase mb-1">Skill You Offer to Teach</label>
+                      <label class="block font-bold text-emerald-800 text-[10px] uppercase mb-1">Attach Skill You Can Teach</label>
                       <select value=${teachSkillId} onChange=${e => setTeachSkillId(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold text-navy-900">
                         <option value="">(Optional) Select teaching skill...</option>
                         ${allSkills.map(s => html`<option key=${s.id} value=${s.id}>🌱 ${s.name}</option>`)}
@@ -1827,7 +2478,7 @@
                     </div>
 
                     <div>
-                      <label class="block font-bold text-indigo-900 text-[10px] uppercase mb-1">Skill You Want to Learn</label>
+                      <label class="block font-bold text-indigo-900 text-[10px] uppercase mb-1">Attach Skill You Want to Learn</label>
                       <select value=${learnSkillId} onChange=${e => setLearnSkillId(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold text-navy-900">
                         <option value="">(Optional) Select learning target...</option>
                         ${allSkills.map(s => html`<option key=${s.id} value=${s.id}>🎯 ${s.name}</option>`)}
@@ -1835,8 +2486,12 @@
                     </div>
                   </div>
 
-                  <div class="flex justify-end pt-1">
-                    <button type="submit" disabled=${submitting} class="px-6 py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-bold text-xs rounded-xl shadow-md transition-all">
+                  <!-- Submit Button -->
+                  <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" onClick=${() => setComposerOpen(false)} class="px-5 py-2.5 bg-cream-100 hover:bg-cream-200 text-navy-900 font-bold rounded-xl">
+                      Cancel
+                    </button>
+                    <button type="submit" disabled=${submitting} class="px-7 py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-md transition-all">
                       ${submitting ? 'Publishing...' : 'Publish to Feed →'}
                     </button>
                   </div>
@@ -1844,179 +2499,315 @@
               </div>
             ` : null}
 
-            ${loading ? html`<div class="p-12 text-center text-warmgray-500 font-serif">Loading community discussions...</div>` : null}
-            ${!loading && filteredPosts.length === 0 ? html`
-              <div class="p-12 bg-white rounded-3xl border border-cream-300 text-center space-y-3 shadow-sm">
-                <p class="text-sm font-semibold text-warmgray-600">No community posts match this channel filter.</p>
-                <button onClick=${() => setActiveChannel('ALL')} class="px-4 py-2 bg-navy-700 text-white font-bold rounded-xl text-xs">Show All</button>
+            ${loading ? html`
+              <div class="p-16 text-center space-y-3 bg-white rounded-3xl border border-cream-300">
+                <div class="w-10 h-10 border-4 border-navy-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p class="text-xs font-semibold text-warmgray-600">Loading community feed...</p>
               </div>
             ` : null}
 
-            ${filteredPosts.map(p => html`
-              <div key=${p.id} class="bg-white rounded-3xl p-6.5 border border-cream-300 shadow-sm space-y-5 hover:border-navy-300 transition-all duration-200">
-                <div class="flex items-center justify-between gap-3 border-b border-cream-100 pb-3.5">
-                  <div class="flex items-center gap-3">
-                    <img src=${p.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop'} class="w-11 h-11 rounded-2xl object-cover border border-cream-200 shadow-xs ring-1 ring-navy-600/10" />
-                    <div>
-                      <h4 class="font-bold text-navy-950 text-sm">${p.user_name}</h4>
-                      <p class="text-[10px] text-warmgray-500 font-semibold">${p.headline || 'SkillSwapX Practitioner'} · ${new Date(p.created_at).toLocaleDateString()}</p>
+            ${!loading && filteredPosts.length === 0 ? html`
+              <div class="p-14 bg-white rounded-3xl border border-cream-300 text-center space-y-4 shadow-sm">
+                <div class="text-4xl">📬</div>
+                <div class="space-y-1">
+                  <h3 class="font-serif text-lg font-bold text-navy-950">No Posts Found in this Category</h3>
+                  <p class="text-xs text-warmgray-600">Be the first to share an article, image, video tutorial, or swap offer!</p>
+                </div>
+                <button onClick=${() => { setActiveChannel('ALL'); setSelectedTag('ALL'); }} class="px-5 py-2 bg-navy-700 text-white font-bold rounded-xl text-xs">
+                  Show All Posts
+                </button>
+              </div>
+            ` : null}
+
+            <!-- ---------------------------------------------------- -->
+            <!-- POST CARDS STREAM -->
+            <!-- ---------------------------------------------------- -->
+            ${filteredPosts.map(p => {
+              const pType = p.post_type || 'POST';
+              const isAuthor = currentUser && currentUser.id === p.user_id;
+              const isAdmin = currentUser && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(currentUser.role);
+              const isCommentsOpen = openComments[p.id];
+              const tagList = (p.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+
+              return html`
+                <div key=${p.id} class="bg-white rounded-3xl p-6 sm:p-7 border border-cream-300 shadow-sm space-y-5 hover:border-navy-400/60 transition-all duration-200 animate-fadeIn">
+                  
+                  <!-- Post Header: Author & Meta -->
+                  <div class="flex items-center justify-between gap-3 border-b border-cream-100 pb-4">
+                    <div class="flex items-center gap-3 cursor-pointer" onClick=${() => onViewProfile && onViewProfile(p.username || p.user_id)}>
+                      <img
+                        src=${p.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${p.user_name}`}
+                        class="w-11 h-11 rounded-2xl object-cover border border-cream-200 shadow-sm ring-2 ring-navy-600/10"
+                      />
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <h4 class="font-bold text-navy-950 text-sm hover:underline">${p.user_name}</h4>
+                          <span class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider ${
+                            pType === 'BLOG' ? 'bg-amber-50 text-amber-900 border border-amber-200' :
+                            pType === 'VIDEO' ? 'bg-rose-50 text-rose-900 border border-rose-200' :
+                            pType === 'IMAGE' ? 'bg-purple-50 text-purple-900 border border-purple-200' :
+                            pType === 'CODE' ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' :
+                            'bg-navy-50 text-navy-800 border border-navy-200'
+                          }">
+                            ${pType === 'BLOG' ? '📰 Tech Blog' : pType === 'VIDEO' ? '🎥 Video Tutorial' : pType === 'IMAGE' ? '🖼️ Showcase' : pType === 'CODE' ? '💻 Code' : '💬 Post'}
+                          </span>
+                        </div>
+                        <p class="text-[10px] text-warmgray-500 font-semibold">${p.headline || 'Peer Learner'} · ${new Date(p.created_at).toLocaleDateString([], { dateStyle: 'medium' })}</p>
+                      </div>
+                    </div>
+
+                    <!-- Author Action Button -->
+                    <div class="flex items-center gap-2">
+                      ${currentUser && !isAuthor ? html`
+                        <button
+                          onClick=${() => onProposeSwap && onProposeSwap({ user: { id: p.user_id, name: p.user_name } })}
+                          class="px-3.5 py-1.5 bg-navy-800 hover:bg-navy-900 text-white rounded-xl font-bold text-xs shadow-sm hover:scale-105 transition-all"
+                        >
+                          Propose Swap →
+                        </button>
+                      ` : null}
+
+                      ${(isAuthor || isAdmin) ? html`
+                        <button
+                          onClick=${() => handleDeletePost(p.id)}
+                          class="p-2 text-warmgray-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                          title="Delete Post"
+                        >
+                          🗑️
+                        </button>
+                      ` : null}
                     </div>
                   </div>
-                  
-                  ${currentUser && currentUser.id !== p.user_id ? html`
-                    <button onClick=${() => onProposeSwap({ user: { id: p.user_id, name: p.user_name } })} class="px-4 py-2 bg-gradient-to-r from-navy-700 to-navy-800 hover:from-navy-800 hover:to-navy-900 text-white rounded-xl font-bold text-xs shadow-sm hover:scale-105 active:scale-95 transition-all">
-                      Propose Swap →
-                    </button>
-                  ` : null}
-                </div>
 
-                <div class="space-y-2">
-                  <h3 class="font-serif text-lg font-bold text-navy-950 leading-snug">${p.title}</h3>
-                  <p class="text-xs sm:text-sm text-warmgray-700 leading-relaxed">${p.content}</p>
-                </div>
+                  <!-- Post Body / Content Rendering -->
+                  <div class="space-y-3">
+                    <h3 class="font-serif text-xl font-bold text-navy-950 leading-snug">
+                      ${p.title}
+                    </h3>
 
-                <div class="flex flex-wrap gap-2 text-xs pb-3 border-b border-cream-100">
-                  ${p.teach_skill ? html`
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold text-[10px]">
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Can Teach: ${p.teach_skill}
-                    </span>
-                  ` : null}
-                  ${p.learn_skill ? html`
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-sky-50 text-indigo-900 border border-indigo-200 font-semibold text-[10px]">
-                      <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
-                      Wants to Learn: ${p.learn_skill}
-                    </span>
-                  ` : null}
-                </div>
-
-                <!-- Discussion Comments & Reactions -->
-                <div class="space-y-3.5 pt-1 text-xs">
-                  <div class="flex items-center justify-between">
-                    <h4 class="font-bold text-navy-950 uppercase tracking-wider text-[9px]">Peer Discussion (${(p.comments || []).length}):</h4>
-                    <button
-                      onClick=${() => handleCheer(p.id)}
-                      class="flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg transition-colors"
-                    >
-                      <span>❤️ Cheer</span>
-                      <span>${cheers[p.id] || 3}</span>
-                    </button>
-                  </div>
-                  
-                  <!-- Comment List -->
-                  <div class="space-y-3 max-h-60 overflow-y-auto pr-1">
-                    ${(p.comments || []).map(comment => html`
-                      <div key=${comment.id} class="p-3.5 bg-cream-50/70 border border-cream-200/60 rounded-2xl flex items-start gap-2.5">
-                        <img src=${comment.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50&h=50&fit=crop'} class="w-7 h-7 rounded-full object-cover border border-cream-200 shrink-0" />
-                        <div class="flex-1 space-y-0.5">
-                          <div class="flex justify-between items-center text-[10px]">
-                            <span class="font-bold text-navy-950">${comment.user_name}</span>
-                            <span class="text-warmgray-500 font-medium">${new Date(comment.created_at).toLocaleDateString()}</span>
-                          </div>
-                          <p class="text-warmgray-700 leading-relaxed text-xs">${comment.content}</p>
+                    <!-- 1. IMAGE POST PRESENTATION -->
+                    ${pType === 'IMAGE' && p.media_url ? html`
+                      <div class="rounded-2xl overflow-hidden border border-cream-300 shadow-inner group relative cursor-pointer" onClick=${() => setViewingImageModal(p.media_url)}>
+                        <img src=${p.media_url} alt=${p.title} class="w-full max-h-[420px] object-cover group-hover:scale-[1.01] transition-transform duration-300" />
+                        <div class="absolute bottom-2 right-2 px-2.5 py-1 bg-navy-950/80 backdrop-blur-sm rounded-lg text-white font-bold text-[10px] flex items-center gap-1">
+                          <span>🔍 Click to Zoom</span>
                         </div>
                       </div>
-                    `)}
-                    ${(p.comments || []).length === 0 ? html`<p class="text-warmgray-400 italic text-[11px] py-1 pl-1">No comments yet. Write a reply to start exchanging!</p>` : null}
+                    ` : null}
+
+                    <!-- 2. VIDEO POST PRESENTATION -->
+                    ${pType === 'VIDEO' && p.media_url ? html`
+                      <div class="rounded-2xl overflow-hidden border border-cream-300 shadow-md aspect-video bg-black">
+                        ${(p.media_url.includes('youtube.com') || p.media_url.includes('youtu.be') || p.media_url.includes('vimeo.com')) ? html`
+                          <iframe
+                            src=${getVideoEmbedUrl(p.media_url)}
+                            class="w-full h-full"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          ></iframe>
+                        ` : html`
+                          <video src=${p.media_url} controls class="w-full h-full object-cover"></video>
+                        `}
+                      </div>
+                    ` : null}
+
+                    <!-- 3. TECHNICAL BLOG PRESENTATION -->
+                    ${pType === 'BLOG' ? html`
+                      <div class="space-y-3">
+                        ${p.cover_image ? html`
+                          <div class="rounded-2xl overflow-hidden max-h-64 border border-cream-300 shadow-sm cursor-pointer" onClick=${() => setReadingArticle(p)}>
+                            <img src=${p.cover_image} alt=${p.title} class="w-full h-64 object-cover hover:scale-105 transition-transform duration-300" />
+                          </div>
+                        ` : null}
+                        <div class="flex items-center gap-3 text-[11px] text-warmgray-500 font-semibold">
+                          <span>⏱️ ${p.read_time || '4 min read'}</span>
+                          <span>•</span>
+                          <span>Technical Deep Dive</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-warmgray-700 leading-relaxed line-clamp-3">
+                          ${p.content}
+                        </p>
+                        <button
+                          onClick=${() => setReadingArticle(p)}
+                          class="px-4 py-2 bg-cream-100 hover:bg-cream-200 text-navy-900 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5"
+                        >
+                          <span>📖</span> Read Full Article →
+                        </button>
+                      </div>
+                    ` : pType === 'CODE' ? html`
+                      <!-- 4. CODE POST PRESENTATION -->
+                      <div class="space-y-2">
+                        <p class="text-xs sm:text-sm text-warmgray-700 leading-relaxed">${p.content}</p>
+                        <div class="bg-navy-955 rounded-2xl p-4 border border-navy-800 text-white font-mono text-xs overflow-x-auto relative">
+                          <button
+                            onClick=${() => {
+                              navigator.clipboard.writeText(p.content);
+                              alert('Code copied to clipboard! 📋');
+                            }}
+                            class="absolute top-3 right-3 px-2.5 py-1 bg-navy-800 hover:bg-navy-700 text-cream-200 rounded-lg text-[10px] font-bold border border-navy-700"
+                          >
+                            📋 Copy
+                          </button>
+                          <pre class="text-emerald-300 whitespace-pre-wrap">${p.content}</pre>
+                        </div>
+                      </div>
+                    ` : html`
+                      <!-- 5. GENERAL POST -->
+                      <p class="text-xs sm:text-sm text-warmgray-700 leading-relaxed whitespace-pre-wrap">${p.content}</p>
+                    `}
                   </div>
 
-                  <!-- Add Comment Form -->
-                  ${currentUser ? html`
-                    <form onSubmit=${e => handlePostComment(e, p.id)} class="flex gap-2 pt-2">
-                      <input
-                        type="text"
-                        required
-                        value=${commentTexts[p.id] || ''}
-                        onChange=${e => handleCommentChange(p.id, e.target.value)}
-                        placeholder="Write a comment or introduce your skills..."
-                        class="w-full px-3.5 py-2.5 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-medium text-navy-900 text-xs"
-                      />
-                      <button type="submit" disabled=${commentSubmitting[p.id]} class="px-4 py-2 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shrink-0 transition-all text-xs shadow-sm">
-                        ${commentSubmitting[p.id] ? 'Posting...' : 'Comment'}
-                      </button>
-                    </form>
+                  <!-- Attached Reciprocal Skills -->
+                  ${(p.teach_skill || p.learn_skill) ? html`
+                    <div class="flex flex-wrap gap-2 text-xs pt-1">
+                      ${p.teach_skill ? html`
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold text-[10px]">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          Offers to Teach: <strong>${p.teach_skill}</strong>
+                        </span>
+                      ` : null}
+                      ${p.learn_skill ? html`
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-sky-50 text-indigo-900 border border-indigo-200 font-semibold text-[10px]">
+                          <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                          Wants to Learn: <strong>${p.learn_skill}</strong>
+                        </span>
+                      ` : null}
+                    </div>
                   ` : null}
+
+                  <!-- Tags -->
+                  ${tagList.length > 0 ? html`
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                      ${tagList.map(t => html`
+                        <button
+                          key=${t}
+                          onClick=${() => setSelectedTag(t)}
+                          class="px-2.5 py-0.5 rounded-md bg-cream-50 hover:bg-cream-100 text-navy-800 border border-cream-200 text-[10px] font-medium"
+                        >
+                          ${t}
+                        </button>
+                      `)}
+                    </div>
+                  ` : null}
+
+                  <!-- Engagement Footer (Likes, Comments, Share) -->
+                  <div class="flex items-center justify-between border-t border-cream-100 pt-3.5 text-xs text-warmgray-600">
+                    <div class="flex items-center gap-3">
+                      <!-- Like Button -->
+                      <button
+                        onClick=${() => handleToggleLike(p.id)}
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all ${
+                          p.user_liked ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-cream-50 hover:bg-cream-100 text-warmgray-700 border border-cream-200'
+                        }"
+                      >
+                        <span class="${p.user_liked ? 'scale-125' : ''} transition-transform">❤️</span>
+                        <span>${p.likes_count || 0} Likes</span>
+                      </button>
+
+                      <!-- Comment Toggle Button -->
+                      <button
+                        onClick=${() => setOpenComments(prev => ({ ...prev, [p.id]: !prev[p.id] }))}
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold bg-cream-50 hover:bg-cream-100 text-warmgray-700 border border-cream-200 transition-colors"
+                      >
+                        <span>💬</span>
+                        <span>${(p.comments || []).length} Comments</span>
+                      </button>
+                    </div>
+
+                    <!-- Share Button -->
+                    <button
+                      onClick=${() => copyPostLink(p)}
+                      class="flex items-center gap-1 font-bold text-navy-800 hover:text-navy-950 p-1.5 rounded-lg hover:bg-cream-50 text-[11px]"
+                    >
+                      <span>🔗</span> Share
+                    </button>
+                  </div>
+
+                  <!-- Comments Section (Expandable) -->
+                  ${isCommentsOpen ? html`
+                    <div class="space-y-3 pt-2 border-t border-cream-100 text-xs animate-fadeIn">
+                      <div class="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                        ${(p.comments || []).length === 0 ? html`
+                          <p class="text-warmgray-400 italic text-[11px] py-2 text-center">No comments yet. Write the first response!</p>
+                        ` : (p.comments || []).map(c => html`
+                          <div key=${c.id} class="p-3 bg-cream-50/80 border border-cream-200 rounded-2xl flex items-start gap-2.5">
+                            <img src=${c.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${c.user_name}`} class="w-7 h-7 rounded-full object-cover border border-cream-200 shrink-0" />
+                            <div class="flex-1 space-y-0.5">
+                              <div class="flex justify-between items-center text-[10px]">
+                                <span class="font-bold text-navy-950">${c.user_name}</span>
+                                <span class="text-warmgray-400">${new Date(c.created_at).toLocaleDateString()}</span>
+                              </div>
+                              <p class="text-warmgray-700 text-xs leading-relaxed">${c.content}</p>
+                            </div>
+                          </div>
+                        `)}
+                      </div>
+
+                      <!-- Comment Composer -->
+                      ${currentUser ? html`
+                        <form onSubmit=${e => handlePostComment(e, p.id)} class="flex gap-2 pt-1">
+                          <input
+                            type="text"
+                            required
+                            value=${commentTexts[p.id] || ''}
+                            onChange=${e => setCommentTexts(prev => ({ ...prev, [p.id]: e.target.value }))}
+                            placeholder="Write a comment or connect with author..."
+                            class="w-full px-3.5 py-2.5 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-medium text-navy-900 text-xs"
+                          />
+                          <button
+                            type="submit"
+                            disabled=${commentSubmitting[p.id] || !commentTexts[p.id]?.trim()}
+                            class="px-5 py-2.5 bg-navy-700 hover:bg-navy-800 disabled:opacity-50 text-white font-bold rounded-xl shrink-0 transition-all text-xs shadow-sm"
+                          >
+                            Comment
+                          </button>
+                        </form>
+                      ` : null}
+                    </div>
+                  ` : null}
+
                 </div>
-              </div>
-            `)}
+              `;
+            })}
           </div>
 
           <!-- Sidebar Column (1 Col) -->
           <div class="space-y-6">
             
-            <!-- Post Creation Card -->
+            <!-- Quick Post Launcher Banner -->
             ${currentUser ? html`
-              <div class="bg-white p-6.5 rounded-3xl border border-cream-300 shadow-sm space-y-4 text-xs">
-                <h3 class="font-serif text-lg font-bold text-navy-950 border-b border-cream-100 pb-2.5">
-                  📢 Post Swap Proposal
+              <div class="bg-gradient-to-br from-navy-900 to-navy-955 text-white p-6 rounded-3xl border border-navy-800 shadow-md space-y-3 text-xs">
+                <h3 class="font-serif text-lg font-bold text-white flex items-center gap-2">
+                  <span>🚀 Share Your Knowledge</span>
                 </h3>
-                <p class="text-warmgray-500 text-[11px]">Publish your learning goal to the community feed to receive direct matches.</p>
-
-                <form onSubmit=${handleCreatePost} class="space-y-3.5">
-                  <div>
-                    <label class="block font-bold text-navy-955 mb-1">Proposal Title</label>
-                    <input
-                      required
-                      type="text"
-                      value=${title}
-                      onChange=${e => setTitle(e.target.value)}
-                      placeholder="e.g. Trade Figma Mastery for Python APIs"
-                      class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900"
-                    />
-                  </div>
-
-                  <div>
-                    <label class="block font-bold text-navy-955 mb-1">Exchange Details</label>
-                    <textarea
-                      required
-                      rows="4"
-                      value=${content}
-                      onChange=${e => setContent(e.target.value)}
-                      placeholder="Outline what you can teach, what project you want to build, and your weekly schedule..."
-                      class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 leading-relaxed text-navy-900"
-                    ></textarea>
-                  </div>
-
-                  <div class="grid grid-cols-1 gap-2.5">
-                    <div>
-                      <label class="block font-bold text-navy-955 mb-1">Skill to Teach (Optional)</label>
-                      <select value=${teachSkillId} onChange=${e => setTeachSkillId(e.target.value)} class="w-full p-2 bg-cream-50 border border-cream-300 rounded-xl font-semibold text-navy-900 text-xs">
-                        <option value="">Select a skill...</option>
-                        ${allSkills.map(s => html`<option key=${s.id} value=${s.id}>${s.name}</option>`)}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label class="block font-bold text-navy-955 mb-1">Skill to Learn (Optional)</label>
-                      <select value=${learnSkillId} onChange=${e => setLearnSkillId(e.target.value)} class="w-full p-2 bg-cream-50 border border-cream-300 rounded-xl font-semibold text-navy-900 text-xs">
-                        <option value="">Select a skill...</option>
-                        ${allSkills.map(s => html`<option key=${s.id} value=${s.id}>${s.name}</option>`)}
-                      </select>
-                    </div>
-                  </div>
-
-                  <button type="submit" disabled=${submitting} class="w-full py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-md transition-colors text-xs">
-                    ${submitting ? 'Publishing...' : 'Publish to Feed →'}
+                <p class="text-cream-300 text-[11px] leading-relaxed">
+                  Have a system design blueprint, a coding tutorial, an architecture diagram, or a tech blog? Share it on the public feed!
+                </p>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    onClick=${() => { setPostType('BLOG'); setComposerOpen(true); }}
+                    class="p-2.5 bg-navy-800 hover:bg-navy-700 text-cream-100 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1"
+                  >
+                    <span>📰</span> Write Blog
                   </button>
-                </form>
+                  <button
+                    onClick=${() => { setPostType('IMAGE'); setComposerOpen(true); }}
+                    class="p-2.5 bg-navy-800 hover:bg-navy-700 text-cream-100 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1"
+                  >
+                    <span>🖼️</span> Post Image
+                  </button>
+                </div>
               </div>
-            ` : html`
-              <div class="bg-white p-6.5 rounded-3xl border border-cream-300 shadow-sm text-center space-y-3.5">
-                <h3 class="font-serif text-lg font-bold text-navy-950">Join the Conversation</h3>
-                <p class="text-xs text-warmgray-600 leading-relaxed">Sign up to publish your own swap proposal and connect directly with 14,200+ verified peers.</p>
-                <button onClick=${() => setActiveTab('signup')} class="w-full py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl text-xs shadow-sm">
-                  Create Account Free →
-                </button>
-              </div>
-            `}
+            ` : null}
 
-            <!-- Active Study Circles & Daily Sprints Widget -->
+            <!-- Active Study Circles Widget -->
             <div class="bg-white p-6 rounded-3xl border border-cream-300 shadow-sm space-y-4 text-xs">
               <div class="flex items-center justify-between border-b border-cream-100 pb-2.5">
                 <h3 class="font-serif text-base font-bold text-navy-950 flex items-center gap-2">
-                  <span>⚡ Active Study Circles</span>
+                  <span>⚡ Active Skill Circles</span>
                 </h3>
-                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 text-[9px] font-extrabold uppercase">Live</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 text-[9px] font-extrabold uppercase">Live 🇮🇳</span>
               </div>
 
               <div class="space-y-3">
@@ -2033,9 +2824,6 @@
                       <span>Host: ${circle.host}</span>
                       <span>👥 ${circle.members} swappers</span>
                     </div>
-                    <div class="text-[10px] text-navy-700 font-bold">
-                      📅 ${circle.time}
-                    </div>
                   </div>
                 `)}
               </div>
@@ -2044,7 +2832,7 @@
             <!-- Weekly Knowledge Leaderboard -->
             <div class="bg-white p-6 rounded-3xl border border-cream-300 shadow-sm space-y-4 text-xs">
               <h3 class="font-serif text-base font-bold text-navy-950 border-b border-cream-100 pb-2.5 flex items-center gap-2">
-                <span>🏆 Weekly Karma Champions</span>
+                <span>🏆 Top Peer Mentors in India</span>
               </h3>
 
               <div class="space-y-3">
@@ -2069,17 +2857,83 @@
               </div>
             </div>
 
-            <!-- Code of Conduct Card -->
+            <!-- Community Guidelines & Barter Rules -->
             <div class="bg-cream-50 p-5 rounded-3xl border border-cream-200 space-y-2 text-xs">
-              <h4 class="font-bold text-navy-950">🤝 Community Ground Rules</h4>
-              <ul class="space-y-1 text-warmgray-600 text-[11px] leading-relaxed">
-                <li>• Pure barter only: no soliciting, courses, or fee requests.</li>
-                <li>• Be punctual and respectful to peer learning partners.</li>
-                <li>• Report bad actors directly to the moderation queue.</li>
+              <h4 class="font-bold text-navy-950">🤝 Barter & Content Guidelines</h4>
+              <ul class="space-y-1.5 text-warmgray-600 text-[11px] leading-relaxed">
+                <li>• Pure peer knowledge exchange: zero paid promotions or spam.</li>
+                <li>• Attribute original sources for technical images and diagrams.</li>
+                <li>• Constructive, respectful feedback on peer code snippets.</li>
               </ul>
             </div>
           </div>
         </div>
+
+        <!-- ---------------------------------------------------- -->
+        <!-- FULL ARTICLE READING MODAL (FOR BLOGS) -->
+        <!-- ---------------------------------------------------- -->
+        ${readingArticle ? html`
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-955/70 backdrop-blur-md animate-fadeIn">
+            <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 border border-cream-300 shadow-2xl space-y-6 text-left">
+              <div class="flex items-center justify-between border-b border-cream-200 pb-4">
+                <div class="flex items-center gap-2">
+                  <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold">
+                    📰 Technical Article
+                  </span>
+                  <span class="text-xs text-warmgray-500 font-semibold">⏱️ ${readingArticle.read_time || '4 min read'}</span>
+                </div>
+                <button onClick=${() => setReadingArticle(null)} class="p-2 text-warmgray-500 hover:bg-cream-100 rounded-xl text-sm font-bold">✕ Close</button>
+              </div>
+
+              ${readingArticle.cover_image ? html`
+                <div class="rounded-2xl overflow-hidden max-h-72 border border-cream-300 shadow-sm">
+                  <img src=${readingArticle.cover_image} alt=${readingArticle.title} class="w-full h-72 object-cover" />
+                </div>
+              ` : null}
+
+              <div class="space-y-3">
+                <h1 class="font-serif text-2xl sm:text-3xl font-bold text-navy-950 leading-tight">
+                  ${readingArticle.title}
+                </h1>
+                
+                <div class="flex items-center gap-3 py-2 border-y border-cream-100 text-xs text-warmgray-600">
+                  <img src=${readingArticle.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${readingArticle.user_name}`} class="w-8 h-8 rounded-full border" />
+                  <div>
+                    <strong class="text-navy-950">${readingArticle.user_name}</strong> • ${readingArticle.headline || 'Peer Author'}
+                  </div>
+                </div>
+
+                <div class="text-xs sm:text-sm text-navy-900 font-sans leading-relaxed whitespace-pre-wrap pt-2 space-y-4">
+                  ${readingArticle.content}
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-cream-200 flex justify-end gap-3">
+                <button onClick=${() => copyPostLink(readingArticle)} class="px-4 py-2 bg-cream-100 hover:bg-cream-200 text-navy-900 font-bold rounded-xl text-xs">
+                  🔗 Share Article
+                </button>
+                <button onClick=${() => setReadingArticle(null)} class="px-6 py-2 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl text-xs">
+                  Done Reading
+                </button>
+              </div>
+            </div>
+          </div>
+        ` : null}
+
+        <!-- ---------------------------------------------------- -->
+        <!-- IMAGE LIGHTBOX / ZOOM MODAL -->
+        <!-- ---------------------------------------------------- -->
+        ${viewingImageModal ? html`
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn" onClick=${() => setViewingImageModal(null)}>
+            <div class="max-w-4xl max-h-[90vh] overflow-hidden relative">
+              <button onClick=${() => setViewingImageModal(null)} class="absolute top-4 right-4 z-10 px-3 py-1.5 bg-black/70 hover:bg-black text-white font-bold rounded-xl text-xs">
+                ✕ Close
+              </button>
+              <img src=${viewingImageModal} alt="Enlarged Showcase" class="w-full h-auto max-h-[85vh] object-contain rounded-2xl shadow-2xl" />
+            </div>
+          </div>
+        ` : null}
+
       </div>
     `;
   }

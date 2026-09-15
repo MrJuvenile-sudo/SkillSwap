@@ -1,5 +1,0 @@
-name = "SkillSwap"
-
-[auth]
-enabled = true
-providers = ["email"]

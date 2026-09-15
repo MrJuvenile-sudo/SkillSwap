@@ -27,9 +27,9 @@ export default async function (req, res) {
            updated_at = now()`,
         [
           user.id,
-          bio || 'Passionate about sharing skills and acquiring new knowledge.',
-          location || 'Remote / Worldwide',
-          timezone || 'UTC',
+          bio || 'Passionate about sharing skills and acquiring new knowledge across India.',
+          location || 'Bengaluru, Karnataka, India',
+          timezone || 'IST (UTC+5:30)',
           preferred_language || 'English',
           weekly_hours || 4,
           JSON.stringify(availability_schedule || { monday: ['evening'], wednesday: ['evening'], saturday: ['morning'] })

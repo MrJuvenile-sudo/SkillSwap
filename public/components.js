@@ -65,8 +65,10 @@
       'inbox': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>`,
       'message-circle': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>`,
       'circle': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/></svg>`,
-      'folder': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2z"/></svg>`
-
+      'folder': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2z"/></svg>`,
+      'eye': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`,
+      'eye-off': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`,
+      'shield-check': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>`
     };
     return icons[name] || html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="8"/></svg>`;
   }
@@ -274,7 +276,6 @@
       { id: 'features', label: 'Platform Features', icon: 'layers' },
       { id: 'skills-dir', label: 'Skill Directory', icon: 'search' },
       { id: 'community', label: 'Community Feed', icon: 'message-square' },
-      { id: 'hub-browse', label: 'Learning Hub', icon: 'book-open' },
       { id: 'help', label: 'How It Works', icon: 'compass' },
       { id: 'faq', label: 'FAQ & Help Center', icon: 'message-circle' }
     ];
@@ -283,6 +284,8 @@
       { id: 'dashboard', label: 'Dashboard', icon: 'activity' },
       { id: 'exchange', label: 'Exchange Hub', badge: 'Hub', icon: 'book-open' },
       { id: 'hub-browse', label: 'Learning Hub', icon: 'book-open' },
+      { id: 'problems', label: 'Problems', icon: 'layers' },
+      { id: 'circles', label: 'Skill Circles', icon: 'sparkles' },
       { id: 'community', label: 'Community Feed', icon: 'message-square' },
       { id: 'requests', label: 'Requests', count: pendingRequestsCount, icon: 'inbox' },
       { id: 'chat', label: 'Chat', icon: 'message-circle' }
@@ -370,9 +373,6 @@
                 <button onClick=${() => handleNavClick('features')} class="px-3.5 py-2.5 rounded-xl transition-all ${activeTab === 'features' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
                   Features
                 </button>
-                <button onClick=${() => handleNavClick('hub-browse')} class="px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1 ${activeTab === 'hub-browse' || activeTab.startsWith('hub') ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
-                  <span>Learning Hub</span>
-                </button>
                 <button onClick=${() => handleNavClick('community')} class="px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1 ${activeTab === 'community' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
                   <span>Community Feed</span>
                 </button>
@@ -385,21 +385,35 @@
                   </button>
                   ${exploreDropdownOpen ? html`
                     <div class="absolute left-0 top-full mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cream-300 py-2 z-50 text-xs text-left animate-fadeIn ring-1 ring-black/5 space-y-0.5">
-                      <button onClick=${() => handleNavClick('skills-dir')} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('skills-dir'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
                         <${Icon} name="search" class="w-4 h-4 text-navy-600 shrink-0" />
                         <div>
                           <p class="font-bold text-navy-950">Skill Directory</p>
                           <p class="text-[10px] text-warmgray-500 font-normal">Browse 120+ verified subjects</p>
                         </div>
                       </button>
-                      <button onClick=${() => handleNavClick('help')} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('problems'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="layers" class="w-4 h-4 text-navy-600 shrink-0" />
+                        <div>
+                          <p class="font-bold text-navy-950">Problems & Challenges</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Real problem cases seeking solutions</p>
+                        </div>
+                      </button>
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('circles'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="sparkles" class="w-4 h-4 text-navy-600 shrink-0" />
+                        <div>
+                          <p class="font-bold text-navy-950">Skill Circles</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Group peer learning cohorts</p>
+                        </div>
+                      </button>
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('help'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
                         <${Icon} name="compass" class="w-4 h-4 text-navy-600 shrink-0" />
                         <div>
                           <p class="font-bold text-navy-950">How It Works</p>
                           <p class="text-[10px] text-warmgray-500 font-normal">P2P Barter Guide & Escrow</p>
                         </div>
                       </button>
-                      <button onClick=${() => handleNavClick('faq')} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('faq'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
                         <${Icon} name="message-circle" class="w-4 h-4 text-navy-600 shrink-0" />
                         <div>
                           <p class="font-bold text-navy-950">FAQ & Support</p>
@@ -421,50 +435,57 @@
                   <span class="px-1 py-0.2 text-[8px] font-black rounded-md ${activeTab === 'exchange' ? 'bg-white/20 text-white' : 'bg-navy-100 text-navy-700'}">Hub</span>
                 </button>
 
-                <!-- Discover Dropdown (People, Problems, Circles) -->
+                <!-- Learning Hub Top Level Nav Item (Directly in Navbar) -->
+                <button onClick=${() => handleNavClick('hub-browse')} class="px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'hub-browse' || activeTab.startsWith('hub') ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                  <${Icon} name="book-open" class="w-4 h-4" />
+                  <span>Learning Hub</span>
+                </button>
+
+                <!-- Discover Dropdown (People, Problems, Skill Circles, How It Works) -->
                 <div class="relative text-left" id="explore-dropdown-container">
-                  <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['skills-dir', 'problems', 'circles'].includes(activeTab) ? 'bg-navy-700 text-white font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                  <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['skills-dir', 'problems', 'circles', 'help', 'faq'].includes(activeTab) ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
                     <span>Discover</span>
                     <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${exploreDropdownOpen ? 'rotate-180' : ''}" />
                   </button>
                   ${exploreDropdownOpen ? html`
                     <div class="absolute left-0 top-full mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cream-300 py-2 z-50 text-xs text-left animate-fadeIn ring-1 ring-black/5 space-y-0.5">
                       <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('skills-dir'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="users" class="w-4 h-4 text-navy-600 shrink-0" />
+                        <${Icon} name="search" class="w-4 h-4 text-navy-600 shrink-0" />
                         <div>
-                          <p class="font-bold text-navy-950">People (Directory)</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Browse verified skill swappers</p>
+                          <p class="font-bold text-navy-950">Skill Directory</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Browse 120+ verified subjects</p>
                         </div>
                       </button>
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('community'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('problems'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
                         <${Icon} name="layers" class="w-4 h-4 text-navy-600 shrink-0" />
                         <div>
-                          <p class="font-bold text-navy-950">Problems</p>
+                          <p class="font-bold text-navy-950">Problems & Challenges</p>
                           <p class="text-[10px] text-warmgray-500 font-normal">Real problem cases seeking solutions</p>
                         </div>
                       </button>
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('hub-browse'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="book-open" class="w-4 h-4 text-indigo-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">Learning Hub</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Academic resources & courses</p>
-                        </div>
-                      </button>
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('exchange'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="sparkles" class="w-4 h-4 text-indigo-600 shrink-0" />
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('circles'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="sparkles" class="w-4 h-4 text-navy-600 shrink-0" />
                         <div>
                           <p class="font-bold text-navy-950">Skill Circles</p>
                           <p class="text-[10px] text-warmgray-500 font-normal">Group peer learning cohorts</p>
+                        </div>
+                      </button>
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('help'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="compass" class="w-4 h-4 text-navy-600 shrink-0" />
+                        <div>
+                          <p class="font-bold text-navy-950">How It Works</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">P2P Barter Guide & Escrow</p>
                         </div>
                       </button>
                     </div>
                   ` : null}
                 </div>
 
-                <!-- Workspace Dropdown (Matches, Exchanges, Sessions) -->
+                <!-- Workspace Dropdown (Matches, Exchanges, Requests, Community) -->
                 <div class="relative text-left" id="resources-dropdown-container">
-                  <button onClick=${() => setResourcesDropdownOpen(!resourcesDropdownOpen)} class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['matches', 'workspaces', 'requests'].includes(activeTab) ? 'bg-navy-700 text-white font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                  <button onClick=${() => setResourcesDropdownOpen(!resourcesDropdownOpen)} class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['matches', 'workspaces', 'requests', 'community'].includes(activeTab) ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
                     <span>Workspace</span>
+                    ${pendingRequestsCount > 0 ? html`<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-sky-500 text-white shadow-xs">${pendingRequestsCount}</span>` : null}
                     <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${resourcesDropdownOpen ? 'rotate-180' : ''}" />
                   </button>
                   ${resourcesDropdownOpen ? html`
@@ -483,24 +504,27 @@
                           <p class="text-[10px] text-warmgray-500 font-normal">Ongoing agreement workspaces</p>
                         </div>
                       </button>
-                      <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('requests'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="clock" class="w-4 h-4 text-navy-600 shrink-0" />
+                      <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('requests'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center justify-between gap-2 text-navy-900 font-bold transition-colors">
+                        <div class="flex items-center gap-3">
+                          <${Icon} name="inbox" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">Swap Requests</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">Sent and received barter requests</p>
+                          </div>
+                        </div>
+                        ${pendingRequestsCount > 0 ? html`<span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-500 text-white shadow-xs">${pendingRequestsCount} new</span>` : null}
+                      </button>
+                      <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('community'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="message-square" class="w-4 h-4 text-navy-600 shrink-0" />
                         <div>
-                          <p class="font-bold text-navy-950">Scheduled Sessions</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Upcoming 1:1 barter sessions</p>
+                          <p class="font-bold text-navy-950">Community Feed</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Peer discussions & study groups</p>
                         </div>
                       </button>
                     </div>
                   ` : null}
                 </div>
 
-                <button onClick=${() => handleNavClick('community')} class="px-3 py-2 rounded-xl transition-all duration-200 ${activeTab === 'community' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
-                  Community
-                </button>
-                <button onClick=${() => handleNavClick('requests')} class="px-3 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 relative ${activeTab === 'requests' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
-                  <span>Requests</span>
-                  ${pendingRequestsCount > 0 ? html`<span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-500 text-white shadow-xs">${pendingRequestsCount}</span>` : null}
-                </button>
                 <button onClick=${() => handleNavClick('chat')} class="px-3 py-2 rounded-xl transition-all duration-200 ${activeTab === 'chat' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
                   Chat
                 </button>
@@ -635,14 +659,6 @@
                   ` : null}
                 </div>
               `}
-              <!-- Mobile Menu Toggle Button -->
-              <button
-                onClick=${() => setMobileOpen(!mobileOpen)}
-                class="lg:hidden p-2 rounded-xl text-navy-900 hover:bg-cream-200/70 border border-cream-300 transition-colors"
-                aria-label="Toggle Navigation Menu"
-              >
-                <${Icon} name=${mobileOpen ? 'x' : 'menu'} class="w-5 h-5" />
-              </button>
             </div>
           </div>
         </div>
@@ -657,15 +673,15 @@
           { id: 'skills-dir', label: 'Explore', icon: 'search' },
           { id: 'hub-browse', label: 'Hub', icon: 'book-open' },
           { id: 'community', label: 'Feed', icon: 'message-square' },
-          { id: 'menu', label: 'Account', icon: 'user', isMenu: true }
+          { id: 'menu', label: 'Menu', icon: 'menu', isMenu: true }
         ] : [
           { id: 'dashboard', label: 'Dash', icon: 'layout-grid' },
           { id: 'exchange', label: 'Exchange', icon: 'book-open', badge: 'Hub' },
-          { id: 'skills-dir', label: 'Discover', icon: 'compass' },
-          { id: 'community', label: 'Feed', icon: 'message-square' },
+          { id: 'hub-browse', label: 'Hub', icon: 'book-open' },
+          { id: 'chat', label: 'Chat', icon: 'message-circle' },
           { id: 'menu', label: 'Menu', icon: 'menu', isMenu: true, count: pendingRequestsCount }
         ]).map(tab => {
-          const isActive = tab.isMenu ? mobileOpen : (activeTab === tab.id || (tab.id === 'exchange' && activeTab === 'exchange'));
+          const isActive = tab.isMenu ? mobileOpen : (activeTab === tab.id || (tab.id === 'hub-browse' && activeTab.startsWith('hub')));
           return html`
             <button
               key=${tab.id}
@@ -697,122 +713,201 @@
         })}
       </nav>
 
-      <!-- Solid Mobile Sidebar Drawer (Solid Color - No Transparency) -->
+      <!-- Premium Structured Mobile Sidebar Drawer -->
       ${mobileOpen ? html`
         <div
-          class="lg:hidden fixed inset-0 z-40 bg-black/60 opacity-100 transition-opacity animate-fadeIn"
+          class="lg:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-xs transition-opacity animate-fadeIn"
           onClick=${() => setMobileOpen(false)}
         ></div>
 
-        <aside class="lg:hidden fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 bg-[#0B1E36] text-white p-6 shadow-[10px_0_35px_rgba(0,0,0,0.6)] flex flex-col justify-between overflow-y-auto animate-slideRight border-r border-navy-800 opacity-100 select-none">
-          <div class="space-y-6">
+        <aside class="lg:hidden fixed top-0 left-0 bottom-0 w-84 max-w-[88vw] z-50 bg-[#0A192F] text-white p-5 shadow-[12px_0_40px_rgba(0,0,0,0.8)] flex flex-col justify-between overflow-y-auto animate-slideRight border-r border-navy-800/90 select-none">
+          <div class="space-y-5">
             <!-- Sidebar Header -->
-            <div class="flex items-center justify-between border-b border-navy-800 pb-4">
+            <div class="flex items-center justify-between border-b border-navy-800/80 pb-3.5">
               <div class="flex items-center gap-2.5 cursor-pointer" onClick=${() => handleNavClick(user ? 'dashboard' : 'home')}>
                 <img src="/logo-icon.png" alt="SkillSwapX Logo" class="w-9 h-9 rounded-xl object-contain bg-white p-1 border border-navy-700 shadow-sm" />
-                <span class="font-serif text-xl font-extrabold text-white tracking-tight">SkillSwap<span class="text-indigo-400">X</span></span>
+                <div class="flex flex-col text-left">
+                  <span class="font-serif text-lg font-extrabold text-white tracking-tight">SkillSwap<span class="text-indigo-400">X</span></span>
+                  <span class="text-[9px] font-bold text-sky-300/80 -mt-0.5">🇮🇳 India P2P Barter Network</span>
+                </div>
               </div>
               <button
                 onClick=${() => setMobileOpen(false)}
-                class="p-2 rounded-xl bg-navy-900 text-cream-200 hover:text-white hover:bg-navy-800 border border-navy-700 transition-colors"
-                aria-label="Close Sidebar"
+                class="p-2 rounded-xl bg-navy-900/90 text-cream-200 hover:text-white hover:bg-navy-800 border border-navy-700 transition-colors"
+                aria-label="Close Navigation Sidebar"
               >
-                <${Icon} name="x" class="w-5 h-5" />
+                <${Icon} name="x" class="w-4.5 h-4.5" />
               </button>
             </div>
 
-            <!-- User Info / Welcome Banner -->
+            <!-- User Info / Welcome Card -->
             ${!user ? html`
-              <div class="p-4 bg-navy-900 rounded-2xl border border-navy-800 text-white space-y-1">
+              <div class="p-4 bg-gradient-to-br from-navy-900 to-navy-950 rounded-2xl border border-navy-800 text-white space-y-1.5 shadow-sm">
                 <div class="flex items-center justify-between">
-                  <p class="font-serif font-bold text-sm">Welcome 👋</p>
-                  <span class="px-2 py-0.5 bg-navy-800 text-sky-300 rounded text-[9px] font-black uppercase border border-sky-400/20">Zero Fees</span>
+                  <p class="font-serif font-bold text-sm">Namaste 👋</p>
+                  <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded text-[9px] font-black uppercase border border-emerald-500/30">Zero Fees</span>
                 </div>
-                <p class="text-[11px] text-cream-200/70">Reciprocal Knowledge Barter Network</p>
+                <p class="text-[11px] text-cream-200/80 leading-relaxed">Join 14,000+ verified swappers sharing skills across India.</p>
               </div>
             ` : html`
-              <div class="p-4 bg-navy-900 rounded-2xl border border-navy-800 flex items-center gap-3.5 shadow-sm">
+              <div class="p-4 bg-gradient-to-br from-navy-900 to-navy-950 rounded-2xl border border-navy-800 flex items-center gap-3.5 shadow-sm">
                 <div class="relative shrink-0">
-                  <img src=${user.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop'} alt=${user.name} class="w-11 h-11 rounded-full object-cover ring-2 ring-indigo-500" />
-                  <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-navy-950"></span>
+                  <img src=${user.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop'} alt=${user.name} class="w-11 h-11 rounded-2xl object-cover ring-2 ring-indigo-500" />
+                  <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-navy-950"></span>
                 </div>
                 <div class="flex-1 min-w-0 text-left">
-                  <p class="font-bold text-white text-sm truncate flex items-center gap-1">
+                  <p class="font-bold text-white text-xs truncate flex items-center gap-1">
                     <span>${user.name}</span>
                     <span class="text-emerald-400 font-black text-xs">✓</span>
                   </p>
-                  <p class="text-cream-200/70 truncate text-[11px]">@${user.username || 'user'}</p>
+                  <p class="text-cream-200/70 truncate text-[10.5px]">@${user.username || 'user'}</p>
+                  <p class="text-sky-300/80 truncate text-[10px] font-medium mt-0.5">📍 ${user.location || 'Bengaluru, India'}</p>
                 </div>
-                <span class="px-2 py-1 rounded-lg bg-navy-800 text-sky-300 text-[10px] font-extrabold border border-navy-700">4.9★</span>
+                <div class="flex flex-col items-end gap-1">
+                  <span class="px-2 py-0.5 rounded-lg bg-navy-800 text-sky-300 text-[9.5px] font-extrabold border border-navy-700">4.9★</span>
+                  ${['SUPER_ADMIN', 'ADMIN'].includes(user.role) ? html`
+                    <span class="px-1.5 py-0.2 rounded bg-purple-500/30 text-purple-300 text-[8px] font-bold border border-purple-400/40">ADMIN</span>
+                  ` : null}
+                </div>
               </div>
             `}
 
-            <!-- Navigation Links -->
-            <nav class="space-y-1.5 text-left">
-              <p class="text-[10px] font-extrabold uppercase tracking-widest text-navy-400 px-2 pb-1">Navigation Menu</p>
-              ${(!user ? guestNavLinks : authNavLinks).map(link => {
-                const isActive = activeTab === link.id || (link.id === 'hub-browse' && activeTab.startsWith('hub'));
-                return html`
-                  <button
-                    key=${link.id}
-                    onClick=${() => handleNavClick(link.id)}
-                    class="w-full text-left px-4 py-3 rounded-xl text-xs font-bold flex items-center justify-between transition-all duration-200 ${
-                      isActive 
-                        ? 'bg-navy-700 text-white shadow-md font-extrabold border border-indigo-400/40' 
-                        : 'text-cream-200/90 hover:bg-navy-900 hover:text-white'
-                    }"
-                  >
-                    <span class="flex items-center gap-3">
-                      <${Icon} name=${link.icon || 'circle'} class="w-4.5 h-4.5 ${isActive ? 'text-white' : 'text-navy-400'}" />
-                      ${link.label}
+            <!-- Organized Navigation Menu Sections -->
+            <nav class="space-y-4 text-left">
+              ${!user ? html`
+                <div class="space-y-1">
+                  <p class="text-[9.5px] font-extrabold uppercase tracking-wider text-navy-400 px-2 pb-1">Navigation</p>
+                  ${guestNavLinks.map(link => {
+                    const isActive = activeTab === link.id;
+                    return html`
+                      <button
+                        key=${link.id}
+                        onClick=${() => handleNavClick(link.id)}
+                        class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all ${
+                          isActive 
+                            ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' 
+                            : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'
+                        }"
+                      >
+                        <span class="flex items-center gap-2.5">
+                          <${Icon} name=${link.icon || 'circle'} class="w-4 h-4 ${isActive ? 'text-white' : 'text-navy-400'}" />
+                          <span>${link.label}</span>
+                        </span>
+                      </button>
+                    `;
+                  })}
+                </div>
+              ` : html`
+                <!-- Section 1: Main Platform -->
+                <div class="space-y-1">
+                  <p class="text-[9.5px] font-extrabold uppercase tracking-wider text-navy-400 px-2 pb-1">Core Experience</p>
+                  <button onClick=${() => handleNavClick('dashboard')} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'dashboard' ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'}">
+                    <${Icon} name="layout-grid" class="w-4 h-4 ${activeTab === 'dashboard' ? 'text-white' : 'text-navy-400'}" />
+                    <span>Dashboard</span>
+                  </button>
+                  <button onClick=${() => handleNavClick('exchange')} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all ${activeTab === 'exchange' ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'}">
+                    <span class="flex items-center gap-2.5">
+                      <${Icon} name="book-open" class="w-4 h-4 ${activeTab === 'exchange' ? 'text-white' : 'text-navy-400'}" />
+                      <span>Exchange Hub</span>
                     </span>
-                    ${link.badge ? html`
-                      <span class="px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase ${isActive ? 'bg-white/20 text-white' : 'bg-navy-800 text-sky-300'}">${link.badge}</span>
-                    ` : null}
-                    ${link.count > 0 ? html`
-                      <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-500 text-white shadow-xs">${link.count}</span>
+                    <span class="px-1.5 py-0.2 rounded text-[8px] font-black uppercase bg-navy-800 text-sky-300">Hub</span>
+                  </button>
+                  <button onClick=${() => handleNavClick('hub-browse')} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all ${activeTab === 'hub-browse' || activeTab.startsWith('hub') ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'}">
+                    <span class="flex items-center gap-2.5">
+                      <${Icon} name="book-open" class="w-4 h-4 ${activeTab === 'hub-browse' || activeTab.startsWith('hub') ? 'text-white' : 'text-navy-400'}" />
+                      <span>Learning Hub</span>
+                    </span>
+                    <span class="px-1.5 py-0.2 rounded text-[8px] font-black uppercase bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">Exams</span>
+                  </button>
+                </div>
+
+                <!-- Section 2: Discover & Network -->
+                <div class="space-y-1">
+                  <p class="text-[9.5px] font-extrabold uppercase tracking-wider text-navy-400 px-2 pb-1">Discover & Peer Network</p>
+                  <button onClick=${() => handleNavClick('skills-dir')} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'skills-dir' ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'}">
+                    <${Icon} name="search" class="w-4 h-4 ${activeTab === 'skills-dir' ? 'text-white' : 'text-navy-400'}" />
+                    <span>Skill Directory</span>
+                  </button>
+                  <button onClick=${() => handleNavClick('problems')} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'problems' ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'}">
+                    <${Icon} name="layers" class="w-4 h-4 ${activeTab === 'problems' ? 'text-white' : 'text-navy-400'}" />
+                    <span>Problems & Challenges</span>
+                  </button>
+                  <button onClick=${() => handleNavClick('circles')} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'circles' ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'}">
+                    <${Icon} name="sparkles" class="w-4 h-4 ${activeTab === 'circles' ? 'text-white' : 'text-navy-400'}" />
+                    <span>Skill Circles</span>
+                  </button>
+                </div>
+
+                <!-- Section 3: Workspace & Comms -->
+                <div class="space-y-1">
+                  <p class="text-[9.5px] font-extrabold uppercase tracking-wider text-navy-400 px-2 pb-1">Workspace & Collaboration</p>
+                  <button onClick=${() => handleNavClick('requests')} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all ${activeTab === 'requests' ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'}">
+                    <span class="flex items-center gap-2.5">
+                      <${Icon} name="inbox" class="w-4 h-4 ${activeTab === 'requests' ? 'text-white' : 'text-navy-400'}" />
+                      <span>Swap Requests</span>
+                    </span>
+                    ${pendingRequestsCount > 0 ? html`
+                      <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-sky-500 text-white shadow-xs">${pendingRequestsCount} new</span>
                     ` : null}
                   </button>
-                `;
-              })}
+                  <button onClick=${() => handleNavClick('workspaces')} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'workspaces' ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'}">
+                    <${Icon} name="folder" class="w-4 h-4 ${activeTab === 'workspaces' ? 'text-white' : 'text-navy-400'}" />
+                    <span>Active Workspaces</span>
+                  </button>
+                  <button onClick=${() => handleNavClick('chat')} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'chat' ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'}">
+                    <${Icon} name="message-circle" class="w-4 h-4 ${activeTab === 'chat' ? 'text-white' : 'text-navy-400'}" />
+                    <span>Direct Messages (Chat)</span>
+                  </button>
+                  <button onClick=${() => handleNavClick('community')} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'community' ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'}">
+                    <${Icon} name="message-square" class="w-4 h-4 ${activeTab === 'community' ? 'text-white' : 'text-navy-400'}" />
+                    <span>Community Feed</span>
+                  </button>
+                </div>
 
-              ${user && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role) ? html`
-                <button
-                  onClick=${() => handleNavClick('admin')}
-                  class="w-full text-left px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-3 text-indigo-200 bg-indigo-950/80 border border-indigo-500/40 hover:bg-indigo-900 transition-colors"
-                >
-                  <span class="text-base leading-none">🛡️</span>
-                  <span>Admin Console</span>
-                </button>
-              ` : null}
+                ${user && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role) ? html`
+                  <button
+                    onClick=${() => handleNavClick('admin')}
+                    class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 text-indigo-200 bg-indigo-950/90 border border-indigo-500/40 hover:bg-indigo-900 transition-colors"
+                  >
+                    <span class="text-base leading-none">🛡️</span>
+                    <span>Admin Panel Suite</span>
+                  </button>
+                ` : null}
+              `}
             </nav>
           </div>
 
-          <!-- Bottom Footer -->
-          <div class="pt-6 border-t border-navy-800 space-y-2 text-left mt-6">
+          <!-- Bottom Footer Quick Actions -->
+          <div class="pt-4 border-t border-navy-800/90 space-y-2 text-left mt-6">
             ${!user ? html`
-              <div class="grid grid-cols-2 gap-2.5">
-                <button onClick=${() => handleNavClick('login')} class="w-full py-3 text-center font-bold text-white bg-navy-900 hover:bg-navy-800 border border-navy-700 rounded-xl text-xs shadow-2xs transition-all">
+              <div class="grid grid-cols-2 gap-2">
+                <button onClick=${() => handleNavClick('login')} class="w-full py-2.5 text-center font-bold text-white bg-navy-900 hover:bg-navy-800 border border-navy-700 rounded-xl text-xs shadow-2xs transition-all">
                   Log In
                 </button>
-                <button onClick=${() => handleNavClick('signup')} class="w-full py-3 text-center font-bold text-white bg-navy-700 hover:bg-navy-800 rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1">
+                <button onClick=${() => handleNavClick('signup')} class="w-full py-2.5 text-center font-bold text-white bg-navy-700 hover:bg-navy-800 rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1">
                   <span>Join Free</span>
                   <${Icon} name="arrow-right" class="w-3.5 h-3.5" />
                 </button>
               </div>
             ` : html`
               <div class="space-y-1.5">
-                <button onClick=${() => { setMobileOpen(false); if (onViewProfile && user) { onViewProfile(user.username || user.id); } else { handleNavClick('public-profile'); } }} class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-cream-200/90 hover:bg-navy-900 hover:text-white flex items-center gap-3">
-                  <${Icon} name="user" class="w-4 h-4 text-navy-400" /> View Public Profile
+                <button onClick=${() => { setMobileOpen(false); if (onViewProfile && user) { onViewProfile(user.username || user.id); } else { handleNavClick('public-profile'); } }} class="w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold text-cream-200/90 hover:bg-navy-900/80 hover:text-white flex items-center gap-2.5">
+                  <${Icon} name="user" class="w-4 h-4 text-navy-400" />
+                  <span>View Public Profile</span>
                 </button>
-                <button onClick=${() => { setMobileOpen(false); handleNavClick('settings'); }} class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-cream-200/90 hover:bg-navy-900 hover:text-white flex items-center gap-3">
-                  <${Icon} name="settings" class="w-4 h-4 text-navy-400" /> Account Preferences
+                <button onClick=${() => { setMobileOpen(false); handleNavClick('settings'); }} class="w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold text-cream-200/90 hover:bg-navy-900/80 hover:text-white flex items-center gap-2.5">
+                  <${Icon} name="settings" class="w-4 h-4 text-navy-400" />
+                  <span>Account & Preferences</span>
                 </button>
-                <button onClick=${() => { setMobileOpen(false); onLogout(); }} class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-rose-300 hover:bg-rose-600 hover:text-white flex items-center gap-3 transition-colors border border-rose-500/30 rounded-xl">
-                  <${Icon} name="log-out" class="w-4 h-4 text-rose-400" /> Log Out
+                <button onClick=${() => { setMobileOpen(false); onLogout(); }} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-300 hover:bg-rose-600 hover:text-white flex items-center gap-2.5 transition-colors border border-rose-500/30">
+                  <${Icon} name="log-out" class="w-4 h-4 text-rose-400" />
+                  <span>Log Out</span>
                 </button>
               </div>
             `}
+            <div class="pt-2 text-center text-[9.5px] text-navy-400 font-semibold">
+              🇮🇳 SkillSwapX • Peer Barter Platform
+            </div>
           </div>
         </aside>
       ` : null}

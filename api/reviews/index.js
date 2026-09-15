@@ -92,7 +92,7 @@ export default async function (req, res) {
            knowledge_rating = EXCLUDED.knowledge_rating,
            reliability_rating = EXCLUDED.reliability_rating,
            comment = EXCLUDED.comment,
-           created_at = now()
+           created_at = datetime('now')
          RETURNING *`,
         [
           workspace_id, 
@@ -104,14 +104,14 @@ export default async function (req, res) {
           Math.min(5, Math.max(1, Number(reliability_rating || 5))),
           comment || '',
           !isBothReviewed,
-          isBothReviewed ? new Date() : new Date(Date.now() + 7 * 86400 * 1000)
+          isBothReviewed ? new Date().toISOString() : new Date(Date.now() + 7 * 86400 * 1000).toISOString()
         ]
       );
 
       // If both have reviewed, reveal both reviews immediately!
       if (isBothReviewed) {
         await db.query(
-          `UPDATE reviews SET is_blind = false, revealed_at = now() WHERE workspace_id = $1`,
+          `UPDATE reviews SET is_blind = false, revealed_at = datetime('now') WHERE workspace_id = $1`,
           [workspace_id]
         );
       }

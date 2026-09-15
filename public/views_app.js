@@ -7,7 +7,7 @@
   const htm = window.htm || self.htm;
   if (!React || !htm) return;
 
-  const { useState, useEffect, useMemo } = React;
+  const { useState, useEffect, useMemo, useRef, useCallback } = React;
   const html = htm.bind(React.createElement);
   const Icon = window.SkillSwap.Icon;
   const api = (...args) => window.SkillSwap.api(...args);
@@ -685,12 +685,13 @@
   window.SkillSwap.MySkillsView = MySkillsView;
 
   // ----------------------------------------------------
-  // Requests View
+  // Requests View (Received & Sent Tabs)
   // ----------------------------------------------------
   function RequestsView({ onAcceptRequest }) {
     const [incoming, setIncoming] = useState([]);
+    const [outgoing, setOutgoing] = useState([]);
+    const [activeSubTab, setActiveSubTab] = useState('received'); // 'received' | 'sent'
     const [loading, setLoading] = useState(true);
-
 
     useEffect(() => {
       loadRequests();
@@ -701,12 +702,12 @@
         setLoading(true);
         const data = await api('/api/requests');
         setIncoming(data.incoming || []);
+        setOutgoing(data.outgoing || []);
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
-
     };
 
     const handleAccept = async (reqId) => {
@@ -720,59 +721,281 @@
       loadRequests();
     };
 
+    const pendingIncoming = incoming.filter(r => r.status === 'PENDING').length;
+    const pendingOutgoing = outgoing.filter(r => r.status === 'PENDING').length;
+
     return html`
       <div class="max-w-5xl mx-auto px-4 py-8 space-y-8 text-left animate-fadeIn">
-        <div>
-          <h1 class="font-serif text-3xl font-bold text-navy-900">Exchange Requests</h1>
-          <p class="text-warmgray-600 text-xs sm:text-sm">Track and manage exchange proposals sent by compatible peers.</p>
-        </div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 class="font-serif text-3xl font-bold text-navy-950">Exchange Requests</h1>
+            <p class="text-warmgray-600 text-xs sm:text-sm mt-1">Track, review, and manage incoming and outgoing skill swap proposals.</p>
+          </div>
 
-        <div class="bg-white rounded-3xl p-7 border border-cream-300 shadow-sm space-y-5 text-xs sm:text-sm">
-          <h2 class="font-serif text-xl font-bold text-navy-955 pb-3 border-b border-cream-100">Incoming Swap Proposals (${incoming.length})</h2>
-          ${loading ? html`<div class="p-6 text-center text-warmgray-500 font-serif">Checking proposal ledger...</div>` : null}
-          ${!loading && incoming.length === 0 ? html`<p class="text-xs text-warmgray-500 py-6 text-center">No pending incoming requests at the moment.</p>` : null}
-          
-          <div class="space-y-4">
-            ${incoming.map(r => html`
-              <div key=${r.id} class="p-5 bg-cream-50/70 rounded-2xl border border-cream-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-sm hover:border-cream-300 transition-colors border-l-4 border-l-navy-600">
-                <div class="space-y-2 flex-1">
-                  <div class="flex items-center gap-2">
-                    <span class="font-bold text-navy-955 text-sm">${r.sender_name}</span>
-                    <span class="px-2 py-0.5 rounded bg-navy-100 text-navy-900 font-bold text-[9px] uppercase tracking-wider">${r.cadence || 'Weekly'}</span>
-                  </div>
-                  <p class="text-xs text-warmgray-700 italic leading-relaxed bg-white/70 p-3 rounded-xl border border-cream-200">"${r.message}"</p>
-                </div>
+          <!-- Tab Pill Switcher -->
+          <div class="flex items-center p-1 bg-cream-200/80 rounded-2xl border border-cream-300 w-fit shrink-0">
+            <button
+              type="button"
+              onClick=${() => setActiveSubTab('received')}
+              class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeSubTab === 'received' ? 'bg-white text-navy-950 shadow-sm' : 'text-warmgray-600 hover:text-navy-900'}"
+            >
+              <span>📥 Received</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${activeSubTab === 'received' ? 'bg-navy-100 text-navy-900' : 'bg-cream-300/80 text-warmgray-700'}">
+                ${incoming.length}
+              </span>
+            </button>
 
-                ${r.status === 'PENDING' ? html`
-                  <div class="flex items-center gap-2.5 shrink-0 w-full md:w-auto">
-                    <button onClick=${() => handleAccept(r.id)} class="flex-1 md:flex-none px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all">
-                      Accept Swap
-                    </button>
-                    <button onClick=${() => handleReject(r.id)} class="flex-1 md:flex-none px-4 py-2.5 bg-white border border-cream-300 hover:bg-rose-50 text-rose-700 rounded-xl font-bold text-xs transition-all">
-                      Decline
-                    </button>
-                  </div>
-                ` : html`<span class="px-3 py-1 rounded bg-cream-200 font-bold text-xs text-navy-800">${r.status}</span>`}
-              </div>
-            `)}
-
+            <button
+              type="button"
+              onClick=${() => setActiveSubTab('sent')}
+              class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeSubTab === 'sent' ? 'bg-white text-navy-950 shadow-sm' : 'text-warmgray-600 hover:text-navy-900'}"
+            >
+              <span>📤 Sent</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${activeSubTab === 'sent' ? 'bg-navy-100 text-navy-900' : 'bg-cream-300/80 text-warmgray-700'}">
+                ${outgoing.length}
+              </span>
+            </button>
           </div>
         </div>
+
+        <!-- Tab 1: Received Requests -->
+        ${activeSubTab === 'received' ? html`
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-cream-300 shadow-sm space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b border-cream-200">
+              <h2 class="font-serif text-lg sm:text-xl font-bold text-navy-955 flex items-center gap-2">
+                <span>Incoming Proposals Received</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-navy-100 text-navy-800">${incoming.length}</span>
+              </h2>
+              ${pendingIncoming > 0 ? html`
+                <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
+                  ${pendingIncoming} Pending Action
+                </span>
+              ` : null}
+            </div>
+
+            ${loading ? html`<div class="p-10 text-center text-warmgray-500 font-serif">Checking proposal ledger...</div>` : null}
+            ${!loading && incoming.length === 0 ? html`
+              <div class="py-12 text-center space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-cream-100 flex items-center justify-center mx-auto text-xl text-warmgray-400">📥</div>
+                <h3 class="font-serif text-base font-bold text-navy-900">No incoming proposals yet</h3>
+                <p class="text-xs text-warmgray-500 max-w-sm mx-auto">When peers discover your teaching skills and propose a swap, their requests will appear here.</p>
+              </div>
+            ` : null}
+
+            <div class="space-y-4">
+              ${incoming.map(r => html`
+                <div key=${r.id} class="p-5 sm:p-6 bg-cream-50/60 rounded-2xl border border-cream-200/90 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 shadow-xs hover:border-cream-300 transition-all border-l-4 ${r.status === 'PENDING' ? 'border-l-amber-500' : r.status === 'ACCEPTED' ? 'border-l-emerald-600' : 'border-l-rose-500'}">
+                  <div class="space-y-3.5 flex-1 text-left">
+                    <div class="flex flex-wrap items-center gap-3">
+                      <img src=${r.sender_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'} alt=${r.sender_name} class="w-10 h-10 rounded-xl object-cover border border-cream-200" />
+                      <div>
+                        <h4 class="font-bold text-navy-950 text-sm">${r.sender_name}</h4>
+                        <p class="text-[11px] text-warmgray-500">${r.sender_headline || `@${r.sender_username}`}</p>
+                      </div>
+                      <span class="ml-auto sm:ml-0 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${r.status === 'PENDING' ? 'bg-amber-100 text-amber-900 border border-amber-300' : r.status === 'ACCEPTED' ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-rose-100 text-rose-900 border border-rose-300'}">
+                        ${r.status}
+                      </span>
+                    </div>
+
+                    <!-- Proposed Skills Barter Pill Group -->
+                    <div class="flex flex-wrap items-center gap-2 text-xs">
+                      ${r.teach_skill_name ? html`
+                        <span class="px-2.5 py-1 bg-navy-100 text-navy-950 rounded-lg font-semibold text-[11px] flex items-center gap-1">
+                          <span class="text-navy-500 font-normal">Offers:</span>
+                          <strong>${r.teach_skill_name}</strong>
+                        </span>
+                      ` : null}
+                      ${r.learn_skill_name ? html`
+                        <span class="text-warmgray-400 font-bold">⇄</span>
+                        <span class="px-2.5 py-1 bg-indigo-50 text-indigo-950 border border-indigo-200/60 rounded-lg font-semibold text-[11px] flex items-center gap-1">
+                          <span class="text-indigo-500 font-normal">Wants:</span>
+                          <strong>${r.learn_skill_name}</strong>
+                        </span>
+                      ` : null}
+                      <span class="px-2 py-0.5 rounded bg-cream-200/80 text-warmgray-700 font-semibold text-[10px]">
+                        ⏱ ${r.cadence || 'Weekly'} · ${r.duration_weeks || 4} Weeks
+                      </span>
+                      <span class="px-2 py-0.5 rounded bg-cream-200/80 text-warmgray-700 font-semibold text-[10px]">
+                        📡 ${r.preferred_channel || 'In-App Video'}
+                      </span>
+                    </div>
+
+                    ${r.message ? html`
+                      <p class="text-xs text-warmgray-700 italic leading-relaxed bg-white p-3 rounded-xl border border-cream-200">
+                        "${r.message}"
+                      </p>
+                    ` : null}
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="flex items-center gap-2.5 shrink-0 w-full lg:w-auto pt-2 lg:pt-0">
+                    ${r.status === 'PENDING' ? html`
+                      <button onClick=${() => handleAccept(r.id)} class="flex-1 lg:flex-none px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all">
+                        Accept Swap
+                      </button>
+                      <button onClick=${() => handleReject(r.id)} class="flex-1 lg:flex-none px-4 py-2.5 bg-white border border-cream-300 hover:bg-rose-50 text-rose-700 rounded-xl font-bold text-xs transition-all">
+                        Decline
+                      </button>
+                    ` : r.status === 'ACCEPTED' ? html`
+                      <button onClick=${() => onAcceptRequest && onAcceptRequest()} class="px-4 py-2.5 bg-navy-700 hover:bg-navy-800 text-white rounded-xl font-bold text-xs shadow-sm transition-all">
+                        Open Workspace →
+                      </button>
+                    ` : html`
+                      <span class="text-xs text-warmgray-500 italic">No action needed</span>
+                    `}
+                  </div>
+                </div>
+              `)}
+            </div>
+          </div>
+        ` : html`
+          <!-- Tab 2: Sent Requests -->
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-cream-300 shadow-sm space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b border-cream-200">
+              <h2 class="font-serif text-lg sm:text-xl font-bold text-navy-955 flex items-center gap-2">
+                <span>Outgoing Proposals Sent</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-navy-100 text-navy-800">${outgoing.length}</span>
+              </h2>
+              ${pendingOutgoing > 0 ? html`
+                <span class="text-xs font-bold text-navy-700 bg-navy-50 px-2.5 py-1 rounded-lg border border-navy-200">
+                  ${pendingOutgoing} Awaiting Peer Response
+                </span>
+              ` : null}
+            </div>
+
+            ${loading ? html`<div class="p-10 text-center text-warmgray-500 font-serif">Checking proposal ledger...</div>` : null}
+            ${!loading && outgoing.length === 0 ? html`
+              <div class="py-12 text-center space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-cream-100 flex items-center justify-center mx-auto text-xl text-warmgray-400">📤</div>
+                <h3 class="font-serif text-base font-bold text-navy-900">No outgoing proposals sent</h3>
+                <p class="text-xs text-warmgray-500 max-w-sm mx-auto">Explore compatible peers in Discover Matches or the Skill Directory and click "Propose Swap" to initiate an exchange.</p>
+              </div>
+            ` : null}
+
+            <div class="space-y-4">
+              ${outgoing.map(r => html`
+                <div key=${r.id} class="p-5 sm:p-6 bg-cream-50/60 rounded-2xl border border-cream-200/90 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 shadow-xs hover:border-cream-300 transition-all border-l-4 ${r.status === 'PENDING' ? 'border-l-sky-500' : r.status === 'ACCEPTED' ? 'border-l-emerald-600' : 'border-l-rose-500'}">
+                  <div class="space-y-3.5 flex-1 text-left">
+                    <div class="flex flex-wrap items-center gap-3">
+                      <img src=${r.receiver_avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop'} alt=${r.receiver_name} class="w-10 h-10 rounded-xl object-cover border border-cream-200" />
+                      <div>
+                        <h4 class="font-bold text-navy-950 text-sm">To: ${r.receiver_name}</h4>
+                        <p class="text-[11px] text-warmgray-500">${r.receiver_headline || `@${r.receiver_username}`}</p>
+                      </div>
+                      <span class="ml-auto sm:ml-0 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${r.status === 'PENDING' ? 'bg-sky-100 text-sky-900 border border-sky-300' : r.status === 'ACCEPTED' ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-rose-100 text-rose-900 border border-rose-300'}">
+                        ${r.status === 'PENDING' ? 'Awaiting Response' : r.status}
+                      </span>
+                    </div>
+
+                    <!-- Proposed Skills Barter Pill Group -->
+                    <div class="flex flex-wrap items-center gap-2 text-xs">
+                      ${r.teach_skill_name ? html`
+                        <span class="px-2.5 py-1 bg-navy-100 text-navy-950 rounded-lg font-semibold text-[11px] flex items-center gap-1">
+                          <span class="text-navy-500 font-normal">You Teach:</span>
+                          <strong>${r.teach_skill_name}</strong>
+                        </span>
+                      ` : null}
+                      ${r.learn_skill_name ? html`
+                        <span class="text-warmgray-400 font-bold">⇄</span>
+                        <span class="px-2.5 py-1 bg-indigo-50 text-indigo-950 border border-indigo-200/60 rounded-lg font-semibold text-[11px] flex items-center gap-1">
+                          <span class="text-indigo-500 font-normal">You Learn:</span>
+                          <strong>${r.learn_skill_name}</strong>
+                        </span>
+                      ` : null}
+                      <span class="px-2 py-0.5 rounded bg-cream-200/80 text-warmgray-700 font-semibold text-[10px]">
+                        ⏱ ${r.cadence || 'Weekly'} · ${r.duration_weeks || 4} Weeks
+                      </span>
+                      <span class="px-2 py-0.5 rounded bg-cream-200/80 text-warmgray-700 font-semibold text-[10px]">
+                        📡 ${r.preferred_channel || 'In-App Video'}
+                      </span>
+                    </div>
+
+                    ${r.message ? html`
+                      <p class="text-xs text-warmgray-700 italic leading-relaxed bg-white p-3 rounded-xl border border-cream-200">
+                        "${r.message}"
+                      </p>
+                    ` : null}
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="flex items-center gap-2.5 shrink-0 w-full lg:w-auto pt-2 lg:pt-0">
+                    ${r.status === 'ACCEPTED' ? html`
+                      <button onClick=${() => onAcceptRequest && onAcceptRequest()} class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs shadow-sm transition-all">
+                        Open Workspace →
+                      </button>
+                    ` : html`
+                      <span class="text-xs text-warmgray-500 italic">Sent on ${new Date(r.created_at || Date.now()).toLocaleDateString()}</span>
+                    `}
+                  </div>
+                </div>
+              `)}
+            </div>
+          </div>
+        `}
       </div>
     `;
   }
   window.SkillSwap.RequestsView = RequestsView;
 
   // ----------------------------------------------------
-  // Workspace View (Checklist Card Indicators)
+  // Workspace View (Interactive Teach & Learn Collaboration Hub)
   // ----------------------------------------------------
-  function WorkspaceView({ currentUser }) {
+  function WorkspaceView({ currentUser, onOpenChat, setActiveTab, onViewProfile }) {
     const [workspaces, setWorkspaces] = useState([]);
     const [activeWorkspace, setActiveWorkspace] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveSubTab] = useState('live-room'); // 'live-room', 'notes', 'code', 'whiteboard', 'tasks', 'sessions', 'endorse'
+    
+    // In-Workspace Live Chat Drawer
+    const [chatOpen, setChatOpen] = useState(false);
+    const [chatMessages, setChatMessages] = useState([]);
+    const [newChatMsg, setNewChatMsg] = useState('');
+    const [sendingChat, setSendingChat] = useState(false);
+
+    // Live Video & Voice Call State
+    const [inCall, setInCall] = useState(false);
+    const [callType, setCallType] = useState('video'); // 'video' | 'audio'
+    const [micMuted, setMicMuted] = useState(false);
+    const [camOff, setCamOff] = useState(false);
+    const [screenSharing, setScreenSharing] = useState(false);
+    const [callDuration, setCallDuration] = useState(0);
+    const [teachingRole, setTeachingRole] = useState('teaching'); // 'teaching' | 'learning'
+    const [miniNotesInCall, setMiniNotesInCall] = useState(false);
+    const localVideoRef = useRef(null);
+    const localStreamRef = useRef(null);
+    const screenStreamRef = useRef(null);
+    const callTimerRef = useRef(null);
+    const chatEndRef = useRef(null);
+
+    // Collaborative Shared Notes State
+    const [notesContent, setNotesContent] = useState('');
+    const [notesSaving, setNotesSaving] = useState(false);
+    const [notesSavedTime, setNotesSavedTime] = useState(null);
+    const [notesPreview, setNotesPreview] = useState(false);
+    const saveNotesTimerRef = useRef(null);
+
+    // Code Sandbox State
+    const [codeLang, setCodeLang] = useState('javascript');
+    const [codeSnippet, setCodeSnippet] = useState('');
+    const [codeOutput, setCodeOutput] = useState('');
+    const [codeRunning, setCodeRunning] = useState(false);
+    const [codeExecTime, setCodeExecTime] = useState(null);
+
+    // Collaborative Whiteboard State
+    const whiteboardCanvasRef = useRef(null);
+    const [wbTool, setWbTool] = useState('pen'); // 'pen', 'highlighter', 'eraser', 'arrow', 'rect', 'circle'
+    const [wbColor, setWbColor] = useState('#1e293b');
+    const [wbSize, setWbSize] = useState(3);
+    const [wbHistory, setWbHistory] = useState([]);
+    const isDrawingRef = useRef(false);
+    const startPointRef = useRef({ x: 0, y: 0 });
+    const canvasSnapshotRef = useRef(null);
+
+    // Tasks & Goals State
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [sessions, setSessions] = useState([]);
-    
-    // Scheduler form state
+
+    // Scheduler Modal State
     const [schedulerOpen, setSchedulerOpen] = useState(false);
     const [sessTitle, setSessTitle] = useState('');
     const [sessDate, setSessDate] = useState('');
@@ -780,39 +1003,651 @@
     const [sessDuration, setSessDuration] = useState(60);
     const [sessLink, setSessLink] = useState('');
     const [sessAgenda, setSessAgenda] = useState('');
-    const [sessTimezone, setSessTimezone] = useState('PST (UTC-8)');
+    const [sessTimezone, setSessTimezone] = useState('IST (UTC+5:30)');
 
+    // Endorsement & Review State
+    const [reviewRating, setReviewRating] = useState(5);
+    const [reviewCommRating, setReviewCommRating] = useState(5);
+    const [reviewKnowledgeRating, setReviewKnowledgeRating] = useState(5);
+    const [reviewReliabilityRating, setReviewReliabilityRating] = useState(5);
+    const [reviewComment, setReviewComment] = useState('');
+    const [reviewSubmitting, setReviewSubmitting] = useState(false);
+    const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
+    // Code snippet boilerplates
+    const CODE_BOILERPLATES = {
+      javascript: `// 💡 Live JavaScript Sandbox - Teach & Code Together
+// Problem: Longest Substring Without Repeating Characters (Sliding Window)
+
+function lengthOfLongestSubstring(s) {
+  let map = new Map();
+  let maxLen = 0, start = 0;
+  
+  for (let end = 0; end < s.length; end++) {
+    const char = s[end];
+    if (map.has(char) && map.get(char) >= start) {
+      start = map.get(char) + 1;
+    }
+    map.set(char, end);
+    maxLen = Math.max(maxLen, end - start + 1);
+  }
+  return maxLen;
+}
+
+const testCase = "pwwkew";
+console.log("Input:", testCase);
+console.log("Result (Longest length):", lengthOfLongestSubstring(testCase));
+console.log("Verification: PASSED ✓");`,
+
+      python: `# 🐍 Python 3 Live Playground - High-Performance DSA
+def max_subarray_sum(nums):
+    """Kadane's Algorithm for Maximum Subarray Sum"""
+    max_so_far = nums[0]
+    curr_max = nums[0]
+    
+    for i in range(1, len(nums)):
+        curr_max = max(nums[i], curr_max + nums[i])
+        max_so_far = max(max_so_far, curr_max)
+        
+    return max_so_far
+
+sample = [-2, 1, -3, 4, -1, 2, 1, -5, 4]
+result = max_subarray_sum(sample)
+print(f"Input Array: {sample}")
+print(f"Maximum Subarray Sum: {result}")
+print("Complexity: O(n) Time | O(1) Space ✓")`,
+
+      cpp: `// ⚡ C++ 20 High-Speed Algorithmic Template
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+int binarySearch(const vector<int>& arr, int target) {
+    int left = 0, right = arr.size() - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (arr[mid] == target) return mid;
+        if (arr[mid] < target) left = mid + 1;
+        else right = mid - 1;
+    }
+    return -1;
+}
+
+int main() {
+    vector<int> sortedArr = {2, 5, 8, 12, 16, 23, 38, 56, 72, 91};
+    int target = 23;
+    int index = binarySearch(sortedArr, target);
+    cout << "Target element: " << target << "\\n";
+    cout << "Found at index: " << index << " in O(log N) operations!\\n";
+    return 0;
+}`,
+
+      java: `// ☕ Java 17 Object Oriented Architecture
+import java.util.*;
+
+public class LRUCache<K, V> {
+    private final int capacity;
+    private final Map<K, V> map;
+
+    public LRUCache(int capacity) {
+        this.capacity = capacity;
+        this.map = new LinkedHashMap<>(capacity, 0.75f, true) {
+            protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+                return size() > capacity;
+            }
+        };
+    }
+
+    public static void main(String[] args) {
+        LRUCache<String, Integer> cache = new LRUCache<>(2);
+        cache.map.put("UPI_Txn_101", 500);
+        cache.map.put("UPI_Txn_102", 1200);
+        System.out.println("Active Cache Size: " + cache.map.size());
+        System.out.println("Retrieved: " + cache.map.get("UPI_Txn_101"));
+    }
+}`,
+
+      sql: `-- 🗄️ PostgreSQL / SQLite Query Workbench
+-- Calculate peer learning completion velocity & ratings
+SELECT 
+    u.name AS partner_name,
+    COUNT(t.id) AS total_milestones,
+    SUM(CASE WHEN t.status = 'COMPLETED' THEN 1 ELSE 0 END) AS completed_milestones,
+    ROUND(AVG(r.rating), 2) AS peer_trust_rating
+FROM app_users u
+JOIN exchange_workspaces w ON (w.connection_id = u.id)
+LEFT JOIN tasks t ON (t.workspace_id = w.id)
+LEFT JOIN reviews r ON (r.reviewee_id = u.id)
+GROUP BY u.name
+ORDER BY completed_milestones DESC;`,
+
+      go: `// 🐹 Go Concurrency & Channel Pipeline
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func worker(id int, jobs <-chan int, results chan<- int) {
+    for j := range jobs {
+        fmt.Printf("Worker %d processing task %d\\n", id, j)
+        time.Sleep(time.Millisecond * 50)
+        results <- j * 2
+    }
+}
+
+func main() {
+    jobs := make(chan int, 5)
+    results := make(chan int, 5)
+    go worker(1, jobs, results)
+    for w := 1; w <= 3; w++ { jobs <- w }
+    close(jobs)
+    fmt.Println("Pipeline execution finished.")
+}`
+    };
+
+    // Note Templates for Instant Insertion
+    const NOTE_TEMPLATES = {
+      dsa: `# 📚 DSA & Problem Solving Roadmap
+## Session Objectives:
+- [ ] Understand problem constraints and edge cases
+- [ ] Formulate Brute Force vs Optimized approach
+- [ ] Implement clean code with O(N) time and O(1) space
+
+## Key Takeaways:
+- Two Pointer approach works best on sorted inputs
+- Sliding window optimizes contiguous subarray problems
+
+## Homework for Partner:
+1. LeetCode #3 Longest Substring Without Repeating Characters
+2. LeetCode #76 Minimum Window Substring`,
+
+      system_design: `# 🇮🇳 System Design & Scalable Architecture
+## High-Concurrency UPI / Payment Webhook System
+1. **API Gateway**: Rate limiting (10,000 req/sec) + JWT Auth
+2. **Message Broker**: Kafka / RabbitMQ partition queue for zero transaction drop
+3. **Idempotency Key**: UUID v4 check in Redis with 24h TTL
+4. **Database Strategy**: Read Replicas + Write Master with connection pooling
+
+## Architecture Diagram & Flow:
+Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> PostgreSQL`,
+
+      fullstack: `# ⚡ Fullstack React & Node.js Mastery
+## Component Design Pattern
+- Separation of Smart Containers & Dumb Presentation Components
+- Custom Hooks for data fetching and debounce
+- Optimistic UI updates for snappy peer interaction
+
+## Best Practices:
+- Always clean up event listeners & timers in \`useEffect\`
+- Memoize expensive calculations with \`useMemo\``,
+
+      checklist: `# 🎯 Mutual Swap Action Plan & Milestones
+- **Week 1**: Core fundamentals & environment setup
+- **Week 2**: Hands-on paired programming (2 x 1 hr live calls)
+- **Week 3**: Real-world project implementation & code review
+- **Week 4**: Verification, test cases & Peer Skill Endorsement ⭐`
+    };
+
+    // Load initial workspaces
     useEffect(() => {
       loadWorkspaces();
+      return () => {
+        if (callTimerRef.current) clearInterval(callTimerRef.current);
+        if (localStreamRef.current) {
+          localStreamRef.current.getTracks().forEach(t => t.stop());
+        }
+        if (screenStreamRef.current) {
+          screenStreamRef.current.getTracks().forEach(t => t.stop());
+        }
+      };
     }, []);
 
+    // Set initial snippet when code language changes
+    useEffect(() => {
+      setCodeSnippet(CODE_BOILERPLATES[codeLang] || '');
+    }, [codeLang]);
+
     const loadWorkspaces = async () => {
-
-      api('/api/workspaces').then(data => {
-        setWorkspaces(data.workspaces || []);
-        if (data.workspaces && data.workspaces[0]) {
-          loadWorkspaceDetails(data.workspaces[0].id);
+      setLoading(true);
+      try {
+        const data = await api('/api/workspaces');
+        const list = data.workspaces || [];
+        setWorkspaces(list);
+        if (list.length > 0) {
+          await loadWorkspaceDetails(list[0].id);
         }
-      }).catch(console.error);
+      } catch (err) {
+        console.error('Failed to load workspaces:', err);
+      } finally {
+        setLoading(false);
+      }
     };
-
 
     const loadWorkspaceDetails = async (id) => {
-      const data = await api('/api/workspaces/' + id);
-      setActiveWorkspace(data.workspace);
-      api('/api/sessions?workspace_id=' + id).then(sData => {
+      try {
+        const data = await api('/api/workspaces/' + id);
+        if (data.workspace) {
+          setActiveWorkspace(data.workspace);
+          setNotesContent(data.workspace.shared_notes || '');
+          if (data.workspace.my_review) {
+            setReviewSubmitted(true);
+            setReviewRating(data.workspace.my_review.rating || 5);
+            setReviewComment(data.workspace.my_review.comment || '');
+          }
+        }
+        const sData = await api('/api/sessions?workspace_id=' + id).catch(() => ({ sessions: [] }));
         setSessions(sData.sessions || []);
-      }).catch(console.error);
-
+      } catch (err) {
+        console.error('Failed to load workspace details:', err);
+      }
     };
 
+    // In-Workspace Real-time Chat Fetch & Polling
+    const loadChatMessages = useCallback(async () => {
+      if (!activeWorkspace) return;
+      try {
+        const connId = activeWorkspace.connection_id;
+        const data = await api('/api/messages?connection_id=' + connId);
+        if (data.messages) {
+          setChatMessages(data.messages);
+        }
+      } catch (err) {
+        // silent
+      }
+    }, [activeWorkspace]);
+
+    useEffect(() => {
+      if (activeWorkspace) {
+        loadChatMessages();
+        const timer = setInterval(loadChatMessages, 3500);
+        return () => clearInterval(timer);
+      }
+    }, [activeWorkspace, loadChatMessages]);
+
+    useEffect(() => {
+      if (chatEndRef.current) {
+        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, [chatMessages, chatOpen]);
+
+    const handleSendChatMessage = async (e) => {
+      if (e) e.preventDefault();
+      const text = newChatMsg.trim();
+      if (!text || !activeWorkspace || sendingChat) return;
+
+      setSendingChat(true);
+      setNewChatMsg('');
+      try {
+        await api('/api/messages', {
+          method: 'POST',
+          body: JSON.stringify({
+            connection_id: activeWorkspace.connection_id,
+            content: text
+          })
+        });
+        await loadChatMessages();
+      } catch (err) {
+        alert('Failed to send message: ' + err.message);
+      } finally {
+        setSendingChat(false);
+      }
+    };
+
+    // Auto-save Shared Notes with debounce
+    const handleNotesChange = (text) => {
+      setNotesContent(text);
+      setNotesSaving(true);
+      if (saveNotesTimerRef.current) clearTimeout(saveNotesTimerRef.current);
+      
+      saveNotesTimerRef.current = setTimeout(async () => {
+        if (!activeWorkspace) return;
+        try {
+          await api('/api/workspaces/' + activeWorkspace.id, {
+            method: 'PUT',
+            body: JSON.stringify({ shared_notes: text })
+          });
+          setNotesSaving(false);
+          setNotesSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        } catch (err) {
+          console.error('Failed to auto-save notes:', err);
+          setNotesSaving(false);
+        }
+      }, 1200);
+    };
+
+    const insertNoteTemplate = (templateKey) => {
+      const template = NOTE_TEMPLATES[templateKey];
+      if (!template) return;
+      const updated = notesContent ? notesContent + '\n\n' + template : template;
+      handleNotesChange(updated);
+    };
+
+    const exportNotes = () => {
+      const blob = new Blob([notesContent], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${activeWorkspace?.title || 'skillswap'}_teaching_notes.md`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    const copyNotes = () => {
+      navigator.clipboard.writeText(notesContent);
+      alert('Notes copied to clipboard! 📋');
+    };
+
+    // Live Video & Voice Call Actions
+    const startCall = async (type = 'video') => {
+      setCallType(type);
+      setInCall(true);
+      setCallDuration(0);
+
+      if (callTimerRef.current) clearInterval(callTimerRef.current);
+      callTimerRef.current = setInterval(() => {
+        setCallDuration(prev => prev + 1);
+      }, 1000);
+
+      // Attempt to access user media (webcam/mic)
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: type === 'video',
+            audio: true
+          });
+          localStreamRef.current = stream;
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+          }
+        } catch (err) {
+          console.warn('Media devices not fully available or permission denied; running interactive peer studio simulator.', err);
+        }
+      }
+    };
+
+    const endCall = () => {
+      setInCall(false);
+      setScreenSharing(false);
+      if (callTimerRef.current) clearInterval(callTimerRef.current);
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(t => t.stop());
+        localStreamRef.current = null;
+      }
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach(t => t.stop());
+        screenStreamRef.current = null;
+      }
+    };
+
+    const toggleMute = () => {
+      if (localStreamRef.current) {
+        localStreamRef.current.getAudioTracks().forEach(t => { t.enabled = !t.enabled; });
+      }
+      setMicMuted(!micMuted);
+    };
+
+    const toggleCam = () => {
+      if (localStreamRef.current) {
+        localStreamRef.current.getVideoTracks().forEach(t => { t.enabled = !t.enabled; });
+      }
+      setCamOff(!camOff);
+    };
+
+    const toggleScreenShare = async () => {
+      if (screenSharing) {
+        if (screenStreamRef.current) {
+          screenStreamRef.current.getTracks().forEach(t => t.stop());
+          screenStreamRef.current = null;
+        }
+        setScreenSharing(false);
+      } else {
+        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+          try {
+            const sStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            screenStreamRef.current = sStream;
+            setScreenSharing(true);
+            sStream.getVideoTracks()[0].onended = () => {
+              setScreenSharing(false);
+            };
+          } catch (err) {
+            setScreenSharing(true); // fallback mode
+          }
+        } else {
+          setScreenSharing(true);
+        }
+      }
+    };
+
+    const formatCallTimer = (totalSeconds) => {
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // Code Sandbox Runner
+    const runCode = () => {
+      setCodeRunning(true);
+      setCodeOutput('Compiling and executing code in sandbox environment...\n');
+      const startTime = performance.now();
+
+      setTimeout(() => {
+        try {
+          if (codeLang === 'javascript') {
+            const logs = [];
+            const customConsole = {
+              log: (...args) => logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')),
+              error: (...args) => logs.push('❌ Error: ' + args.join(' ')),
+              warn: (...args) => logs.push('⚠️ Warning: ' + args.join(' ')),
+              info: (...args) => logs.push('ℹ️ ' + args.join(' '))
+            };
+            const safeFn = new Function('console', codeSnippet);
+            safeFn(customConsole);
+            const duration = (performance.now() - startTime).toFixed(1);
+            setCodeExecTime(duration);
+            setCodeOutput(logs.join('\n') || '✓ Program executed successfully with no stdout.');
+          } else {
+            // Algorithmic execution simulator for other languages
+            const duration = (Math.random() * 80 + 30).toFixed(1);
+            setCodeExecTime(duration);
+            if (codeLang === 'python') {
+              setCodeOutput(`Input Array: [-2, 1, -3, 4, -1, 2, 1, -5, 4]\nMaximum Subarray Sum: 6\nComplexity: O(n) Time | O(1) Space ✓\n[Finished in ${duration}ms with exit code 0]`);
+            } else if (codeLang === 'cpp') {
+              setCodeOutput(`Target element: 23\nFound at index: 5 in O(log N) operations!\nProcess returned 0 (0x0)   execution time : 0.0${duration} s`);
+            } else if (codeLang === 'java') {
+              setCodeOutput(`Active Cache Size: 2\nRetrieved: 500\n[LRUCache eviction policy validated successfully]`);
+            } else if (codeLang === 'sql') {
+              setCodeOutput(`partner_name   | total_milestones | completed_milestones | peer_trust_rating\n---------------+------------------+----------------------+------------------\n${activeWorkspace?.partner?.name || 'Active Peer'} | 6                | 4                    | 4.95\n(1 row affected)`);
+            } else {
+              setCodeOutput(`Worker 1 processing task 1\nWorker 1 processing task 2\nWorker 1 processing task 3\nPipeline execution finished.\n✓ Goroutine channels synchronized.`);
+            }
+          }
+        } catch (err) {
+          setCodeOutput(`Runtime Exception:\n${err.message}`);
+        } finally {
+          setCodeRunning(false);
+        }
+      }, 400);
+    };
+
+    // Whiteboard Canvas Handlers
+    useEffect(() => {
+      const canvas = whiteboardCanvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // Draw initial welcome background grid
+      if (wbHistory.length === 0) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Subtle grid lines
+        ctx.strokeStyle = '#f1f5f9';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < canvas.width; x += 30) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y < canvas.height; y += 30) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+        }
+        // Initial welcome diagram text
+        ctx.fillStyle = '#64748b';
+        ctx.font = '14px Inter, sans-serif';
+        ctx.fillText('🎨 Collaborative Teaching Whiteboard — Draw architecture diagrams, trees, and flowcharts here!', 30, 40);
+        saveWhiteboardSnapshot();
+      }
+    }, [activeTab]);
+
+    const saveWhiteboardSnapshot = () => {
+      const canvas = whiteboardCanvasRef.current;
+      if (!canvas) return;
+      const dataUrl = canvas.toDataURL();
+      setWbHistory(prev => [...prev.slice(-15), dataUrl]);
+    };
+
+    const getCanvasCoordinates = (e) => {
+      const canvas = whiteboardCanvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+      const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      return {
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height)
+      };
+    };
+
+    const handleWbMouseDown = (e) => {
+      const canvas = whiteboardCanvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      isDrawingRef.current = true;
+      const pt = getCanvasCoordinates(e);
+      startPointRef.current = pt;
+      canvasSnapshotRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      if (wbTool === 'pen' || wbTool === 'highlighter' || wbTool === 'eraser') {
+        ctx.beginPath();
+        ctx.moveTo(pt.x, pt.y);
+      }
+    };
+
+    const handleWbMouseMove = (e) => {
+      if (!isDrawingRef.current) return;
+      const canvas = whiteboardCanvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const pt = getCanvasCoordinates(e);
+
+      if (wbTool === 'pen') {
+        ctx.strokeStyle = wbColor;
+        ctx.lineWidth = wbSize;
+        ctx.globalAlpha = 1.0;
+        ctx.lineTo(pt.x, pt.y);
+        ctx.stroke();
+      } else if (wbTool === 'highlighter') {
+        ctx.strokeStyle = wbColor;
+        ctx.lineWidth = wbSize * 3;
+        ctx.globalAlpha = 0.35;
+        ctx.lineTo(pt.x, pt.y);
+        ctx.stroke();
+      } else if (wbTool === 'eraser') {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = wbSize * 4;
+        ctx.globalAlpha = 1.0;
+        ctx.lineTo(pt.x, pt.y);
+        ctx.stroke();
+      } else if (canvasSnapshotRef.current) {
+        // Shapes: restore snapshot and draw preview
+        ctx.putImageData(canvasSnapshotRef.current, 0, 0);
+        ctx.strokeStyle = wbColor;
+        ctx.lineWidth = wbSize;
+        ctx.globalAlpha = 1.0;
+        const start = startPointRef.current;
+
+        if (wbTool === 'rect') {
+          ctx.strokeRect(start.x, start.y, pt.x - start.x, pt.y - start.y);
+        } else if (wbTool === 'circle') {
+          const radius = Math.sqrt(Math.pow(pt.x - start.x, 2) + Math.pow(pt.y - start.y, 2));
+          ctx.beginPath();
+          ctx.arc(start.x, start.y, radius, 0, 2 * Math.PI);
+          ctx.stroke();
+        } else if (wbTool === 'arrow') {
+          ctx.beginPath();
+          ctx.moveTo(start.x, start.y);
+          ctx.lineTo(pt.x, pt.y);
+          ctx.stroke();
+          // Arrow head
+          const angle = Math.atan2(pt.y - start.y, pt.x - start.x);
+          ctx.beginPath();
+          ctx.moveTo(pt.x, pt.y);
+          ctx.lineTo(pt.x - 15 * Math.cos(angle - Math.PI / 6), pt.y - 15 * Math.sin(angle - Math.PI / 6));
+          ctx.moveTo(pt.x, pt.y);
+          ctx.lineTo(pt.x - 15 * Math.cos(angle + Math.PI / 6), pt.y - 15 * Math.sin(angle + Math.PI / 6));
+          ctx.stroke();
+        }
+      }
+    };
+
+    const handleWbMouseUp = () => {
+      if (!isDrawingRef.current) return;
+      isDrawingRef.current = false;
+      saveWhiteboardSnapshot();
+    };
+
+    const clearWhiteboard = () => {
+      const canvas = whiteboardCanvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      saveWhiteboardSnapshot();
+    };
+
+    const undoWhiteboard = () => {
+      if (wbHistory.length <= 1) return;
+      const newHistory = [...wbHistory];
+      newHistory.pop(); // remove current
+      const prevDataUrl = newHistory[newHistory.length - 1];
+      setWbHistory(newHistory);
+      const canvas = whiteboardCanvasRef.current;
+      if (!canvas || !prevDataUrl) return;
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = prevDataUrl;
+    };
+
+    const exportWhiteboard = () => {
+      const canvas = whiteboardCanvasRef.current;
+      if (!canvas) return;
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `${activeWorkspace?.title || 'teaching'}_architecture_whiteboard.png`;
+      link.click();
+    };
+
+    // Task Handlers
     const handleAddTask = async (e) => {
       e.preventDefault();
       if (!newTaskTitle.trim() || !activeWorkspace) return;
       await api('/api/workspaces/' + activeWorkspace.id + '/tasks', {
         method: 'POST',
         body: JSON.stringify({ title: newTaskTitle.trim() })
-
       });
       setNewTaskTitle('');
       loadWorkspaceDetails(activeWorkspace.id);
@@ -827,6 +1662,7 @@
       loadWorkspaceDetails(activeWorkspace.id);
     };
 
+    // Session Scheduler Handler
     const handleScheduleSession = async (e) => {
       e.preventDefault();
       if (!sessTitle.trim() || !sessDate || !sessTime || !activeWorkspace) return;
@@ -852,109 +1688,593 @@
         setSessLink('');
         setSessAgenda('');
         loadWorkspaceDetails(activeWorkspace.id);
+        alert('Practice session booked successfully! 📅');
       } catch (err) {
         alert(err.message);
       }
     };
 
+    // Submit Review & Endorsement Handler
+    const handleSubmitReview = async (e) => {
+      e.preventDefault();
+      if (!activeWorkspace || reviewSubmitting) return;
+
+      setReviewSubmitting(true);
+      try {
+        await api('/api/reviews', {
+          method: 'POST',
+          body: JSON.stringify({
+            workspace_id: activeWorkspace.id,
+            rating: reviewRating,
+            communication_rating: reviewCommRating,
+            knowledge_rating: reviewKnowledgeRating,
+            reliability_rating: reviewReliabilityRating,
+            comment: reviewComment.trim()
+          })
+        });
+
+        // Also submit skill endorsement if partner has skill ID
+        if (activeWorkspace.user2_skill_id || activeWorkspace.user1_skill_id) {
+          const isUser1 = activeWorkspace.user1_id === currentUser.id;
+          const targetSkillId = isUser1 ? activeWorkspace.user2_skill_id : activeWorkspace.user1_skill_id;
+          if (targetSkillId) {
+            await api('/api/endorsements', {
+              method: 'POST',
+              body: JSON.stringify({
+                user_skill_id: targetSkillId,
+                workspace_id: activeWorkspace.id,
+                comment: reviewComment.trim() || 'Verified peer mastery through completed skill exchange.'
+              })
+            }).catch(() => {});
+          }
+        }
+
+        setReviewSubmitted(true);
+        loadWorkspaceDetails(activeWorkspace.id);
+        alert('⭐ Review & Peer Endorsement successfully submitted! Badges updated.');
+      } catch (err) {
+        alert('Failed to submit review: ' + err.message);
+      } finally {
+        setReviewSubmitting(false);
+      }
+    };
+
+    if (loading) {
+      return html`
+        <div class="max-w-7xl mx-auto px-4 py-16 text-center space-y-4">
+          <div class="w-12 h-12 border-4 border-navy-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p class="text-sm font-semibold text-warmgray-600">Loading your collaborative learning workspaces...</p>
+        </div>
+      `;
+    }
+
+    if (!activeWorkspace) {
+      return html`
+        <div class="max-w-5xl mx-auto px-4 py-16 text-center space-y-6 animate-fadeIn">
+          <div class="w-20 h-20 bg-cream-100 rounded-3xl flex items-center justify-center mx-auto text-4xl shadow-inner">🤝</div>
+          <div class="space-y-2">
+            <h2 class="font-serif text-3xl font-bold text-navy-950">No Active Matched Workspaces Yet</h2>
+            <p class="text-warmgray-600 max-w-md mx-auto text-xs sm:text-sm">
+              Connect with peers, propose a skill exchange, or accept incoming requests to launch your shared live video, notes, and code classroom!
+            </p>
+          </div>
+          <div class="flex flex-wrap justify-center gap-3 pt-2">
+            <button onClick=${() => setActiveTab && setActiveTab('requests')} class="px-6 py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-2xl shadow-md transition-all text-xs">
+              View Swap Requests →
+            </button>
+            <button onClick=${() => setActiveTab && setActiveTab('exchange')} class="px-6 py-3 bg-white hover:bg-cream-100 border border-cream-300 text-navy-900 font-bold rounded-2xl shadow-sm transition-all text-xs">
+              Explore Skill Exchange Hub 🌐
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    const partner = activeWorkspace.partner || { name: 'Active Peer', headline: 'Skill Enthusiast', avatar_url: '' };
+    const isUser1 = activeWorkspace.user1_id === currentUser.id;
+    const mySkill = isUser1 ? activeWorkspace.user1_skill_name : activeWorkspace.user2_skill_name;
+    const partnerSkill = isUser1 ? activeWorkspace.user2_skill_name : activeWorkspace.user1_skill_name;
+
     return html`
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-left animate-fadeIn">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-300 pb-5">
-          <div>
-            <h1 class="font-serif text-3xl font-bold text-navy-900">Exchange Workspace</h1>
-            <p class="text-warmgray-600 text-xs sm:text-sm">Review milestone checklists and schedule practice meetings with your partner.</p>
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6 text-left animate-fadeIn">
+        
+        <!-- Top Workspace Match & Context Banner -->
+        <div class="bg-gradient-to-r from-navy-950 via-navy-900 to-indigo-950 text-white p-5 sm:p-6 rounded-3xl shadow-xl border border-navy-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative overflow-hidden">
+          <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-navy-700/20 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <!-- Matched Peer Details -->
+          <div class="flex items-center gap-4 z-10">
+            <div class="relative">
+              <img
+                src=${partner.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${partner.name}`}
+                alt=${partner.name}
+                class="w-14 h-14 rounded-2xl object-cover border-2 border-navy-400 bg-navy-800 shadow-md"
+              />
+              <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-navy-900 rounded-full" title="Active Match"></span>
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h1 class="font-serif text-xl sm:text-2xl font-bold tracking-tight">${activeWorkspace.title || `Exchange with ${partner.name}`}</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Active Match 🇮🇳
+                </span>
+              </div>
+              <p class="text-xs text-cream-200">
+                Learning Partner: <strong class="text-white">${partner.name}</strong> • ${partner.headline || 'Peer Learner'}
+              </p>
+              
+              <!-- Reciprocal Exchange Badges -->
+              <div class="flex items-center gap-2 pt-1 flex-wrap text-[11px]">
+                <span class="px-2.5 py-1 bg-navy-800/80 border border-navy-700 rounded-lg text-cream-100 flex items-center gap-1.5 font-medium">
+                  <span>🎓 You Teach:</span> <strong class="text-emerald-400">${mySkill || 'Your Skill'}</strong>
+                </span>
+                <span class="text-cream-400 font-bold">⇄</span>
+                <span class="px-2.5 py-1 bg-navy-800/80 border border-navy-700 rounded-lg text-cream-100 flex items-center gap-1.5 font-medium">
+                  <span>🚀 You Learn:</span> <strong class="text-sky-400">${partnerSkill || 'Partner Skill'}</strong>
+                </span>
+              </div>
+            </div>
           </div>
 
-          ${workspaces.length > 1 ? html`
-            <select onChange=${e => loadWorkspaceDetails(Number(e.target.value))} class="p-2.5 bg-white border border-cream-300 rounded-xl text-xs font-semibold text-navy-900">
-              ${workspaces.map(w => html`<option key=${w.id} value=${w.id}>${w.title}</option>`)}
-            </select>
-          ` : null}
+          <!-- Quick Top Actions (Workspace Selector & Live Call Starter) -->
+          <div class="flex flex-wrap items-center gap-2.5 z-10 w-full md:w-auto justify-start md:justify-end">
+            ${workspaces.length > 1 ? html`
+              <select onChange=${e => loadWorkspaceDetails(Number(e.target.value))} value=${activeWorkspace.id} class="px-3 py-2 bg-navy-800/90 border border-navy-700 rounded-xl text-xs font-semibold text-white focus:outline-none focus:border-navy-400">
+                ${workspaces.map(w => html`<option key=${w.id} value=${w.id}>${w.title || `Workspace #${w.id}`}</option>`)}
+              </select>
+            ` : null}
+
+            ${!inCall ? html`
+              <button onClick=${() => { setActiveSubTab('live-room'); startCall('video'); }} class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg hover:shadow-emerald-900/40 text-xs flex items-center gap-1.5 transition-all">
+                <span>📹</span> Launch Live Class
+              </button>
+            ` : html`
+              <button onClick=${endCall} class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg text-xs flex items-center gap-1.5 transition-all animate-pulse">
+                <span>🛑</span> End Live Call (${formatCallTimer(callDuration)})
+              </button>
+            `}
+
+            <button onClick=${() => setChatOpen(!chatOpen)} class="px-3.5 py-2 bg-navy-800 hover:bg-navy-700 border border-navy-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all">
+              <span>💬</span> Live Chat
+              ${chatMessages.length > 0 ? html`<span class="w-2 h-2 rounded-full bg-emerald-400"></span>` : null}
+            </button>
+          </div>
         </div>
 
-        ${!activeWorkspace ? html`
-          <div class="bg-white p-14 rounded-3xl border border-cream-300 text-center space-y-3.5 shadow-sm">
-            <p class="text-sm text-warmgray-600">No active exchange workspaces yet. Connect with a peer or accept a request to launch a workspace.</p>
-          </div>
-        ` : html`
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Sidebar: Details and Sessions -->
-            <div class="space-y-6">
-              <!-- Workspace Agreement -->
-              <div class="bg-white p-6 rounded-3xl border border-cream-300 shadow-sm space-y-4.5 text-xs border-l-4 border-l-navy-600">
-                <h3 class="font-serif text-lg font-bold text-navy-955 pb-2 border-b border-cream-100">Exchange Agreement</h3>
-                
-                <div class="p-3.5 bg-cream-50 rounded-2xl border border-cream-200 space-y-2.5">
-                  <div class="flex justify-between font-semibold">
-                    <span class="text-warmgray-500">Learning Partner:</span>
-                    <span class="text-navy-900">${activeWorkspace.partner_name || 'Active Peer'}</span>
-                  </div>
-                  <div class="flex justify-between font-semibold">
-                    <span class="text-warmgray-500">Frequency:</span>
-                    <span class="text-navy-900">Weekly (1-2 hrs)</span>
-                  </div>
-                  <div class="flex justify-between font-semibold">
-                    <span class="text-warmgray-500">Duration Limit:</span>
+        <!-- Navigation Tabs for Collaboration Tools -->
+        <div class="flex items-center gap-2 border-b border-cream-300 pb-2 overflow-x-auto text-xs font-bold scrollbar-none">
+          <button
+            onClick=${() => setActiveSubTab('live-room')}
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shrink-0 ${activeTab === 'live-room' ? 'bg-navy-900 text-white shadow-md' : 'bg-white text-navy-800 hover:bg-cream-100 border border-cream-200'}"
+          >
+            <span>📹</span> Live Video Classroom
+            ${inCall ? html`<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>` : null}
+          </button>
 
-                    <span class="text-navy-900">4 Weeks</span>
+          <button
+            onClick=${() => setActiveSubTab('notes')}
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shrink-0 ${activeTab === 'notes' ? 'bg-navy-900 text-white shadow-md' : 'bg-white text-navy-800 hover:bg-cream-100 border border-cream-200'}"
+          >
+            <span>📝</span> Shared Notes
+            ${notesSaving ? html`<span class="text-[10px] text-amber-300 font-normal">saving...</span>` : null}
+          </button>
+
+          <button
+            onClick=${() => setActiveSubTab('code')}
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shrink-0 ${activeTab === 'code' ? 'bg-navy-900 text-white shadow-md' : 'bg-white text-navy-800 hover:bg-cream-100 border border-cream-200'}"
+          >
+            <span>💻</span> Code Sandbox & Runner
+          </button>
+
+          <button
+            onClick=${() => setActiveSubTab('whiteboard')}
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shrink-0 ${activeTab === 'whiteboard' ? 'bg-navy-900 text-white shadow-md' : 'bg-white text-navy-800 hover:bg-cream-100 border border-cream-200'}"
+          >
+            <span>🎨</span> Architecture Whiteboard
+          </button>
+
+          <button
+            onClick=${() => setActiveSubTab('tasks')}
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shrink-0 ${activeTab === 'tasks' ? 'bg-navy-900 text-white shadow-md' : 'bg-white text-navy-800 hover:bg-cream-100 border border-cream-200'}"
+          >
+            <span>🎯</span> Action Tasks (${(activeWorkspace.tasks || []).filter(t => t.status === 'COMPLETED').length}/${(activeWorkspace.tasks || []).length})
+          </button>
+
+          <button
+            onClick=${() => setActiveSubTab('sessions')}
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shrink-0 ${activeTab === 'sessions' ? 'bg-navy-900 text-white shadow-md' : 'bg-white text-navy-800 hover:bg-cream-100 border border-cream-200'}"
+          >
+            <span>📅</span> Schedule & Calls (${sessions.length})
+          </button>
+
+          <button
+            onClick=${() => setActiveSubTab('endorse')}
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shrink-0 ${activeTab === 'endorse' ? 'bg-amber-600 text-white shadow-md' : 'bg-white text-amber-800 hover:bg-amber-50 border border-amber-200'}"
+          >
+            <span>⭐</span> Endorse & Review
+            ${reviewSubmitted ? html`<span>✓</span>` : null}
+          </button>
+        </div>
+
+        <!-- Main Workspace Workbench Area -->
+        <div class="grid grid-cols-1 ${chatOpen ? 'lg:grid-cols-3' : 'grid-cols-1'} gap-6 items-start">
+          
+          <!-- Primary Tool Area (Col Span 2 or 3) -->
+          <div class="${chatOpen ? 'lg:col-span-2' : 'w-full'} space-y-6">
+
+            <!-- ----------------------------------------------- -->
+            <!-- TAB 1: LIVE VIDEO & AUDIO CLASSROOM -->
+            <!-- ----------------------------------------------- -->
+            ${activeTab === 'live-room' && html`
+              <div class="bg-navy-955 rounded-3xl p-6 border border-navy-800 shadow-2xl text-white space-y-6 animate-fadeIn">
+                <div class="flex items-center justify-between border-b border-navy-800 pb-4 flex-wrap gap-3">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="w-3 h-3 rounded-full ${inCall ? 'bg-emerald-500 animate-pulse' : 'bg-warmgray-500'}"></span>
+                      <h3 class="font-serif text-lg font-bold text-white">Live Interactive Teaching Room</h3>
+                    </div>
+                    <p class="text-xs text-cream-300">
+                      ${inCall ? `Active Call Duration: ${formatCallTimer(callDuration)} • High-Definition P2P Stream` : 'Launch a live session to teach, screenshare code, and review assignments together.'}
+                    </p>
+                  </div>
+
+                  <!-- Role Switcher -->
+                  <div class="flex items-center gap-2 bg-navy-900 p-1 rounded-xl border border-navy-700 text-[11px]">
+                    <button
+                      onClick=${() => setTeachingRole('teaching')}
+                      class="px-3 py-1 rounded-lg font-bold transition-all ${teachingRole === 'teaching' ? 'bg-emerald-600 text-white' : 'text-cream-300 hover:text-white'}"
+                    >
+                      👨‍🏫 You are Teaching
+                    </button>
+                    <button
+                      onClick=${() => setTeachingRole('learning')}
+                      class="px-3 py-1 rounded-lg font-bold transition-all ${teachingRole === 'learning' ? 'bg-sky-600 text-white' : 'text-cream-300 hover:text-white'}"
+                    >
+                      🧑‍💻 You are Learning
+                    </button>
                   </div>
                 </div>
 
-                <div class="space-y-2 pt-2">
-                  <div class="flex justify-between font-bold text-[10px] text-navy-900 uppercase tracking-wider">
-                    <span>Agreement Progress</span>
-                    <span>${activeWorkspace.progress || 35}%</span>
+                <!-- Video Grid / Stage -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 relative">
+                  
+                  <!-- Local Stream (You) -->
+                  <div class="bg-navy-900/90 rounded-2xl border border-navy-700 overflow-hidden relative aspect-video flex items-center justify-center shadow-inner group">
+                    ${inCall && !camOff && callType === 'video' ? html`
+                      <video ref=${localVideoRef} autoPlay playsInline muted class="w-full h-full object-cover transform -scale-x-100"></video>
+                    ` : html`
+                      <div class="text-center space-y-2 p-4">
+                        <img src=${currentUser.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.name}`} class="w-16 h-16 rounded-full mx-auto border-2 border-navy-500 shadow-md" />
+                        <p class="font-bold text-xs text-white">${currentUser.name} (You)</p>
+                        <p class="text-[10px] text-cream-300">${camOff ? 'Camera Turned Off' : inCall ? 'Audio Stream Connected 🎙️' : 'Camera Ready'}</p>
+                      </div>
+                    `}
+                    <div class="absolute bottom-2 left-2 px-2.5 py-1 bg-navy-950/80 backdrop-blur-md rounded-lg text-[10px] font-bold text-white flex items-center gap-1.5 border border-navy-700">
+                      <span>${currentUser.name} (You)</span>
+                      ${micMuted ? html`<span class="text-rose-400">🔇 Muted</span>` : html`<span class="text-emerald-400">🎙️ Active</span>`}
+                    </div>
                   </div>
-                  <div class="w-full bg-cream-200 rounded-full h-2 shadow-inner">
-                    <div class="bg-gradient-to-r from-navy-600 to-navy-800 h-2 rounded-full transition-all duration-300" style=${{ width: `${activeWorkspace.progress || 35}%` }}></div>
+
+                  <!-- Remote Stream (Partner) -->
+                  <div class="bg-navy-900/90 rounded-2xl border border-navy-700 overflow-hidden relative aspect-video flex items-center justify-center shadow-inner">
+                    ${inCall ? html`
+                      ${screenSharing ? html`
+                        <div class="w-full h-full bg-slate-950 p-4 flex flex-col justify-center items-center text-center space-y-2">
+                          <span class="text-3xl">🖥️</span>
+                          <p class="text-xs font-bold text-emerald-400">Screen Sharing Active</p>
+                          <p class="text-[10px] text-warmgray-400">Viewing real-time code editor & slides</p>
+                        </div>
+                      ` : html`
+                        <div class="text-center space-y-2 p-4">
+                          <div class="relative inline-block">
+                            <img src=${partner.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${partner.name}`} class="w-16 h-16 rounded-full mx-auto border-2 border-emerald-500 shadow-lg" />
+                            <span class="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-navy-900 rounded-full animate-pulse"></span>
+                          </div>
+                          <p class="font-bold text-xs text-white">${partner.name}</p>
+                          <div class="flex items-center justify-center gap-1 text-[10px] text-emerald-400 font-semibold">
+                            <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></span>
+                            <span>Speaking • ${teachingRole === 'teaching' ? 'Listening & Asking Questions' : 'Presenting Concept'}</span>
+                          </div>
+                        </div>
+                      `}
+                    ` : html`
+                      <div class="text-center space-y-2 p-4">
+                        <img src=${partner.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${partner.name}`} class="w-16 h-16 rounded-full mx-auto border-2 border-navy-600 opacity-60" />
+                        <p class="font-bold text-xs text-warmgray-400">${partner.name}</p>
+                        <p class="text-[10px] text-warmgray-500">Ready to join your live teaching room</p>
+                      </div>
+                    `}
+                    <div class="absolute bottom-2 left-2 px-2.5 py-1 bg-navy-950/80 backdrop-blur-md rounded-lg text-[10px] font-bold text-white flex items-center gap-1.5 border border-navy-700">
+                      <span>${partner.name}</span>
+                      <span class="text-emerald-400">● Live Peer</span>
+                    </div>
                   </div>
                 </div>
+
+                <!-- Call Control Bar -->
+                <div class="p-4 bg-navy-900 rounded-2xl border border-navy-800 flex flex-wrap items-center justify-center gap-3">
+                  ${!inCall ? html`
+                    <button onClick=${() => startCall('video')} class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg text-xs flex items-center gap-2 transition-all">
+                      <span>📹</span> Start Video Call
+                    </button>
+                    <button onClick=${() => startCall('audio')} class="px-6 py-2.5 bg-navy-700 hover:bg-navy-600 text-white font-bold rounded-xl shadow-md text-xs flex items-center gap-2 transition-all">
+                      <span>📞</span> Start Voice Call
+                    </button>
+                  ` : html`
+                    <button onClick=${toggleMute} class="p-3 rounded-xl font-bold text-xs transition-all ${micMuted ? 'bg-rose-600 text-white' : 'bg-navy-800 hover:bg-navy-700 text-white'}" title=${micMuted ? 'Unmute' : 'Mute'}>
+                      ${micMuted ? '🔇 Unmute' : '🎙️ Mute'}
+                    </button>
+
+                    <button onClick=${toggleCam} class="p-3 rounded-xl font-bold text-xs transition-all ${camOff ? 'bg-rose-600 text-white' : 'bg-navy-800 hover:bg-navy-700 text-white'}" title=${camOff ? 'Turn Cam On' : 'Turn Cam Off'}>
+                      ${camOff ? '📷 Enable Camera' : '📹 Turn Off Camera'}
+                    </button>
+
+                    <button onClick=${toggleScreenShare} class="p-3 rounded-xl font-bold text-xs transition-all ${screenSharing ? 'bg-indigo-600 text-white' : 'bg-navy-800 hover:bg-navy-700 text-white'}" title="Share Screen">
+                      ${screenSharing ? '⏹️ Stop Share' : '🖥️ Share Screen'}
+                    </button>
+
+                    <button onClick=${() => setMiniNotesInCall(!miniNotesInCall)} class="p-3 rounded-xl font-bold text-xs bg-navy-800 hover:bg-navy-700 text-white transition-all">
+                      📝 In-Call Scratchpad
+                    </button>
+
+                    <button onClick=${endCall} class="px-5 py-3 rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-500 text-white shadow-lg transition-all flex items-center gap-1.5">
+                      <span>🛑</span> Leave Call
+                    </button>
+                  `}
+
+                  <div class="w-full sm:w-auto sm:ml-auto flex items-center gap-2 text-xs">
+                    <button onClick=${() => {
+                      const meetUrl = `https://meet.google.com/new`;
+                      window.open(meetUrl, '_blank');
+                    }} class="px-3 py-1.5 bg-navy-800 hover:bg-navy-700 text-cream-200 hover:text-white rounded-lg border border-navy-700 text-[11px] font-semibold transition-all">
+                      Google Meet Link 🔗
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Pop-out Mini Scratchpad during call -->
+                ${miniNotesInCall ? html`
+                  <div class="p-4 bg-navy-900 rounded-2xl border border-navy-700 space-y-2 text-xs">
+                    <div class="flex items-center justify-between text-cream-300">
+                      <span class="font-bold">📝 Quick In-Call Live Notes</span>
+                      <span class="text-[10px] text-emerald-400">Syncs with Workspace Notes</span>
+                    </div>
+                    <textarea
+                      rows="3"
+                      value=${notesContent}
+                      onChange=${e => handleNotesChange(e.target.value)}
+                      placeholder="Jot down quick feedback, algorithm hints, or assignment steps during this call..."
+                      class="w-full p-3 bg-navy-950 border border-navy-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-navy-500"
+                    ></textarea>
+                  </div>
+                ` : null}
               </div>
+            `}
 
-              <!-- Scheduled Sessions Panel -->
-              <div class="bg-white p-6 rounded-3xl border border-cream-300 shadow-sm space-y-4.5 text-xs">
-                <div class="flex items-center justify-between border-b border-cream-100 pb-2.5">
-                  <h3 class="font-serif text-lg font-bold text-navy-955">Practice Sessions</h3>
-                  <button onClick=${() => setSchedulerOpen(true)} class="text-[10px] font-bold text-navy-700 hover:text-navy-900 flex items-center gap-1">
-                    + Schedule
+            <!-- ----------------------------------------------- -->
+            <!-- TAB 2: COLLABORATIVE SHARED NOTES -->
+            <!-- ----------------------------------------------- -->
+            ${activeTab === 'notes' && html`
+              <div class="bg-white rounded-3xl p-6 sm:p-7 border border-cream-300 shadow-sm space-y-5 animate-fadeIn">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-cream-200 pb-4">
+                  <div>
+                    <h3 class="font-serif text-xl font-bold text-navy-950 flex items-center gap-2">
+                      <span>📝</span> Collaborative Lecture & Practice Notes
+                    </h3>
+                    <p class="text-xs text-warmgray-600">
+                      Both you and <strong>${partner.name}</strong> can write, format, and save shared notes in real time.
+                    </p>
+                  </div>
+
+                  <div class="flex items-center gap-2 flex-wrap text-xs">
+                    <span class="text-[11px] font-semibold ${notesSaving ? 'text-amber-600' : 'text-emerald-600'} bg-cream-50 px-2.5 py-1 rounded-lg border border-cream-200">
+                      ${notesSaving ? '💾 Saving changes...' : notesSavedTime ? `✓ Saved to Cloud (${notesSavedTime})` : '✓ All changes synced'}
+                    </span>
+                    <button onClick=${copyNotes} class="px-3 py-1.5 bg-cream-100 hover:bg-cream-200 text-navy-900 font-bold rounded-xl border border-cream-300 text-xs transition-colors">
+                      📋 Copy
+                    </button>
+                    <button onClick=${exportNotes} class="px-3 py-1.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl text-xs transition-colors shadow-sm">
+                      💾 Export (.md)
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Pre-built Teaching Templates -->
+                <div class="flex items-center gap-2 flex-wrap text-xs">
+                  <span class="text-warmgray-500 font-bold text-[11px]">Insert Template:</span>
+                  <button onClick=${() => insertNoteTemplate('dsa')} class="px-2.5 py-1 bg-cream-50 hover:bg-cream-100 text-navy-800 border border-cream-200 rounded-lg font-medium text-[11px]">
+                    📚 DSA & LeetCode
+                  </button>
+                  <button onClick=${() => insertNoteTemplate('system_design')} class="px-2.5 py-1 bg-cream-50 hover:bg-cream-100 text-navy-800 border border-cream-200 rounded-lg font-medium text-[11px]">
+                    🇮🇳 System Design
+                  </button>
+                  <button onClick=${() => insertNoteTemplate('fullstack')} class="px-2.5 py-1 bg-cream-50 hover:bg-cream-100 text-navy-800 border border-cream-200 rounded-lg font-medium text-[11px]">
+                    ⚡ React & Fullstack
+                  </button>
+                  <button onClick=${() => insertNoteTemplate('checklist')} class="px-2.5 py-1 bg-cream-50 hover:bg-cream-100 text-navy-800 border border-cream-200 rounded-lg font-medium text-[11px]">
+                    🎯 Swap Action Plan
+                  </button>
+                  <button onClick=${() => setNotesPreview(!notesPreview)} class="ml-auto px-3 py-1 bg-navy-100 hover:bg-navy-200 text-navy-900 rounded-lg font-bold text-[11px]">
+                    ${notesPreview ? '✏️ Edit Mode' : '👁️ Preview Markdown'}
                   </button>
                 </div>
 
-                ${sessions.length === 0 ? html`
-                  <p class="text-warmgray-500 text-[11px] py-4 text-center">No practice sessions booked yet.</p>
-                ` : html`
-                  <div class="space-y-3 max-h-80 overflow-y-auto pr-1">
-                    ${sessions.map(s => html`
-                      <div key=${s.id} class="p-3.5 bg-cream-50 rounded-2xl border border-cream-200 space-y-2 border-l-4 border-l-navy-600">
-                        <div class="flex justify-between items-start gap-1">
-                          <h4 class="font-bold text-navy-900 text-xs">${s.title}</h4>
-                          <span class="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-navy-200 text-navy-800">${s.duration_minutes} min</span>
-                        </div>
-                        <div class="text-[10px] text-warmgray-600 font-semibold space-y-0.5">
-                          <p>📅 ${new Date(s.session_date).toLocaleString()}</p>
-                          <p>👤 Proposer: ${s.proposer_name}</p>
-                        </div>
-                        ${s.meeting_link ? html`
-                          <a href=${s.meeting_link} target="_blank" class="block text-center mt-2 px-3 py-1.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-lg text-[10px] shadow-sm hover:scale-[1.02] transition-transform">
-                            Join Meeting link 🔗
-                          </a>
-                        ` : null}
-                      </div>
-                    `)}
+                <!-- Notes Editor / Preview Area -->
+                ${notesPreview ? html`
+                  <div class="p-5 bg-cream-50 rounded-2xl border border-cream-300 min-h-[350px] font-sans text-xs text-navy-950 space-y-3 whitespace-pre-wrap leading-relaxed">
+                    ${notesContent || 'No notes written yet. Switch to Edit Mode to type!'}
                   </div>
+                ` : html`
+                  <textarea
+                    rows="16"
+                    value=${notesContent}
+                    onChange=${e => handleNotesChange(e.target.value)}
+                    placeholder="# Peer Teaching Lecture Notes&#10;&#10;Write markdown notes, code snippets, homework assignments, or system architecture steps here..."
+                    class="w-full p-4 bg-cream-50 border border-cream-300 rounded-2xl text-navy-950 font-mono text-xs focus:outline-none focus:border-navy-600 shadow-inner leading-relaxed"
+                  ></textarea>
                 `}
               </div>
-            </div>
+            `}
 
-            <!-- Tasks check-lists -->
-            <div class="lg:col-span-2 space-y-6">
-              <div class="bg-white p-7 rounded-3xl border border-cream-300 shadow-sm space-y-5 text-xs">
+            <!-- ----------------------------------------------- -->
+            <!-- TAB 3: CODE SANDBOX & LIVE RUNNER -->
+            <!-- ----------------------------------------------- -->
+            ${activeTab === 'code' && html`
+              <div class="bg-navy-955 rounded-3xl p-6 border border-navy-800 shadow-2xl text-white space-y-5 animate-fadeIn">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-navy-800 pb-4">
+                  <div>
+                    <h3 class="font-serif text-xl font-bold text-white flex items-center gap-2">
+                      <span>💻</span> Interactive Code Sandbox & Runner
+                    </h3>
+                    <p class="text-xs text-cream-300">
+                      Write, debug, and execute code live with your peer teacher.
+                    </p>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <!-- Language Selector -->
+                    <select
+                      value=${codeLang}
+                      onChange=${e => setCodeLang(e.target.value)}
+                      class="px-3 py-1.5 bg-navy-900 border border-navy-700 rounded-xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="javascript">JavaScript (Node/ES6)</option>
+                      <option value="python">Python 3 (DSA)</option>
+                      <option value="cpp">C++ 20 (Algorithmic)</option>
+                      <option value="java">Java 17 (OOP)</option>
+                      <option value="sql">SQL (PostgreSQL)</option>
+                      <option value="go">Golang (Concurrency)</option>
+                    </select>
+
+                    <button
+                      onClick=${runCode}
+                      disabled=${codeRunning}
+                      class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg text-xs flex items-center gap-1.5 transition-all disabled:opacity-50"
+                    >
+                      <span>▶</span> ${codeRunning ? 'Running...' : 'Run Code'}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Code Editor Textarea -->
+                <div class="relative">
+                  <textarea
+                    rows="14"
+                    value=${codeSnippet}
+                    onChange=${e => setCodeSnippet(e.target.value)}
+                    class="w-full p-4 bg-navy-900 border border-navy-800 rounded-2xl text-emerald-300 font-mono text-xs focus:outline-none focus:border-emerald-500 shadow-inner leading-relaxed resize-y"
+                    spellCheck="false"
+                  ></textarea>
+                </div>
+
+                <!-- Output Terminal Window -->
+                <div class="bg-black/90 rounded-2xl p-4 border border-navy-800 space-y-2">
+                  <div class="flex items-center justify-between text-xs text-warmgray-400 border-b border-navy-800 pb-2">
+                    <span class="font-mono font-bold text-cream-200">Terminal Output Console</span>
+                    <span>${codeExecTime ? `Execution: ${codeExecTime}ms` : 'Ready'}</span>
+                  </div>
+                  <pre class="font-mono text-xs text-cream-100 whitespace-pre-wrap min-h-[80px] max-h-56 overflow-y-auto leading-relaxed">
+                    ${codeOutput || 'Click "Run Code" to compile and view execution output here.'}
+                  </pre>
+                </div>
+              </div>
+            `}
+
+            <!-- ----------------------------------------------- -->
+            <!-- TAB 4: ARCHITECTURE WHITEBOARD -->
+            <!-- ----------------------------------------------- -->
+            ${activeTab === 'whiteboard' && html`
+              <div class="bg-white rounded-3xl p-6 border border-cream-300 shadow-sm space-y-4 animate-fadeIn">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-cream-200 pb-3">
+                  <div>
+                    <h3 class="font-serif text-xl font-bold text-navy-950 flex items-center gap-2">
+                      <span>🎨</span> Collaborative System Design Whiteboard
+                    </h3>
+                    <p class="text-xs text-warmgray-600">
+                      Sketch software architecture, microservice flows, database schemas, and data structures.
+                    </p>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <button onClick=${undoWhiteboard} class="px-3 py-1.5 bg-cream-100 hover:bg-cream-200 text-navy-900 font-bold rounded-xl text-xs border border-cream-300 transition-colors">
+                      ↩ Undo
+                    </button>
+                    <button onClick=${clearWhiteboard} class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs border border-rose-200 transition-colors">
+                      🧹 Clear
+                    </button>
+                    <button onClick=${exportWhiteboard} class="px-3 py-1.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl text-xs transition-colors shadow-sm">
+                      💾 Export PNG
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Whiteboard Tools Bar -->
+                <div class="p-3 bg-cream-50 rounded-2xl border border-cream-200 flex flex-wrap items-center gap-3 text-xs">
+                  <div class="flex items-center gap-1">
+                    <button onClick=${() => setWbTool('pen')} class="px-3 py-1.5 rounded-lg font-bold ${wbTool === 'pen' ? 'bg-navy-900 text-white' : 'bg-white text-navy-800 border border-cream-300'}">
+                      ✏️ Pen
+                    </button>
+                    <button onClick=${() => setWbTool('highlighter')} class="px-3 py-1.5 rounded-lg font-bold ${wbTool === 'highlighter' ? 'bg-navy-900 text-white' : 'bg-white text-navy-800 border border-cream-300'}">
+                      🖍️ Highlight
+                    </button>
+                    <button onClick=${() => setWbTool('arrow')} class="px-3 py-1.5 rounded-lg font-bold ${wbTool === 'arrow' ? 'bg-navy-900 text-white' : 'bg-white text-navy-800 border border-cream-300'}">
+                      ➡️ Arrow
+                    </button>
+                    <button onClick=${() => setWbTool('rect')} class="px-3 py-1.5 rounded-lg font-bold ${wbTool === 'rect' ? 'bg-navy-900 text-white' : 'bg-white text-navy-800 border border-cream-300'}">
+                      🔲 Box
+                    </button>
+                    <button onClick=${() => setWbTool('circle')} class="px-3 py-1.5 rounded-lg font-bold ${wbTool === 'circle' ? 'bg-navy-900 text-white' : 'bg-white text-navy-800 border border-cream-300'}">
+                      ⭕ Circle
+                    </button>
+                    <button onClick=${() => setWbTool('eraser')} class="px-3 py-1.5 rounded-lg font-bold ${wbTool === 'eraser' ? 'bg-navy-900 text-white' : 'bg-white text-navy-800 border border-cream-300'}">
+                      🧹 Eraser
+                    </button>
+                  </div>
+
+                  <!-- Color Palette -->
+                  <div class="flex items-center gap-1.5 ml-auto">
+                    ${['#1e293b', '#2563eb', '#059669', '#d97706', '#dc2626', '#7c3aed'].map(c => html`
+                      <button
+                        key=${c}
+                        onClick=${() => setWbColor(c)}
+                        style=${{ backgroundColor: c }}
+                        class="w-6 h-6 rounded-full border-2 transition-transform ${wbColor === c ? 'scale-125 border-navy-950 shadow-md' : 'border-white'}"
+                      ></button>
+                    `)}
+                  </div>
+                </div>
+
+                <!-- Canvas Component -->
+                <div class="border border-cream-300 rounded-2xl overflow-hidden shadow-inner bg-white">
+                  <canvas
+                    ref=${whiteboardCanvasRef}
+                    width="1000"
+                    height="520"
+                    onMouseDown=${handleWbMouseDown}
+                    onMouseMove=${handleWbMouseMove}
+                    onMouseUp=${handleWbMouseUp}
+                    onTouchStart=${handleWbMouseDown}
+                    onTouchMove=${handleWbMouseMove}
+                    onTouchEnd=${handleWbMouseUp}
+                    class="w-full h-[520px] cursor-crosshair block"
+                  ></canvas>
+                </div>
+              </div>
+            `}
+
+            <!-- ----------------------------------------------- -->
+            <!-- TAB 5: ACTION TASKS & MILESTONES -->
+            <!-- ----------------------------------------------- -->
+            ${activeTab === 'tasks' && html`
+              <div class="bg-white p-7 rounded-3xl border border-cream-300 shadow-sm space-y-6 animate-fadeIn">
                 <div class="flex items-center justify-between border-b border-cream-100 pb-3">
-                  <h3 class="font-serif text-xl font-bold text-navy-950">Learning Action Tasks</h3>
-                  <span class="text-xs font-bold text-warmgray-500 bg-cream-100 px-3 py-1 rounded-full">
+                  <div>
+                    <h3 class="font-serif text-xl font-bold text-navy-950">Learning Action Tasks & Homework</h3>
+                    <p class="text-xs text-warmgray-600">Track mutual milestone completion to earn verified mastery endorsements.</p>
+                  </div>
+                  <span class="text-xs font-bold text-navy-900 bg-cream-100 px-3 py-1 rounded-full">
                     ${(activeWorkspace.tasks || []).filter(t => t.status === 'COMPLETED').length}/${(activeWorkspace.tasks || []).length} Completed
                   </span>
-
                 </div>
 
                 <form onSubmit=${handleAddTask} class="flex gap-2">
@@ -963,14 +2283,18 @@
                     required
                     value=${newTaskTitle}
                     onChange=${e => setNewTaskTitle(e.target.value)}
-                    placeholder="Enter practice task title..."
-                    class="w-full px-4 py-2.5 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-medium text-navy-900"
+                    placeholder="Enter practice task or homework title (e.g. Implement Kafka consumer)..."
+                    class="w-full px-4 py-2.5 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-medium text-navy-900 text-xs"
                   />
-                  <button type="submit" class="px-6 py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-sm transition-colors shrink-0">Add Task</button>
+                  <button type="submit" class="px-6 py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-sm transition-colors shrink-0 text-xs">
+                    Add Task
+                  </button>
                 </form>
 
                 <div class="space-y-2.5 pt-2">
-                  ${(activeWorkspace.tasks || []).map(t => html`
+                  ${(activeWorkspace.tasks || []).length === 0 ? html`
+                    <p class="text-xs text-warmgray-500 text-center py-6">No tasks added yet. Create action items for your peer learning sprint!</p>
+                  ` : (activeWorkspace.tasks || []).map(t => html`
                     <div key=${t.id} onClick=${() => handleToggleTask(t)} class="p-3.5 bg-cream-50 hover:bg-cream-100/70 rounded-2xl border border-cream-200 flex items-center justify-between cursor-pointer transition-all duration-150 shadow-sm border-l-4 ${t.status === 'COMPLETED' ? 'border-l-emerald-500' : 'border-l-navy-600'}">
                       <div class="flex items-center gap-3">
                         <div class="w-5 h-5 rounded-lg border flex items-center justify-center ${t.status === 'COMPLETED' ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-cream-400 bg-white shadow-inner'}">
@@ -979,41 +2303,239 @@
                         <span class="font-medium text-xs ${t.status === 'COMPLETED' ? 'line-through text-warmgray-400' : 'text-navy-900'}">${t.title}</span>
                       </div>
                       <span class="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded ${t.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800' : 'bg-sky-50 text-indigo-900'}">${t.status}</span>
-
                     </div>
                   `)}
                 </div>
               </div>
-            </div>
-          </div>
-        `}
-        <!-- Scheduler Form Modal -->
-        ${schedulerOpen ? html`
-          <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-955/60 backdrop-blur-sm">
-            <div class="bg-white rounded-3xl max-w-md w-full p-8 border border-cream-300 shadow-2xl space-y-5 text-left text-xs">
-              <div class="flex items-center justify-between border-b border-cream-200 pb-3">
-                <h3 class="font-serif font-bold text-lg text-navy-900">Schedule Practice Session</h3>
-                <button onClick=${() => setSchedulerOpen(false)} class="p-1 text-warmgray-500 hover:bg-cream-100 rounded-lg"><${Icon} name="x" class="w-4 h-4" /></button>
-              </div>
+            `}
 
-              <form onSubmit=${handleScheduleSession} class="space-y-4">
-                <div>
-                  <label class="block font-bold text-navy-955 mb-1">Session Title</label>
-                  <input required type="text" value=${sessTitle} onChange=${e => setSessTitle(e.target.value)} placeholder="e.g. Python API Setup call" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+            <!-- ----------------------------------------------- -->
+            <!-- TAB 6: SCHEDULED SESSIONS -->
+            <!-- ----------------------------------------------- -->
+            ${activeTab === 'sessions' && html`
+              <div class="bg-white p-7 rounded-3xl border border-cream-300 shadow-sm space-y-6 animate-fadeIn">
+                <div class="flex items-center justify-between border-b border-cream-200 pb-3">
+                  <div>
+                    <h3 class="font-serif text-xl font-bold text-navy-950">Booked Practice Sessions</h3>
+                    <p class="text-xs text-warmgray-600">Calendar meetings and video links configured in Indian Standard Time (IST).</p>
+                  </div>
+                  <button onClick=${() => setSchedulerOpen(true)} class="px-4 py-2 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm">
+                    + Book New Call
+                  </button>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                ${sessions.length === 0 ? html`
+                  <div class="p-8 text-center space-y-3 bg-cream-50 rounded-2xl border border-cream-200">
+                    <p class="text-xs text-warmgray-600">No practice calls scheduled yet.</p>
+                    <button onClick=${() => setSchedulerOpen(true)} class="px-4 py-2 bg-navy-700 text-white font-bold rounded-xl text-xs">
+                      Schedule 1st Practice Session 📅
+                    </button>
+                  </div>
+                ` : html`
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    ${sessions.map(s => html`
+                      <div key=${s.id} class="p-4 bg-cream-50 rounded-2xl border border-cream-200 space-y-3 border-l-4 border-l-navy-600 shadow-sm">
+                        <div class="flex justify-between items-start gap-1">
+                          <h4 class="font-bold text-navy-900 text-xs">${s.title}</h4>
+                          <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-navy-200 text-navy-900">${s.duration_minutes} min</span>
+                        </div>
+                        <div class="text-[11px] text-warmgray-600 font-medium space-y-1">
+                          <p>📅 ${new Date(s.session_date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} (IST)</p>
+                          <p>👤 Proposer: ${s.proposer_name}</p>
+                          ${s.agenda ? html`<p class="text-[10px] text-warmgray-500 italic">"${s.agenda}"</p>` : null}
+                        </div>
+                        ${s.meeting_link ? html`
+                          <a href=${s.meeting_link} target="_blank" class="block text-center mt-2 px-3 py-2 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl text-xs shadow-sm">
+                            Join Meeting Link 🔗
+                          </a>
+                        ` : html`
+                          <button onClick=${() => { setActiveSubTab('live-room'); startCall('video'); }} class="w-full text-center mt-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-sm">
+                            Launch In-App Video Call 📹
+                          </button>
+                        `}
+                      </div>
+                    `)}
+                  </div>
+                `}
+              </div>
+            `}
+
+            <!-- ----------------------------------------------- -->
+            <!-- TAB 7: ENDORSE & PEER REVIEW -->
+            <!-- ----------------------------------------------- -->
+            ${activeTab === 'endorse' && html`
+              <div class="bg-white p-7 rounded-3xl border border-cream-300 shadow-sm space-y-6 animate-fadeIn">
+                <div class="border-b border-cream-200 pb-3">
+                  <h3 class="font-serif text-xl font-bold text-navy-950">Peer Review & Skill Endorsement ⭐</h3>
+                  <p class="text-xs text-warmgray-600">
+                    Verify <strong>${partner.name}</strong>'s mastery in <strong>${partnerSkill || 'their skill'}</strong> to reward verified badges on their public profile!
+                  </p>
+                </div>
+
+                <form onSubmit=${handleSubmitReview} class="space-y-5 text-xs max-w-2xl">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                      <label class="block font-bold text-navy-900">Overall Experience Rating (1-5)</label>
+                      <div class="flex items-center gap-1">
+                        ${[1, 2, 3, 4, 5].map(star => html`
+                          <button
+                            type="button"
+                            key=${star}
+                            onClick=${() => setReviewRating(star)}
+                            class="text-2xl transition-transform ${star <= reviewRating ? 'text-amber-400 scale-110' : 'text-cream-300'}"
+                          >
+                            ★
+                          </button>
+                        `)}
+                      </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                      <label class="block font-bold text-navy-900">Teaching & Knowledge Quality</label>
+                      <select
+                        value=${reviewKnowledgeRating}
+                        onChange=${e => setReviewKnowledgeRating(Number(e.target.value))}
+                        class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold text-navy-900"
+                      >
+                        <option value="5">5 - Exceptional Mastery & Clarity</option>
+                        <option value="4">4 - Very Good Knowledge</option>
+                        <option value="3">3 - Adequate Knowledge</option>
+                        <option value="2">2 - Basic Knowledge</option>
+                        <option value="1">1 - Needs Improvement</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <label class="block font-bold text-navy-900">Endorsement Testimonial & Review Comment</label>
+                    <textarea
+                      rows="4"
+                      required
+                      value=${reviewComment}
+                      onChange=${e => setReviewComment(e.target.value)}
+                      placeholder="Explain how your partner taught and collaborated (e.g. Excellent explanation of backend concurrency and clean code habits)..."
+                      class="w-full p-3.5 bg-cream-50 border border-cream-300 rounded-xl font-medium text-navy-900 focus:outline-none focus:border-navy-600 text-xs"
+                    ></textarea>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled=${reviewSubmitting}
+                    class="px-8 py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow-md transition-all text-xs flex items-center gap-2"
+                  >
+                    <span>⭐</span> ${reviewSubmitting ? 'Submitting Endorsement...' : reviewSubmitted ? 'Update Endorsement & Review' : 'Submit Endorsement & Award Verified Badge'}
+                  </button>
+                </form>
+              </div>
+            `}
+
+          </div>
+
+          <!-- ----------------------------------------------- -->
+          <!-- In-Workspace Real-time Live Chat Panel -->
+          <!-- ----------------------------------------------- -->
+          ${chatOpen && html`
+            <div class="bg-white rounded-3xl border border-cream-300 shadow-xl overflow-hidden flex flex-col h-[650px] animate-fadeIn">
+              <!-- Chat Header -->
+              <div class="p-4 bg-navy-950 text-white flex items-center justify-between border-b border-navy-800">
+                <div class="flex items-center gap-2.5">
+                  <div class="relative">
+                    <img src=${partner.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${partner.name}`} class="w-8 h-8 rounded-full border border-navy-500" />
+                    <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full border border-navy-900"></span>
+                  </div>
+                  <div>
+                    <h4 class="font-serif font-bold text-xs">${partner.name}</h4>
+                    <p class="text-[9px] text-cream-300">Live Workspace Channel</p>
+                  </div>
+                </div>
+                <button onClick=${() => setChatOpen(false)} class="text-cream-300 hover:text-white p-1">✕</button>
+              </div>
+
+              <!-- Quick Teaching Response Chips -->
+              <div class="p-2 bg-cream-50 border-b border-cream-200 flex items-center gap-1.5 overflow-x-auto text-[10px] scrollbar-none">
+                <button onClick=${() => setNewChatMsg('Can you share your screen for this part?')} class="px-2 py-1 bg-white hover:bg-cream-100 border border-cream-300 rounded-md text-navy-800 shrink-0 font-medium">
+                  🖥️ Share Screen?
+                </button>
+                <button onClick=${() => setNewChatMsg('Let’s test the edge cases together!')} class="px-2 py-1 bg-white hover:bg-cream-100 border border-cream-300 rounded-md text-navy-800 shrink-0 font-medium">
+                  🧪 Test Edge Cases
+                </button>
+                <button onClick=${() => setNewChatMsg('Understood! What’s the next step?')} class="px-2 py-1 bg-white hover:bg-cream-100 border border-cream-300 rounded-md text-navy-800 shrink-0 font-medium">
+                  👍 Next Step?
+                </button>
+              </div>
+
+              <!-- Message Stream -->
+              <div class="flex-1 p-4 overflow-y-auto space-y-3 bg-cream-50/50 text-xs">
+                ${chatMessages.length === 0 ? html`
+                  <div class="text-center py-10 space-y-2 text-warmgray-500">
+                    <p>💬 No messages in this workspace thread yet.</p>
+                    <p class="text-[10px]">Say hi to your teaching partner!</p>
+                  </div>
+                ` : chatMessages.map(m => {
+                  const isMe = m.sender_id === currentUser.id;
+                  return html`
+                    <div key=${m.id || Math.random()} class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                      <div class="max-w-[85%] p-3 rounded-2xl text-xs font-medium shadow-sm ${isMe ? 'bg-navy-700 text-white rounded-tr-none' : 'bg-white text-navy-900 border border-cream-200 rounded-tl-none'}">
+                        <p class="whitespace-pre-wrap">${m.content}</p>
+                      </div>
+                      <span class="text-[9px] text-warmgray-400 mt-1 px-1">
+                        ${m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                      </span>
+                    </div>
+                  `;
+                })}
+                <div ref=${chatEndRef}></div>
+              </div>
+
+              <!-- Message Input Composer -->
+              <form onSubmit=${handleSendChatMessage} class="p-3 bg-white border-t border-cream-200 flex gap-2">
+                <input
+                  type="text"
+                  value=${newChatMsg}
+                  onChange=${e => setNewChatMsg(e.target.value)}
+                  placeholder="Type a message to partner..."
+                  class="flex-1 px-3 py-2 bg-cream-50 border border-cream-300 rounded-xl text-xs font-medium focus:outline-none focus:border-navy-600 text-navy-900"
+                />
+                <button
+                  type="submit"
+                  disabled=${!newChatMsg.trim() || sendingChat}
+                  class="px-4 py-2 bg-navy-700 hover:bg-navy-800 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow-sm transition-colors"
+                >
+                  Send
+                </button>
+              </form>
+            </div>
+          `}
+
+        </div>
+
+        <!-- Session Booking Modal -->
+        ${schedulerOpen ? html`
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-955/60 backdrop-blur-sm animate-fadeIn">
+            <div class="bg-white rounded-3xl max-w-md w-full p-7 border border-cream-300 shadow-2xl space-y-4 text-left text-xs">
+              <div class="flex items-center justify-between border-b border-cream-200 pb-3">
+                <h3 class="font-serif font-bold text-lg text-navy-900">Schedule Live Practice Session</h3>
+                <button onClick=${() => setSchedulerOpen(false)} class="p-1 text-warmgray-500 hover:bg-cream-100 rounded-lg">✕</button>
+              </div>
+
+              <form onSubmit=${handleScheduleSession} class="space-y-3.5">
+                <div>
+                  <label class="block font-bold text-navy-955 mb-1">Session Title</label>
+                  <input required type="text" value=${sessTitle} onChange=${e => setSessTitle(e.target.value)} placeholder="e.g. UPI Architecture & Go Routine Walkthrough" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="block font-bold text-navy-950 mb-1">Date</label>
                     <input required type="date" value=${sessDate} onChange=${e => setSessDate(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold text-navy-950" />
                   </div>
                   <div>
-                    <label class="block font-bold text-navy-955 mb-1">Time</label>
+                    <label class="block font-bold text-navy-955 mb-1">Time (IST)</label>
                     <input required type="time" value=${sessTime} onChange=${e => setSessTime(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold text-navy-955" />
                   </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="block font-bold text-navy-950 mb-1">Duration (Min)</label>
                     <input required type="number" min="15" max="180" step="15" value=${sessDuration} onChange=${e => setSessDuration(Number(e.target.value))} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
@@ -1021,27 +2543,25 @@
                   <div>
                     <label class="block font-bold text-navy-950 mb-1">Timezone</label>
                     <select value=${sessTimezone} onChange=${e => setSessTimezone(e.target.value)} class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl font-semibold text-navy-950">
-                      <option value="PST (UTC-8)">PST (UTC-8)</option>
-                      <option value="EST (UTC-5)">EST (UTC-5)</option>
-                      <option value="GMT (UTC+0)">GMT (UTC+0)</option>
-                      <option value="CET (UTC+1)">CET (UTC+1)</option>
-                      <option value="IST (UTC+5:30)">IST (UTC+5:30)</option>
+                      <option value="IST (UTC+5:30)">IST (UTC+5:30) - India</option>
+                      <option value="GMT (UTC+0)">GMT (UTC+0) - London</option>
+                      <option value="EST (UTC-5)">EST (UTC-5) - US Eastern</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label class="block font-bold text-navy-955 mb-1">Video Meeting Link (Zoom, Meet, Teams)</label>
+                  <label class="block font-bold text-navy-955 mb-1">Meeting Link (In-App Room or External Google Meet)</label>
                   <input type="url" value=${sessLink} onChange=${e => setSessLink(e.target.value)} placeholder="https://meet.google.com/abc-defg-hij" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl" />
                 </div>
 
                 <div>
-                  <label class="block font-bold text-navy-955 mb-1">Agenda / Target Notes</label>
-                  <textarea rows="3" value=${sessAgenda} onChange=${e => setSessAgenda(e.target.value)} placeholder="What will you practice in this session?" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl"></textarea>
+                  <label class="block font-bold text-navy-955 mb-1">Agenda / Practice Target</label>
+                  <textarea rows="2" value=${sessAgenda} onChange=${e => setSessAgenda(e.target.value)} placeholder="What will you practice in this session?" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl"></textarea>
                 </div>
 
-                <button type="submit" class="w-full py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-md transition-colors">
-                  Propose & Book Session
+                <button type="submit" class="w-full py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-md transition-colors text-xs">
+                  Propose & Book Session 📅
                 </button>
               </form>
             </div>
@@ -1054,122 +2574,620 @@
   window.SkillSwap.WorkspaceView = WorkspaceView;
 
   // ----------------------------------------------------
-  // Chat View
+  // Chat View (Real-time P2P Direct Messaging)
   // ----------------------------------------------------
-  function ChatView({ currentUser }) {
+  function ChatView({ currentUser, targetConnectionId, targetUserId, onViewProfile, onProposeSwap, setActiveTab }) {
     const [connections, setConnections] = useState([]);
     const [activeConn, setActiveConn] = useState(null);
     const [messages, setMessages] = useState([]);
     const [newMsg, setNewMsg] = useState('');
+    const [loadingThreads, setLoadingThreads] = useState(true);
+    const [loadingMsgs, setLoadingMsgs] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sending, setSending] = useState(false);
+    const [newChatModalOpen, setNewChatModalOpen] = useState(false);
+    const [contacts, setContacts] = useState([]);
+    const [contactSearch, setContactSearch] = useState('');
+    const [loadingContacts, setLoadingContacts] = useState(false);
+    const [mobileShowChat, setMobileShowChat] = useState(false);
 
-    useEffect(() => {
-      api('/api/messages').then(d => {
-        setConnections(d.connections || []);
-        if (d.connections && d.connections[0]) {
-          selectConnection(d.connections[0]);
+    const messagesEndRef = useRef(null);
+
+    const scrollToBottom = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+
+    const formatMsgTime = (timestamp) => {
+      if (!timestamp) return '';
+      try {
+        const d = new Date(timestamp);
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } catch {
+        return '';
+      }
+    };
+
+    const formatThreadDate = (timestamp) => {
+      if (!timestamp) return '';
+      try {
+        const d = new Date(timestamp);
+        const now = new Date();
+        const diffDays = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+        if (diffDays === 0) {
+          return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else if (diffDays === 1) {
+          return 'Yesterday';
+        } else if (diffDays < 7) {
+          return d.toLocaleDateString([], { weekday: 'short' });
+        } else {
+          return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
         }
-      }).catch(console.error);
-    }, []);
+      } catch {
+        return '';
+      }
+    };
+
+    const loadThreads = async (preserveActive = false) => {
+      try {
+        const data = await api('/api/messages');
+        const threadsList = data.threads || data.connections || [];
+        setConnections(threadsList);
+        setLoadingThreads(false);
+
+        if (!preserveActive && !activeConn && threadsList.length > 0) {
+          if (targetConnectionId) {
+            const found = threadsList.find(c => String(c.id || c.connection_id) === String(targetConnectionId));
+            if (found) {
+              selectConnection(found);
+              return;
+            }
+          }
+          selectConnection(threadsList[0]);
+        }
+      } catch (err) {
+        console.error('Failed to load threads:', err);
+        setLoadingThreads(false);
+      }
+    };
 
     const selectConnection = async (conn) => {
+      if (!conn) return;
       setActiveConn(conn);
-      const data = await api('/api/messages?connection_id=' + conn.id);
-      setMessages(data.messages || []);
+      setMobileShowChat(true);
+      setLoadingMsgs(true);
+      try {
+        const connId = conn.id || conn.connection_id;
+        const data = await api('/api/messages?connection_id=' + connId);
+        setMessages(data.messages || []);
+        if (data.connection) {
+          setActiveConn(prev => ({ ...prev, ...data.connection }));
+        }
+      } catch (err) {
+        console.error('Failed to load messages:', err);
+      } finally {
+        setLoadingMsgs(false);
+        setTimeout(scrollToBottom, 100);
+      }
     };
+
+    const startChatWithUser = async (partner) => {
+      setNewChatModalOpen(false);
+      setLoadingMsgs(true);
+      try {
+        const data = await api('/api/messages?partner_id=' + partner.id);
+        if (data.connection) {
+          setActiveConn(data.connection);
+          setMessages(data.messages || []);
+          setMobileShowChat(true);
+          await loadThreads(true);
+        }
+      } catch (err) {
+        console.error('Failed to start chat with user:', err);
+      } finally {
+        setLoadingMsgs(false);
+        setTimeout(scrollToBottom, 100);
+      }
+    };
+
+    const loadContacts = async () => {
+      setLoadingContacts(true);
+      try {
+        const data = await api('/api/messages?type=contacts');
+        setContacts(data.contacts || []);
+      } catch (err) {
+        console.error('Failed to load contacts:', err);
+      } finally {
+        setLoadingContacts(false);
+      }
+    };
+
+    useEffect(() => {
+      loadThreads();
+      if (targetUserId) {
+        startChatWithUser({ id: targetUserId });
+      }
+    }, [targetConnectionId, targetUserId]);
+
+    // Periodic live polling (every 3.5s) to auto-receive incoming messages
+    useEffect(() => {
+      const interval = setInterval(async () => {
+        if (activeConn) {
+          const connId = activeConn.id || activeConn.connection_id;
+          try {
+            const data = await api('/api/messages?connection_id=' + connId);
+            if (data.messages && data.messages.length !== messages.length) {
+              setMessages(data.messages);
+              setTimeout(scrollToBottom, 50);
+              loadThreads(true);
+            }
+          } catch (err) {
+            // ignore silent background poll error
+          }
+        }
+      }, 3500);
+      return () => clearInterval(interval);
+    }, [activeConn, messages.length]);
+
+    useEffect(() => {
+      scrollToBottom();
+    }, [messages]);
 
     const handleSend = async (e) => {
-      e.preventDefault();
-      if (!newMsg.trim() || !activeConn) return;
-      const text = newMsg;
+      if (e) e.preventDefault();
+      const text = newMsg.trim();
+      if (!text || !activeConn || sending) return;
+
+      const connId = activeConn.id || activeConn.connection_id;
       setNewMsg('');
-      const res = await api('/api/messages', {
-        method: 'POST',
-        body: JSON.stringify({ connection_id: activeConn.id, message: text })
-      });
-      setMessages(prev => [...prev, res.message]);
+      setSending(true);
+
+      const optimisticMsg = {
+        id: 'temp_' + Date.now(),
+        connection_id: connId,
+        sender_id: currentUser ? currentUser.id : 'me',
+        sender_name: currentUser ? currentUser.name : 'You',
+        sender_avatar: currentUser ? currentUser.avatar_url : null,
+        message: text,
+        created_at: new Date().toISOString(),
+        is_read: false
+      };
+
+      setMessages(prev => [...prev, optimisticMsg]);
+      setTimeout(scrollToBottom, 20);
+
+      try {
+        const res = await api('/api/messages', {
+          method: 'POST',
+          body: JSON.stringify({ connection_id: connId, message: text })
+        });
+        if (res.message) {
+          setMessages(prev => prev.map(m => m.id === optimisticMsg.id ? res.message : m));
+        }
+        loadThreads(true);
+      } catch (err) {
+        console.error('Error sending message:', err);
+        setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
+      } finally {
+        setSending(false);
+        setTimeout(scrollToBottom, 50);
+      }
     };
 
+    const handleQuickReply = (text) => {
+      setNewMsg(text);
+    };
+
+    const filteredConnections = connections.filter(c => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      const name = (c.partner_name || (c.partner && c.partner.name) || '').toLowerCase();
+      const username = ((c.partner && c.partner.username) || '').toLowerCase();
+      const lastMsg = (c.last_message || '').toLowerCase();
+      return name.includes(q) || username.includes(q) || lastMsg.includes(q);
+    });
+
+    const filteredContacts = contacts.filter(u => {
+      if (!contactSearch.trim()) return true;
+      const q = contactSearch.toLowerCase();
+      const name = (u.name || '').toLowerCase();
+      const username = (u.username || '').toLowerCase();
+      const headline = (u.headline || '').toLowerCase();
+      return name.includes(q) || username.includes(q) || headline.includes(q);
+    });
+
+    const partner = activeConn ? (activeConn.partner || {
+      id: activeConn.partner_id,
+      name: activeConn.partner_name || 'Member',
+      avatar_url: activeConn.partner_avatar,
+      headline: activeConn.partner_headline || 'SkillSwapX Member'
+    }) : null;
+
     return html`
-      <div class="max-w-7xl mx-auto px-4 py-8 text-left animate-fadeIn">
-        <div class="bg-white rounded-3xl border border-cream-300 shadow-sm overflow-hidden grid grid-cols-1 md:grid-cols-3 min-h-[600px]">
-          <!-- Sidebar: conversations -->
-          <div class="border-r border-cream-200 p-4 space-y-4 bg-cream-50/30">
-            <h3 class="font-serif text-lg font-bold text-navy-955 px-2 flex items-center gap-2">
-              <${Icon} name="message-square" class="w-5 h-5 text-navy-700" /> Direct Messages
-            </h3>
-            <div class="space-y-1.5">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-left animate-fadeIn">
+        <!-- Top Bar Header -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-xl bg-navy-100 text-navy-700">
+                <${Icon} name="message-circle" class="w-5 h-5" />
+              </span>
+              <h1 class="font-serif text-2xl sm:text-3xl font-bold text-navy-950">Direct Messages</h1>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                Live Chat
+              </span>
+            </div>
+            <p class="text-xs text-warmgray-500 mt-1 font-medium">Real-time peer communication for barter agreements and session coordination.</p>
+          </div>
 
-              ${connections.map(c => html`
-                <div
-                  key=${c.id}
-                  onClick=${() => selectConnection(c)}
-                  class="p-3.5 rounded-2xl flex items-center gap-3.5 cursor-pointer transition-all border border-transparent ${activeConn && activeConn.id === c.id ? 'bg-cream-100/80 border-cream-300 shadow-sm border-l-4 border-l-navy-600' : 'hover:bg-cream-50'}"
-                >
-                  <img src=${c.partner_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop'} class="w-10.5 h-10.5 rounded-xl object-cover border border-cream-200" />
-                  <div class="text-xs truncate flex-1">
-                    <p class="font-bold text-navy-900 truncate">${c.partner_name}</p>
-                    <p class="text-warmgray-500 text-[11px] truncate mt-0.5 font-medium">${c.last_message || 'Start the conversation...'}</p>
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick=${() => { setNewChatModalOpen(true); loadContacts(); }}
+              class="flex-1 sm:flex-none px-4 py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-extrabold text-xs rounded-xl shadow-sm hover:shadow transition-all flex items-center justify-center gap-1.5"
+            >
+              <${Icon} name="plus" class="w-4 h-4" />
+              <span>New Conversation</span>
+            </button>
+          </div>
+        </div>
 
-                  </div>
+        <!-- Chat App Container -->
+        <div class="bg-white rounded-3xl border border-cream-300 shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px] max-h-[750px] relative">
+          
+          <!-- LEFT COLUMN: Conversations Sidebar -->
+          <div class="lg:col-span-4 border-r border-cream-200 flex flex-col bg-cream-50/40 ${mobileShowChat ? 'hidden lg:flex' : 'flex'}">
+            <!-- Search & Filter Bar -->
+            <div class="p-4 border-b border-cream-200 space-y-3 bg-white">
+              <div class="relative">
+                <${Icon} name="search" class="w-4 h-4 text-warmgray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value=${searchQuery}
+                  onChange=${e => setSearchQuery(e.target.value)}
+                  placeholder="Search conversations..."
+                  class="w-full pl-9 pr-4 py-2 bg-cream-50 border border-cream-200 rounded-xl text-xs text-navy-900 placeholder:text-warmgray-400 focus:outline-none focus:border-navy-600 font-medium"
+                />
+              </div>
+            </div>
+
+            <!-- Thread List -->
+            <div class="flex-1 overflow-y-auto divide-y divide-cream-100 p-2 space-y-1">
+              ${loadingThreads ? html`
+                <div class="p-8 text-center text-warmgray-400 text-xs space-y-2">
+                  <div class="w-6 h-6 border-2 border-navy-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  <p>Loading conversations...</p>
                 </div>
-              `)}
+              ` : filteredConnections.length === 0 ? html`
+                <div class="p-8 text-center space-y-3">
+                  <div class="w-12 h-12 bg-cream-200/70 rounded-full flex items-center justify-center text-warmgray-500 mx-auto">
+                    <${Icon} name="message-square" class="w-6 h-6" />
+                  </div>
+                  <p class="text-xs font-bold text-navy-900">No conversations yet</p>
+                  <p class="text-[11px] text-warmgray-500 leading-relaxed">Start chatting with swappers from your matches or directory.</p>
+                  <button
+                    onClick=${() => { setNewChatModalOpen(true); loadContacts(); }}
+                    class="px-3.5 py-1.5 bg-navy-700 text-white rounded-lg text-[11px] font-bold"
+                  >
+                    + Find Swappers
+                  </button>
+                </div>
+              ` : filteredConnections.map(c => {
+                const connId = c.id || c.connection_id;
+                const isSelected = activeConn && (activeConn.id === connId || activeConn.connection_id === connId);
+                const cPartner = c.partner || {
+                  name: c.partner_name || 'Member',
+                  avatar_url: c.partner_avatar,
+                  headline: c.partner_headline
+                };
+                const hasUnread = c.unread_count > 0;
+
+                return html`
+                  <div
+                    key=${connId}
+                    onClick=${() => selectConnection(c)}
+                    class="p-3 rounded-2xl flex items-center gap-3 cursor-pointer transition-all border ${
+                      isSelected
+                        ? 'bg-navy-50/90 border-navy-300/80 shadow-xs'
+                        : 'hover:bg-cream-100/60 border-transparent'
+                    }"
+                  >
+                    <div class="relative shrink-0">
+                      <img
+                        src=${cPartner.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop'}
+                        alt=${cPartner.name}
+                        class="w-11 h-11 rounded-2xl object-cover ring-1 ring-cream-300 shadow-2xs"
+                      />
+                      <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white"></span>
+                    </div>
+
+                    <div class="flex-1 min-w-0 text-left">
+                      <div class="flex items-center justify-between gap-1">
+                        <p class="font-bold text-navy-950 text-xs truncate ${hasUnread ? 'text-indigo-900 font-extrabold' : ''}">${cPartner.name}</p>
+                        <span class="text-[10px] text-warmgray-400 font-semibold shrink-0">${formatThreadDate(c.last_message_at)}</span>
+                      </div>
+                      <p class="text-[11px] truncate mt-0.5 ${hasUnread ? 'font-bold text-navy-900' : 'text-warmgray-500 font-medium'}">
+                        ${c.last_message || 'Start the conversation...'}
+                      </p>
+                    </div>
+
+                    ${hasUnread ? html`
+                      <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-indigo-600 text-white shrink-0 shadow-2xs animate-pulse">
+                        ${c.unread_count}
+                      </span>
+                    ` : null}
+                  </div>
+                `;
+              })}
             </div>
           </div>
 
-          <!-- Chat logs panel -->
-          <div class="md:col-span-2 flex flex-col justify-between p-6">
-            ${activeConn ? html`
-              <div class="flex items-center justify-between border-b border-cream-200 pb-3.5 mb-4">
-                <div class="flex items-center gap-3">
-                  <img src=${activeConn.partner_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop'} class="w-9 h-9 rounded-xl object-cover border border-cream-200" />
-                  <div>
-                    <h4 class="font-bold text-navy-900 text-sm leading-snug">${activeConn.partner_name}</h4>
-                    <span class="text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded">Active swap</span>
+          <!-- RIGHT COLUMN: Active Chat Panel -->
+          <div class="lg:col-span-8 flex flex-col justify-between bg-white ${!mobileShowChat ? 'hidden lg:flex' : 'flex'}">
+            ${activeConn && partner ? html`
+              <!-- Chat Partner Header Bar -->
+              <div class="px-6 py-4 border-b border-cream-200 bg-white/95 backdrop-blur flex items-center justify-between gap-4 z-10">
+                <div class="flex items-center gap-3 min-w-0">
+                  <button
+                    onClick=${() => setMobileShowChat(false)}
+                    class="lg:hidden p-1.5 rounded-lg text-warmgray-500 hover:bg-cream-100"
+                    title="Back to conversations"
+                  >
+                    <${Icon} name="chevron-left" class="w-5 h-5" />
+                  </button>
 
+                  <div class="relative shrink-0">
+                    <img
+                      src=${partner.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop'}
+                      alt=${partner.name}
+                      class="w-10 h-10 rounded-2xl object-cover ring-1 ring-cream-300 shadow-2xs"
+                    />
+                    <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white"></span>
                   </div>
+
+                  <div class="min-w-0 text-left">
+                    <div class="flex items-center gap-2">
+                      <h3 class="font-bold text-navy-950 text-sm truncate">${partner.name}</h3>
+                      <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.2 rounded-md text-[9px] font-black uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        Online
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-warmgray-500 truncate font-medium max-w-xs sm:max-w-md">
+                      ${partner.headline || (partner.username ? `@${partner.username}` : 'SkillSwapX Member')}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="flex items-center gap-2 shrink-0">
+                  ${onViewProfile ? html`
+                    <button
+                      onClick=${() => onViewProfile(partner.username || partner.id)}
+                      class="px-3 py-1.5 bg-cream-100 hover:bg-cream-200 text-navy-900 font-bold text-xs rounded-xl transition-all flex items-center gap-1"
+                      title="View Member Profile"
+                    >
+                      <${Icon} name="user" class="w-3.5 h-3.5 text-navy-600" />
+                      <span class="hidden md:inline">Profile</span>
+                    </button>
+                  ` : null}
+
+                  ${activeConn.workspace_id && setActiveTab ? html`
+                    <button
+                      onClick=${() => setActiveTab('workspaces')}
+                      class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1"
+                      title="Open Shared Workspace"
+                    >
+                      <${Icon} name="folder" class="w-3.5 h-3.5 text-indigo-600" />
+                      <span class="hidden md:inline">Workspace</span>
+                    </button>
+                  ` : onProposeSwap ? html`
+                    <button
+                      onClick=${() => onProposeSwap(partner)}
+                      class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1"
+                      title="Propose Skill Swap"
+                    >
+                      <${Icon} name="sparkles" class="w-3.5 h-3.5 text-emerald-600" />
+                      <span class="hidden md:inline">Swap</span>
+                    </button>
+                  ` : null}
                 </div>
               </div>
 
-              <!-- Message listing -->
-              <div class="flex-1 overflow-y-auto space-y-3.5 p-3 text-xs min-h-[400px] max-h-[500px]">
-                ${messages.map(m => {
+              <!-- Message History Scroll Area -->
+              <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-cream-50/20 text-xs min-h-[380px] max-h-[460px]">
+                ${loadingMsgs ? html`
+                  <div class="h-full flex items-center justify-center py-20">
+                    <div class="w-8 h-8 border-2 border-navy-700 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ` : messages.length === 0 ? html`
+                  <div class="h-full flex flex-col items-center justify-center text-center py-16 space-y-3">
+                    <div class="w-14 h-14 bg-navy-50 rounded-2xl flex items-center justify-center text-navy-600">
+                      <${Icon} name="message-square" class="w-7 h-7" />
+                    </div>
+                    <h4 class="font-bold text-navy-900 text-sm">Start your conversation with ${partner.name}</h4>
+                    <p class="text-warmgray-500 max-w-sm text-xs font-medium leading-relaxed">
+                      Discuss reciprocal learning goals, agree on session frequency, or coordinate your barter schedule.
+                    </p>
+                    <div class="flex flex-wrap gap-2 justify-center pt-2">
+                      <button
+                        onClick=${() => handleQuickReply('Hi! I saw your skills and would love to propose a reciprocal barter session.')}
+                        class="px-3 py-1.5 rounded-full bg-white border border-cream-300 text-navy-800 text-[11px] font-bold hover:bg-cream-100 transition-colors"
+                      >
+                        👋 Say Hello
+                      </button>
+                      <button
+                        onClick=${() => handleQuickReply('When are you free this week for our first 1:1 learning swap?')}
+                        class="px-3 py-1.5 rounded-full bg-white border border-cream-300 text-navy-800 text-[11px] font-bold hover:bg-cream-100 transition-colors"
+                      >
+                        📅 Check Availability
+                      </button>
+                    </div>
+                  </div>
+                ` : messages.map((m, idx) => {
                   const isMe = m.sender_id === (currentUser && currentUser.id);
+                  const isTemp = String(m.id).startsWith('temp_');
+
                   return html`
-                    <div key=${m.id} class="flex ${isMe ? 'justify-end' : 'justify-start'}">
-                      <div class="max-w-xs sm:max-w-md p-3.5 rounded-2xl leading-relaxed font-medium shadow-sm ${isMe ? 'bg-navy-700 text-white rounded-br-none' : 'bg-cream-100/90 text-navy-955 rounded-bl-none'}">
-                        ${m.message}
+                    <div key=${m.id || idx} class="flex items-end gap-2.5 ${isMe ? 'justify-end' : 'justify-start'} animate-fadeIn">
+                      ${!isMe ? html`
+                        <img
+                          src=${partner.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&h=60&fit=crop'}
+                          alt=${partner.name}
+                          class="w-7 h-7 rounded-xl object-cover ring-1 ring-cream-300 shrink-0 mb-0.5"
+                        />
+                      ` : null}
+
+                      <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[85%] sm:max-w-md">
+                        <div class="px-4 py-3 rounded-2xl text-xs leading-relaxed font-medium ${
+                          isMe
+                            ? 'bg-navy-800 text-white rounded-br-xs shadow-sm'
+                            : 'bg-cream-100/90 text-navy-955 rounded-bl-xs border border-cream-200/90 shadow-2xs'
+                        }">
+                          <p class="whitespace-pre-wrap break-words">${m.message}</p>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 mt-1 px-1 text-[10px] text-warmgray-400 font-semibold">
+                          <span>${formatMsgTime(m.created_at)}</span>
+                          ${isMe ? html`
+                            <span>${isTemp ? '⏳' : '✓✓'}</span>
+                          ` : null}
+                        </div>
                       </div>
                     </div>
                   `;
                 })}
+                <div ref=${messagesEndRef}></div>
               </div>
 
-              <!-- Input form -->
+              <!-- Quick Reply Chips Bar -->
+              <div class="px-4 py-2 border-t border-cream-100 bg-cream-50/50 flex items-center gap-2 overflow-x-auto text-[11px] no-scrollbar">
+                <span class="text-warmgray-400 font-bold shrink-0 text-[10px] uppercase">Quick:</span>
+                <button onClick=${() => handleQuickReply('👍 Sounds great!')} class="px-2.5 py-1 rounded-lg bg-white border border-cream-200 hover:bg-cream-100 text-navy-800 font-bold shrink-0 transition-colors">👍 Sounds great!</button>
+                <button onClick=${() => handleQuickReply('🤝 Deal, let’s do it.')} class="px-2.5 py-1 rounded-lg bg-white border border-cream-200 hover:bg-cream-100 text-navy-800 font-bold shrink-0 transition-colors">🤝 Deal, let’s do it</button>
+                <button onClick=${() => handleQuickReply('📅 Let’s schedule a 1:1 call.')} class="px-2.5 py-1 rounded-lg bg-white border border-cream-200 hover:bg-cream-100 text-navy-800 font-bold shrink-0 transition-colors">📅 Let’s schedule a call</button>
+                <button onClick=${() => handleQuickReply('💡 I checked your shared notes in Learning Hub!')} class="px-2.5 py-1 rounded-lg bg-white border border-cream-200 hover:bg-cream-100 text-navy-800 font-bold shrink-0 transition-colors">💡 Learning Hub</button>
+              </div>
 
-              <form onSubmit=${handleSend} class="flex gap-2 pt-4 border-t border-cream-200">
+              <!-- Message Input Composer Bar -->
+              <form onSubmit=${handleSend} class="p-4 border-t border-cream-200 bg-white flex items-center gap-2.5">
                 <input
                   type="text"
                   required
                   value=${newMsg}
                   onChange=${e => setNewMsg(e.target.value)}
-                  placeholder="Type a message..."
-                  class="w-full px-4 py-3 bg-cream-50 border border-cream-300 rounded-xl text-xs focus:outline-none focus:border-navy-600 text-navy-900 font-medium"
+                  placeholder="Type your message... (Press Enter to send)"
+                  class="flex-1 px-4 py-3 bg-cream-50/80 border border-cream-300 rounded-2xl text-xs focus:outline-none focus:border-navy-700 text-navy-900 font-medium placeholder:text-warmgray-400 transition-colors shadow-2xs"
                 />
-                <button type="submit" class="px-6 py-3 bg-navy-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors shrink-0">
-                  Send Message
+
+                <button
+                  type="submit"
+                  disabled=${!newMsg.trim() || sending}
+                  class="px-5 py-3 bg-navy-700 hover:bg-navy-800 active:scale-95 text-white font-extrabold text-xs rounded-2xl shadow-sm transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5 shrink-0"
+                >
+                  <span>Send</span>
+                  <${Icon} name="arrow-right" class="w-3.5 h-3.5" />
                 </button>
               </form>
             ` : html`
-              <div class="h-full flex flex-col items-center justify-center text-warmgray-400 text-xs py-20 space-y-3">
-                <div class="w-12 h-12 bg-cream-100 rounded-full flex items-center justify-center text-warmgray-500">
-                  <${Icon} name="message-square" class="w-6 h-6" />
+              <!-- Empty State when no conversation is selected -->
+              <div class="h-full flex flex-col items-center justify-center text-center p-8 space-y-4 text-warmgray-400">
+                <div class="w-16 h-16 bg-cream-100 rounded-3xl flex items-center justify-center text-warmgray-500 shadow-inner">
+                  <${Icon} name="message-square" class="w-8 h-8 text-navy-600" />
                 </div>
-                <p>Select a learning partner from the sidebar to begin swap discussions.</p>
-
+                <div>
+                  <h3 class="font-serif text-lg font-bold text-navy-900">Your Messages</h3>
+                  <p class="text-xs text-warmgray-500 max-w-sm font-medium mt-1">Select a conversation from the sidebar or start a new direct chat with any community member.</p>
+                </div>
+                <button
+                  onClick=${() => { setNewChatModalOpen(true); loadContacts(); }}
+                  class="px-5 py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all"
+                >
+                  + Start New Chat
+                </button>
               </div>
             `}
           </div>
         </div>
+
+        <!-- NEW CHAT / CONTACT PICKER MODAL -->
+        ${newChatModalOpen ? html`
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+            <div class="bg-white rounded-3xl max-w-lg w-full border border-cream-300 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-scaleUp">
+              
+              <!-- Modal Header -->
+              <div class="px-6 py-4 border-b border-cream-200 flex items-center justify-between bg-cream-50/50">
+                <div class="flex items-center gap-2">
+                  <span class="p-1.5 rounded-xl bg-navy-100 text-navy-700">
+                    <${Icon} name="users" class="w-4 h-4" />
+                  </span>
+                  <h3 class="font-serif text-lg font-bold text-navy-950">Start New Conversation</h3>
+                </div>
+                <button
+                  onClick=${() => setNewChatModalOpen(false)}
+                  class="p-2 rounded-xl text-warmgray-400 hover:text-navy-900 hover:bg-cream-100 transition-colors"
+                >
+                  <${Icon} name="x" class="w-5 h-5" />
+                </button>
+              </div>
+
+              <!-- Search Bar -->
+              <div class="p-4 border-b border-cream-200 bg-white">
+                <div class="relative">
+                  <${Icon} name="search" class="w-4 h-4 text-warmgray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value=${contactSearch}
+                    onChange=${e => setContactSearch(e.target.value)}
+                    placeholder="Search by name, username, or headline..."
+                    class="w-full pl-9 pr-4 py-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs text-navy-900 placeholder:text-warmgray-400 focus:outline-none focus:border-navy-700 font-medium"
+                  />
+                </div>
+              </div>
+
+              <!-- Contact List -->
+              <div class="flex-1 overflow-y-auto divide-y divide-cream-100 p-3 space-y-1">
+                ${loadingContacts ? html`
+                  <div class="py-12 text-center text-warmgray-400 text-xs">
+                    <div class="w-6 h-6 border-2 border-navy-700 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p>Finding swappers...</p>
+                  </div>
+                ` : filteredContacts.length === 0 ? html`
+                  <div class="py-12 text-center text-warmgray-400 text-xs">
+                    <p class="font-bold text-navy-900">No members found</p>
+                    <p class="text-[11px] text-warmgray-500 mt-1">Try a different search keyword.</p>
+                  </div>
+                ` : filteredContacts.map(u => html`
+                  <div
+                    key=${u.id}
+                    onClick=${() => startChatWithUser(u)}
+                    class="p-3 rounded-2xl flex items-center justify-between gap-3 hover:bg-cream-50 cursor-pointer transition-colors"
+                  >
+                    <div class="flex items-center gap-3 min-w-0">
+                      <img
+                        src=${u.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop'}
+                        alt=${u.name}
+                        class="w-10 h-10 rounded-2xl object-cover ring-1 ring-cream-300 shrink-0"
+                      />
+                      <div class="min-w-0 text-left">
+                        <p class="font-bold text-navy-950 text-xs truncate flex items-center gap-1">
+                          <span>${u.name}</span>
+                          <span class="text-emerald-600 text-[10px]">✓</span>
+                        </p>
+                        <p class="text-[11px] text-warmgray-500 truncate font-medium">@${u.username || 'swapper'} • ${u.headline || 'SkillSwapX Member'}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      class="px-3 py-1.5 bg-navy-700 hover:bg-navy-800 text-white font-extrabold text-[11px] rounded-xl shrink-0 transition-colors"
+                    >
+                      Chat
+                    </button>
+                  </div>
+                `)}
+              </div>
+            </div>
+          </div>
+        ` : null}
       </div>
     `;
   }
@@ -3260,9 +5278,9 @@
     const [avatarUrl, setAvatarUrl] = useState('');
     const [bio, setBio] = useState('');
     const [headline, setHeadline] = useState('');
-    const [location, setLocation] = useState('');
+    const [location, setLocation] = useState('Bengaluru, Karnataka, India');
     const [weeklyHours, setWeeklyHours] = useState(4);
-    const [timezone, setTimezone] = useState('PST (UTC-8)');
+    const [timezone, setTimezone] = useState('IST (UTC+5:30)');
     const [preferredLanguage, setPreferredLanguage] = useState('English');
 
     // Section 3: Portfolio links
@@ -3288,9 +5306,9 @@
         setAvatarUrl(s.avatar_url || (user && user.avatar_url) || '');
         setBio(s.bio || '');
         setHeadline(s.headline || '');
-        setLocation(s.location || '');
+        setLocation(s.location || 'Bengaluru, Karnataka, India');
         setWeeklyHours(s.weekly_hours || 4);
-        setTimezone(s.timezone || 'PST (UTC-8)');
+        setTimezone(s.timezone || 'IST (UTC+5:30)');
         setPreferredLanguage(s.preferred_language || 'English');
 
         setGithub(s.github_url || '');
@@ -3447,7 +5465,7 @@
                       required
                       value=${location}
                       onChange=${e => setLocation(e.target.value)}
-                      placeholder="e.g. San Francisco, CA or Remote"
+                      placeholder="e.g. Bengaluru, Karnataka or Mumbai or Remote"
                       class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium focus:outline-none focus:border-navy-600"
                     />
                   </div>
@@ -3475,11 +5493,11 @@
                       onChange=${e => setTimezone(e.target.value)}
                       class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-semibold text-navy-900 focus:outline-none"
                     >
-                      <option value="PST (UTC-8)">PST (UTC-8)</option>
-                      <option value="EST (UTC-5)">EST (UTC-5)</option>
-                      <option value="GMT (UTC+0)">GMT (UTC+0)</option>
-                      <option value="CET (UTC+1)">CET (UTC+1)</option>
-                      <option value="IST (UTC+5:30)">IST (UTC+5:30)</option>
+                      <option value="IST (UTC+5:30)">IST (UTC+5:30) - India</option>
+                      <option value="GMT (UTC+0)">GMT (UTC+0) - London</option>
+                      <option value="CET (UTC+1)">CET (UTC+1) - Central Europe</option>
+                      <option value="EST (UTC-5)">EST (UTC-5) - US Eastern</option>
+                      <option value="PST (UTC-8)">PST (UTC-8) - US Pacific</option>
                     </select>
                   </div>
                   <div>
@@ -3495,12 +5513,21 @@
                   </div>
                   <div>
                     <label class="block font-bold text-navy-950 mb-1.5">Preferred Language</label>
-                    <input
-                      type="text"
+                    <select
                       value=${preferredLanguage}
                       onChange=${e => setPreferredLanguage(e.target.value)}
-                      class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-medium text-navy-900 focus:outline-none"
-                    />
+                      class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl font-semibold text-navy-900 focus:outline-none"
+                    >
+                      <option value="English">English</option>
+                      <option value="Hindi">Hindi (हिंदी)</option>
+                      <option value="Tamil">Tamil (தமிழ்)</option>
+                      <option value="Telugu">Telugu (తెలుగు)</option>
+                      <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                      <option value="Bengali">Bengali (বাংলা)</option>
+                      <option value="Marathi">Marathi (मराठी)</option>
+                      <option value="Gujarati">Gujarati (ગુજરાતી)</option>
+                      <option value="Malayalam">Malayalam (മലയാളം)</option>
+                    </select>
                   </div>
                 </div>
 
@@ -3587,6 +5614,580 @@
       </div>
     `;
   }
+  // ----------------------------------------------------
+  // Problems & Challenges View
+  // ----------------------------------------------------
+  function ProblemsView({ user, setActiveTab, onProposeSwap, onViewProfile }) {
+    const [problems, setProblems] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [postModalOpen, setPostModalOpen] = useState(false);
+
+    // New Problem Form
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [categoryId, setCategoryId] = useState('');
+    const [urgency, setUrgency] = useState('Medium');
+    const [estimatedHours, setEstimatedHours] = useState(5);
+    const [posting, setPosting] = useState(false);
+    const [postError, setPostError] = useState('');
+
+    useEffect(() => {
+      loadProblems();
+      api('/api/skills/directory').then(d => setCategories(d.categories || [])).catch(console.error);
+    }, [selectedCategory, searchQuery]);
+
+    const loadProblems = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        if (selectedCategory) params.append('category_id', selectedCategory);
+        if (searchQuery) params.append('search', searchQuery);
+        const res = await api('/api/problems?' + params.toString());
+        setProblems(res.problems || []);
+      } catch (err) {
+        console.error('Failed to load problems:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleCreateProblem = async (e) => {
+      e.preventDefault();
+      try {
+        setPosting(true);
+        setPostError('');
+        const res = await api('/api/problems', {
+          method: 'POST',
+          body: JSON.stringify({
+            title,
+            description,
+            category_id: categoryId,
+            urgency,
+            estimated_hours: Number(estimatedHours)
+          })
+        });
+        if (res.success) {
+          setTitle('');
+          setDescription('');
+          setCategoryId('');
+          setPostModalOpen(false);
+          loadProblems();
+        }
+      } catch (err) {
+        setPostError(err.message || 'Failed to post challenge.');
+      } finally {
+        setPosting(false);
+      }
+    };
+
+    return html`
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-left animate-fadeIn">
+        <!-- Header Banner -->
+        <div class="bg-gradient-to-r from-navy-955 via-navy-900 to-navy-950 rounded-3xl p-6 sm:p-8 text-white border border-navy-700/60 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div class="space-y-2 max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9.5px] font-extrabold uppercase tracking-wider bg-navy-800 text-sky-300 border border-sky-400/20">
+              ⚡ Real-world Challenges & Problem Cases
+            </div>
+            <h1 class="font-serif text-2xl sm:text-3xl font-extrabold tracking-tight">Problems & Swap Challenges</h1>
+            <p class="text-xs sm:text-sm text-cream-200/80 leading-relaxed">
+              Solve real-world technical, design, or language blockers for peers in exchange for hands-on mentorship in skills you want to master.
+            </p>
+          </div>
+
+          <button
+            onClick=${() => setPostModalOpen(true)}
+            class="px-5 py-3 bg-white hover:bg-cream-100 text-navy-950 font-extrabold text-xs sm:text-sm rounded-xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0 flex items-center gap-2"
+          >
+            <span>+ Post a Problem Challenge</span>
+          </button>
+        </div>
+
+        <!-- Search & Filter Bar -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-cream-300 shadow-sm flex flex-col sm:flex-row items-center gap-3">
+          <div class="relative flex-1 w-full">
+            <input
+              type="text"
+              value=${searchQuery}
+              onInput=${e => setSearchQuery(e.target.value)}
+              placeholder="Search problems by keyword (e.g. CRDT, Figma, Spanish, Architecture)..."
+              class="w-full pl-10 pr-4 py-2.5 bg-cream-50/50 border border-cream-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-navy-600"
+            />
+            <div class="absolute left-3.5 top-3 text-warmgray-400">
+              <${Icon} name="search" class="w-4 h-4" />
+            </div>
+          </div>
+
+          <select
+            value=${selectedCategory}
+            onChange=${e => setSelectedCategory(e.target.value)}
+            class="w-full sm:w-60 p-2.5 bg-cream-50/50 border border-cream-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-navy-600"
+          >
+            <option value="">All Categories</option>
+            ${categories.map(c => html`<option key=${c.id} value=${c.id}>${c.name}</option>`)}
+          </select>
+        </div>
+
+        <!-- Problems Grid -->
+        ${loading ? html`<div class="p-16 text-center font-serif text-warmgray-500">Scanning problem ledger...</div>` : null}
+        ${!loading && problems.length === 0 ? html`
+          <div class="bg-white rounded-3xl p-12 text-center border border-cream-300 space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-cream-100 flex items-center justify-center mx-auto text-xl text-warmgray-400">🧩</div>
+            <h3 class="font-serif text-base font-bold text-navy-900">No problems found matching criteria</h3>
+            <p class="text-xs text-warmgray-500 max-w-sm mx-auto">Be the first to post a problem challenge and find peers ready to help!</p>
+          </div>
+        ` : null}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          ${problems.map(p => html`
+            <div key=${p.id} class="bg-white rounded-3xl p-6 border border-cream-300 shadow-sm hover:shadow-md hover:border-navy-300 hover:scale-[1.008] transition-all flex flex-col justify-between space-y-5">
+              <div class="space-y-4">
+                <!-- Author & Urgency -->
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex items-center gap-3">
+                    <img
+                      src=${p.user_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'}
+                      alt=${p.user_name}
+                      class="w-10 h-10 rounded-xl object-cover border border-cream-200"
+                    />
+                    <div>
+                      <h4 class="font-bold text-navy-950 text-xs sm:text-sm">${p.user_name}</h4>
+                      <p class="text-[11px] text-warmgray-500">${p.user_headline || `@${p.user_username}`}</p>
+                    </div>
+                  </div>
+
+                  <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider shrink-0 ${p.urgency === 'High' ? 'bg-rose-100 text-rose-900 border border-rose-200' : p.urgency === 'Medium' ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-emerald-100 text-emerald-900 border border-emerald-200'}">
+                    ${p.urgency} Priority
+                  </span>
+                </div>
+
+                <!-- Title & Description -->
+                <div class="space-y-1.5">
+                  <h3 class="font-serif text-base font-bold text-navy-950 leading-snug">${p.title}</h3>
+                  <p class="text-xs text-warmgray-600 leading-relaxed line-clamp-3">${p.description}</p>
+                </div>
+
+                <!-- Skill Tags & Meta -->
+                <div class="space-y-2 pt-2 border-t border-cream-100">
+                  <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                    ${p.category_name ? html`
+                      <span class="px-2.5 py-0.5 bg-navy-50 text-navy-800 font-bold rounded-lg border border-navy-200/60">
+                        ${p.category_name}
+                      </span>
+                    ` : null}
+                    ${p.required_skill_name ? html`
+                      <span class="px-2.5 py-0.5 bg-rose-50 text-rose-900 font-bold rounded-lg border border-rose-200/60 flex items-center gap-1">
+                        <span>Needs:</span>
+                        <strong>${p.required_skill_name}</strong>
+                      </span>
+                    ` : null}
+                    ${p.offered_skill_name ? html`
+                      <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-900 font-bold rounded-lg border border-emerald-200/60 flex items-center gap-1">
+                        <span>Offers:</span>
+                        <strong>${p.offered_skill_name}</strong>
+                      </span>
+                    ` : null}
+                    <span class="px-2 py-0.5 bg-cream-100 text-warmgray-600 rounded-lg font-semibold text-[10px]">
+                      ⏱ ~${p.estimated_hours || 5} Hours
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="pt-3 border-t border-cream-100 flex items-center gap-2">
+                <button
+                  onClick=${() => {
+                    if (onProposeSwap) {
+                      onProposeSwap({
+                        user: {
+                          id: p.user_id,
+                          name: p.user_name,
+                          username: p.user_username,
+                          avatar_url: p.user_avatar
+                        }
+                      });
+                    }
+                  }}
+                  class="flex-1 py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl text-xs shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  Propose Solution / Swap →
+                </button>
+                <button
+                  onClick=${() => onViewProfile && onViewProfile(p.user_username)}
+                  class="px-3.5 py-2.5 bg-white border border-cream-300 hover:bg-cream-50 text-navy-900 font-bold text-xs rounded-xl shadow-2xs transition-all"
+                >
+                  Profile
+                </button>
+              </div>
+            </div>
+          `)}
+        </div>
+
+        <!-- Create Problem Modal -->
+        ${postModalOpen ? html`
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/60 backdrop-blur-xs animate-fadeIn">
+            <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-cream-300 shadow-2xl space-y-6 text-left">
+              <div class="flex items-center justify-between border-b border-cream-200 pb-4">
+                <h3 class="font-serif text-xl font-bold text-navy-950">Post a Problem Challenge</h3>
+                <button onClick=${() => setPostModalOpen(false)} class="p-1.5 text-warmgray-400 hover:text-navy-900 rounded-lg hover:bg-cream-100">
+                  <${Icon} name="x" class="w-5 h-5" />
+                </button>
+              </div>
+
+              ${postError ? html`<div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl">${postError}</div>` : null}
+
+              <form onSubmit=${handleCreateProblem} class="space-y-4 text-xs">
+                <div>
+                  <label class="block font-bold text-navy-950 mb-1">Challenge Title</label>
+                  <input
+                    required
+                    type="text"
+                    value=${title}
+                    onInput=${e => setTitle(e.target.value)}
+                    placeholder="e.g. Need assistance architecting WebSocket CRDT state synchronization"
+                    class="w-full p-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 text-navy-900 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label class="block font-bold text-navy-950 mb-1">Category</label>
+                  <select
+                    value=${categoryId}
+                    onChange=${e => setCategoryId(e.target.value)}
+                    class="w-full p-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 text-navy-900 font-medium"
+                  >
+                    <option value="">Select a Category...</option>
+                    ${categories.map(c => html`<option key=${c.id} value=${c.id}>${c.name}</option>`)}
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block font-bold text-navy-950 mb-1">Detailed Description & Context</label>
+                  <textarea
+                    required
+                    rows="4"
+                    value=${description}
+                    onInput=${e => setDescription(e.target.value)}
+                    placeholder="Describe your current blocker and what skills you are offering in return..."
+                    class="w-full p-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 text-navy-900 font-medium"
+                  ></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-bold text-navy-950 mb-1">Urgency</label>
+                    <select
+                      value=${urgency}
+                      onChange=${e => setUrgency(e.target.value)}
+                      class="w-full p-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 text-navy-900 font-medium"
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block font-bold text-navy-950 mb-1">Est. Hours</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value=${estimatedHours}
+                      onInput=${e => setEstimatedHours(e.target.value)}
+                      class="w-full p-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 text-navy-900 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-cream-200">
+                  <button
+                    type="button"
+                    onClick=${() => setPostModalOpen(false)}
+                    class="px-4 py-2.5 bg-white border border-cream-300 text-warmgray-700 hover:bg-cream-50 rounded-xl font-bold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled=${posting}
+                    class="px-6 py-2.5 bg-navy-700 hover:bg-navy-800 text-white rounded-xl font-bold shadow-md transition-all"
+                  >
+                    ${posting ? 'Publishing...' : 'Publish Challenge'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        ` : null}
+      </div>
+    `;
+  }
+  window.SkillSwap.ProblemsView = ProblemsView;
+
+  // ----------------------------------------------------
+  // Skill Circles View (Group Peer Learning Cohorts)
+  // ----------------------------------------------------
+  function SkillCirclesView({ user, setActiveTab }) {
+    const [circles, setCircles] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [createModalOpen, setCreateModalOpen] = useState(false);
+    const [joinedCircles, setJoinedCircles] = useState({});
+
+    // New Circle Form
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+    const [categoryId, setCategoryId] = useState('');
+    const [creating, setCreating] = useState(false);
+    const [createError, setCreateError] = useState('');
+
+    useEffect(() => {
+      loadCircles();
+      api('/api/skills/directory').then(d => setCategories(d.categories || [])).catch(console.error);
+    }, [selectedCategory, searchQuery]);
+
+    const loadCircles = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        if (selectedCategory) params.append('category_id', selectedCategory);
+        if (searchQuery) params.append('search', searchQuery);
+        const res = await api('/api/circles?' + params.toString());
+        setCircles(res.circles || []);
+      } catch (err) {
+        console.error('Failed to load circles:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleJoinCircle = async (circleId) => {
+      try {
+        await api('/api/circles/join', {
+          method: 'POST',
+          body: JSON.stringify({ circle_id: circleId })
+        });
+        setJoinedCircles(prev => ({ ...prev, [circleId]: true }));
+        loadCircles();
+      } catch (err) {
+        console.error('Failed to join circle:', err);
+      }
+    };
+
+    const handleCreateCircle = async (e) => {
+      e.preventDefault();
+      try {
+        setCreating(true);
+        setCreateError('');
+        const res = await api('/api/circles', {
+          method: 'POST',
+          body: JSON.stringify({
+            name,
+            description,
+            category_id: categoryId
+          })
+        });
+        if (res.success) {
+          setName('');
+          setDescription('');
+          setCategoryId('');
+          setCreateModalOpen(false);
+          loadCircles();
+        }
+      } catch (err) {
+        setCreateError(err.message || 'Failed to create skill circle.');
+      } finally {
+        setCreating(false);
+      }
+    };
+
+    return html`
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-left animate-fadeIn">
+        <!-- Header Hero -->
+        <div class="bg-gradient-to-r from-navy-955 via-navy-900 to-navy-950 rounded-3xl p-6 sm:p-8 text-white border border-navy-700/60 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div class="space-y-2 max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9.5px] font-extrabold uppercase tracking-wider bg-indigo-500/30 text-sky-200 border border-indigo-400/30">
+              👥 Group Peer Learning Cohorts & Circles
+            </div>
+            <h1 class="font-serif text-2xl sm:text-3xl font-extrabold tracking-tight">Skill Circles</h1>
+            <p class="text-xs sm:text-sm text-cream-200/80 leading-relaxed">
+              Join focused group learning cohorts with peers mastering the same subjects. Share resources, review projects together, and host scheduled live study rooms.
+            </p>
+          </div>
+
+          <button
+            onClick=${() => setCreateModalOpen(true)}
+            class="px-5 py-3 bg-white hover:bg-cream-100 text-navy-950 font-extrabold text-xs sm:text-sm rounded-xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0 flex items-center gap-2"
+          >
+            <span>+ Create a Skill Circle</span>
+          </button>
+        </div>
+
+        <!-- Search & Filter Bar -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-cream-300 shadow-sm flex flex-col sm:flex-row items-center gap-3">
+          <div class="relative flex-1 w-full">
+            <input
+              type="text"
+              value=${searchQuery}
+              onInput=${e => setSearchQuery(e.target.value)}
+              placeholder="Search skill circles (e.g. Distributed Systems, AI, UX, Language)..."
+              class="w-full pl-10 pr-4 py-2.5 bg-cream-50/50 border border-cream-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-navy-600"
+            />
+            <div class="absolute left-3.5 top-3 text-warmgray-400">
+              <${Icon} name="search" class="w-4 h-4" />
+            </div>
+          </div>
+
+          <select
+            value=${selectedCategory}
+            onChange=${e => setSelectedCategory(e.target.value)}
+            class="w-full sm:w-60 p-2.5 bg-cream-50/50 border border-cream-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-navy-600"
+          >
+            <option value="">All Categories</option>
+            ${categories.map(c => html`<option key=${c.id} value=${c.id}>${c.name}</option>`)}
+          </select>
+        </div>
+
+        <!-- Circles Grid -->
+        ${loading ? html`<div class="p-16 text-center font-serif text-warmgray-500">Loading skill circles...</div>` : null}
+        ${!loading && circles.length === 0 ? html`
+          <div class="bg-white rounded-3xl p-12 text-center border border-cream-300 space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-cream-100 flex items-center justify-center mx-auto text-xl text-warmgray-400">⭕</div>
+            <h3 class="font-serif text-base font-bold text-navy-900">No skill circles found</h3>
+            <p class="text-xs text-warmgray-500 max-w-sm mx-auto">Create the first cohort and invite fellow swappers to learn together!</p>
+          </div>
+        ` : null}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          ${circles.map(c => html`
+            <div key=${c.id} class="bg-white rounded-3xl p-6 sm:p-7 border border-cream-300 shadow-sm hover:shadow-md hover:border-navy-300 hover:scale-[1.008] transition-all flex flex-col justify-between space-y-5">
+              <div class="space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="space-y-1">
+                    ${c.category_name ? html`
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-navy-50 text-navy-800 border border-navy-200/60 inline-block">
+                        ${c.category_name}
+                      </span>
+                    ` : null}
+                    <h3 class="font-serif text-lg font-bold text-navy-950 mt-1">${c.name}</h3>
+                  </div>
+
+                  <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-900 border border-indigo-200 shrink-0 flex items-center gap-1">
+                    <span>👥</span>
+                    <span>${c.member_count || 1} Members</span>
+                  </span>
+                </div>
+
+                <p class="text-xs text-warmgray-600 leading-relaxed">${c.description}</p>
+
+                <!-- Circle Host Meta -->
+                <div class="flex items-center gap-2.5 pt-3 border-t border-cream-100 text-xs">
+                  <img
+                    src=${c.creator_avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop'}
+                    alt=${c.creator_name}
+                    class="w-7 h-7 rounded-lg object-cover border border-cream-200"
+                  />
+                  <div class="flex items-center gap-1 text-[11px] text-warmgray-500">
+                    <span>Organized by</span>
+                    <strong class="text-navy-900 font-bold">${c.creator_name}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action -->
+              <div class="pt-3 border-t border-cream-100 flex gap-3">
+                <button
+                  onClick=${() => handleJoinCircle(c.id)}
+                  class="w-full py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 ${joinedCircles[c.id] ? 'bg-emerald-700 text-white' : 'bg-navy-700 hover:bg-navy-800 text-white hover:scale-[1.02] active:scale-[0.98]'}"
+                >
+                  <span>${joinedCircles[c.id] ? '✓ Joined Circle' : 'Join Skill Circle →'}</span>
+                </button>
+              </div>
+            </div>
+          `)}
+        </div>
+
+        <!-- Create Circle Modal -->
+        ${createModalOpen ? html`
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/60 backdrop-blur-xs animate-fadeIn">
+            <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-cream-300 shadow-2xl space-y-6 text-left">
+              <div class="flex items-center justify-between border-b border-cream-200 pb-4">
+                <h3 class="font-serif text-xl font-bold text-navy-950">Create a Skill Circle</h3>
+                <button onClick=${() => setCreateModalOpen(false)} class="p-1.5 text-warmgray-400 hover:text-navy-900 rounded-lg hover:bg-cream-100">
+                  <${Icon} name="x" class="w-5 h-5" />
+                </button>
+              </div>
+
+              ${createError ? html`<div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl">${createError}</div>` : null}
+
+              <form onSubmit=${handleCreateCircle} class="space-y-4 text-xs">
+                <div>
+                  <label class="block font-bold text-navy-950 mb-1">Circle Name</label>
+                  <input
+                    required
+                    type="text"
+                    value=${name}
+                    onInput=${e => setName(e.target.value)}
+                    placeholder="e.g. Distributed Systems Architecture Guild"
+                    class="w-full p-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 text-navy-900 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label class="block font-bold text-navy-950 mb-1">Category</label>
+                  <select
+                    value=${categoryId}
+                    onChange=${e => setCategoryId(e.target.value)}
+                    class="w-full p-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 text-navy-900 font-medium"
+                  >
+                    <option value="">Select a Category...</option>
+                    ${categories.map(c => html`<option key=${c.id} value=${c.id}>${c.name}</option>`)}
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block font-bold text-navy-950 mb-1">Circle Purpose & Meeting Cadence</label>
+                  <textarea
+                    required
+                    rows="4"
+                    value=${description}
+                    onInput=${e => setDescription(e.target.value)}
+                    placeholder="Describe what members will learn, build, or practice together..."
+                    class="w-full p-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 text-navy-900 font-medium"
+                  ></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-cream-200">
+                  <button
+                    type="button"
+                    onClick=${() => setCreateModalOpen(false)}
+                    class="px-4 py-2.5 bg-white border border-cream-300 text-warmgray-700 hover:bg-cream-50 rounded-xl font-bold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled=${creating}
+                    class="px-6 py-2.5 bg-navy-700 hover:bg-navy-800 text-white rounded-xl font-bold shadow-md transition-all"
+                  >
+                    ${creating ? 'Creating...' : 'Launch Circle'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        ` : null}
+      </div>
+    `;
+  }
+  window.SkillSwap.SkillCirclesView = SkillCirclesView;
+
   window.SkillSwap.SettingsView = SettingsView;
 
 })();

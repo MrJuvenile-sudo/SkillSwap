@@ -20,6 +20,8 @@
     HomeLandingView,
     SignupView,
     LoginView,
+    ForgotPasswordView,
+    ResetPasswordView,
     OnboardingWizardView,
     SkillsDirectoryView,
     PublicProfileView,
@@ -49,8 +51,9 @@
     LearningHubRequestsView,
     ExamModeView,
     ExchangeHubView,
+    ProblemsView,
+    SkillCirclesView,
     SkillSwapAIWidget
-
   } = window.SkillSwap;
 
   function App() {
@@ -62,7 +65,8 @@
     const [selectedCategoryId, setSelectedCategoryId] = useState(null);
     const [reportedUserId, setReportedUserId] = useState(null);
     const [hubResourceId, setHubResourceId] = useState(null);
-
+    const [targetChatConnectionId, setTargetChatConnectionId] = useState(null);
+    const [targetChatUserId, setTargetChatUserId] = useState(null);
 
     const checkSession = async () => {
       try {
@@ -70,8 +74,8 @@
         if (data.authenticated && data.user) {
           setUser(data.user);
           if (activeTab === 'home' || activeTab === 'login' || activeTab === 'signup') {
-            setActiveTab(data.user.role === 'ADMIN' ? 'admin' : 'dashboard');
-
+            const isAdmin = data.user.role && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(data.user.role);
+            setActiveTab(isAdmin ? 'admin' : 'dashboard');
           }
         } else {
           setUser(null);
@@ -97,6 +101,29 @@
         return;
       }
       setProposalModalMatch(match);
+    };
+
+    const handleOpenChat = (target) => {
+      if (!user) {
+        setActiveTab('login');
+        return;
+      }
+      if (typeof target === 'object' && target) {
+        if (target.connection_id || (target.id && String(target.id).startsWith('conn_'))) {
+          setTargetChatConnectionId(target.connection_id || target.id);
+          setTargetChatUserId(target.partner_id || (target.partner && target.partner.id));
+        } else {
+          setTargetChatUserId(target.id);
+          setTargetChatConnectionId(null);
+        }
+      } else if (typeof target === 'number') {
+        setTargetChatConnectionId(target);
+        setTargetChatUserId(null);
+      } else {
+        setTargetChatUserId(target);
+        setTargetChatConnectionId(null);
+      }
+      setActiveTab('chat');
     };
 
     const handleOpenCompare = (p1, p2) => {
@@ -141,6 +168,8 @@
           ${activeTab === 'home' && html`<${HomeLandingView} setActiveTab=${setActiveTab} />`}
           ${activeTab === 'signup' && html`<${SignupView} setActiveTab=${setActiveTab} onAuthSuccess=${async (u) => { await checkSession(); setActiveTab('onboarding'); }} />`}
           ${activeTab === 'login' && html`<${LoginView} setActiveTab=${setActiveTab} onAuthSuccess=${async (u) => { await checkSession(); setActiveTab(u.role && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(u.role) ? 'admin' : 'dashboard'); }} />`}
+          ${activeTab === 'forgot-password' && html`<${ForgotPasswordView} setActiveTab=${setActiveTab} />`}
+          ${activeTab === 'reset-password' && html`<${ResetPasswordView} setActiveTab=${setActiveTab} />`}
           ${activeTab === 'onboarding' && html`<${OnboardingWizardView} user=${user} setActiveTab=${setActiveTab} onComplete=${checkSession} />`}
           ${activeTab === 'onboarding-skills' && user && html`<${OnboardingSkillsWizardView} user=${user} setActiveTab=${setActiveTab} onComplete=${checkSession} />`}
           
@@ -148,16 +177,18 @@
           ${activeTab === 'category-detail' && html`<${CategoryDetailView} categoryId=${selectedCategoryId} setActiveTab=${setActiveTab} onViewProfile=${handleViewProfile} onProposeSwap=${handleOpenProposal} />`}
           ${activeTab === 'report-abuse' && user && html`<${ReportAbuseView} reportedUserId=${reportedUserId} setActiveTab=${setActiveTab} />`}
           
-          ${activeTab === 'community' && html`<${CommunityFeedView} currentUser=${user} onProposeSwap=${handleOpenProposal} setActiveTab=${setActiveTab} />`}
-          ${activeTab === 'public-profile' && html`<${PublicProfileView} username=${viewingUsername} currentUser=${user} onProposeSwap=${handleOpenProposal} setActiveTab=${setActiveTab} onOpenReport=${handleOpenReportAbuse} />`}
-          ${activeTab === 'dashboard' && user && html`<${DashboardView} user=${user} setActiveTab=${setActiveTab} onProposeSwap=${handleOpenProposal} onViewProfile=${handleViewProfile} />`}
-          ${activeTab === 'exchange' && html`<${ExchangeHubView} user=${user} setActiveTab=${setActiveTab} onProposeSwap=${handleOpenProposal} onViewProfile=${handleViewProfile} />`}
+          ${activeTab === 'community' && html`<${CommunityFeedView} currentUser=${user} onProposeSwap=${handleOpenProposal} onOpenChat=${handleOpenChat} setActiveTab=${setActiveTab} onViewProfile=${handleViewProfile} />`}
+          ${activeTab === 'public-profile' && html`<${PublicProfileView} username=${viewingUsername} currentUser=${user} onProposeSwap=${handleOpenProposal} onOpenChat=${handleOpenChat} setActiveTab=${setActiveTab} onOpenReport=${handleOpenReportAbuse} />`}
+          ${activeTab === 'dashboard' && user && html`<${DashboardView} user=${user} setActiveTab=${setActiveTab} onProposeSwap=${handleOpenProposal} onOpenChat=${handleOpenChat} onViewProfile=${handleViewProfile} />`}
+          ${activeTab === 'exchange' && html`<${ExchangeHubView} user=${user} setActiveTab=${setActiveTab} onProposeSwap=${handleOpenProposal} onOpenChat=${handleOpenChat} onViewProfile=${handleViewProfile} />`}
+          ${activeTab === 'problems' && html`<${ProblemsView} user=${user} setActiveTab=${setActiveTab} onProposeSwap=${handleOpenProposal} onOpenChat=${handleOpenChat} onViewProfile=${handleViewProfile} />`}
+          ${activeTab === 'circles' && html`<${SkillCirclesView} user=${user} setActiveTab=${setActiveTab} onOpenChat=${handleOpenChat} />`}
 
-          ${activeTab === 'matches' && html`<${MatchesView} currentUser=${user} onProposeSwap=${handleOpenProposal} onComparePeers=${handleOpenCompare} onViewProfile=${handleViewProfile} />`}
+          ${activeTab === 'matches' && html`<${MatchesView} currentUser=${user} onProposeSwap=${handleOpenProposal} onOpenChat=${handleOpenChat} onComparePeers=${handleOpenCompare} onViewProfile=${handleViewProfile} />`}
           ${activeTab === 'skills' && user && html`<${MySkillsView} user=${user} onRefresh=${checkSession} />`}
           ${activeTab === 'requests' && user && html`<${RequestsView} onAcceptRequest=${() => setActiveTab('workspaces')} />`}
-          ${activeTab === 'workspaces' && user && html`<${WorkspaceView} currentUser=${user} />`}
-          ${activeTab === 'chat' && user && html`<${ChatView} currentUser=${user} />`}
+          ${activeTab === 'workspaces' && user && html`<${WorkspaceView} currentUser=${user} onOpenChat=${handleOpenChat} setActiveTab=${setActiveTab} onViewProfile=${handleViewProfile} />`}
+          ${activeTab === 'chat' && user && html`<${ChatView} currentUser=${user} targetConnectionId=${targetChatConnectionId} targetUserId=${targetChatUserId} onViewProfile=${handleViewProfile} onProposeSwap=${handleOpenProposal} setActiveTab=${setActiveTab} />`}
           ${activeTab === 'settings' && user && html`<${SettingsView} user=${user} onUserUpdated=${checkSession} />`}
           ${activeTab === 'admin' && user && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role) && html`<${AdminConsoleView} currentUser=${user} setActiveTab=${setActiveTab} onViewProfile=${handleViewProfile} onLogout=${handleLogout} />`}
           ${activeTab === 'features' && html`<${FeaturesView} />`}
@@ -167,14 +198,17 @@
           ${activeTab === 'privacy' && html`<${PrivacyView} />`}
           ${activeTab === 'guidelines' && html`<${GuidelinesView} />`}
 
-          <!-- Learning Hub Views -->
-          ${activeTab === 'hub-browse' && html`<${LearningHubBrowseView} setActiveTab=${setActiveTab} currentUser=${user} onViewResource=${handleViewResource} />`}
-          ${activeTab === 'hub-upload' && html`<${LearningHubUploadView} setActiveTab=${setActiveTab} currentUser=${user} />`}
-          ${activeTab === 'hub-detail' && html`<${LearningHubDetailView} resourceId=${hubResourceId || (window._hubDetailResourceId)} setActiveTab=${setActiveTab} currentUser=${user} onProposeSwap=${handleOpenProposal} />`}
-          ${activeTab === 'hub-saved' && html`<${LearningHubSavedView} setActiveTab=${setActiveTab} currentUser=${user} onViewResource=${handleViewResource} />`}
-          ${activeTab === 'hub-my' && html`<${LearningHubMyView} setActiveTab=${setActiveTab} currentUser=${user} onViewResource=${handleViewResource} />`}
-          ${activeTab === 'hub-requests' && html`<${LearningHubRequestsView} setActiveTab=${setActiveTab} />`}
-          ${activeTab === 'exam-mode' && html`<${ExamModeView} setActiveTab=${setActiveTab} />`}
+          <!-- Learning Hub Views (Authenticated Only) -->
+          ${(activeTab.startsWith('hub') || activeTab === 'exam-mode') && !user && html`
+            <${LoginView} setActiveTab=${setActiveTab} onAuthSuccess=${async (u) => { await checkSession(); setActiveTab('hub-browse'); }} />
+          `}
+          ${activeTab === 'hub-browse' && user && html`<${LearningHubBrowseView} setActiveTab=${setActiveTab} currentUser=${user} onViewResource=${handleViewResource} />`}
+          ${activeTab === 'hub-upload' && user && html`<${LearningHubUploadView} setActiveTab=${setActiveTab} currentUser=${user} />`}
+          ${activeTab === 'hub-detail' && user && html`<${LearningHubDetailView} resourceId=${hubResourceId || (window._hubDetailResourceId)} setActiveTab=${setActiveTab} currentUser=${user} onProposeSwap=${handleOpenProposal} />`}
+          ${activeTab === 'hub-saved' && user && html`<${LearningHubSavedView} setActiveTab=${setActiveTab} currentUser=${user} onViewResource=${handleViewResource} />`}
+          ${activeTab === 'hub-my' && user && html`<${LearningHubMyView} setActiveTab=${setActiveTab} currentUser=${user} onViewResource=${handleViewResource} />`}
+          ${activeTab === 'hub-requests' && user && html`<${LearningHubRequestsView} setActiveTab=${setActiveTab} />`}
+          ${activeTab === 'exam-mode' && user && html`<${ExamModeView} setActiveTab=${setActiveTab} />`}
         </main>
 
         ${activeTab !== 'admin' ? html`

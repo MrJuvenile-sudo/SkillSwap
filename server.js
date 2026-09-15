@@ -6,6 +6,18 @@ import fs from 'fs';
 import { pathToFileURL } from 'url';
 
 // ----------------------------------------------------
+// 0. Load Environment Configuration (.env)
+// ----------------------------------------------------
+if (fs.existsSync('.env') && typeof process.loadEnvFile === 'function') {
+  try {
+    process.loadEnvFile();
+    console.log('✓ Loaded environment variables from .env');
+  } catch (err) {
+    console.warn('Notice: Failed to load .env file:', err.message);
+  }
+}
+
+// ----------------------------------------------------
 // 1. Boot-time Setup: Mocks and Symlinks
 // ----------------------------------------------------
 const nodeModulesDir = path.resolve('node_modules');
@@ -28,13 +40,23 @@ fs.writeFileSync(path.join(hatchableDir, 'index.js'), `
 import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 
-const database = new DatabaseSync(path.resolve('skillswap.db'));
+const dbPath = process.env.DATABASE_PATH || 'skillswap.db';
+const database = new DatabaseSync(path.resolve(dbPath));
 
-function translateQuery(sql) {
+function translateQuery(sql, params = []) {
   let result = sql;
-  
-  // 1. Convert $1, $2, ... to ?
-  result = result.replace(/\\$\\d+/g, '?');
+  const mappedParams = [];
+
+  // 1. Convert $1, $2, ... to ? while mapping params by index
+  result = result.replace(/\\$(\\d+)/g, (match, index) => {
+    const paramIdx = parseInt(index, 10) - 1;
+    if (params && paramIdx >= 0 && paramIdx < params.length) {
+      mappedParams.push(params[paramIdx]);
+    } else {
+      mappedParams.push(null);
+    }
+    return '?';
+  });
 
   // 2. Wrap function default values in parentheses for SQLite compatibility
   result = result.replace(/DEFAULT\\s+now\\(\\)/gi, "DEFAULT (datetime('now'))");
@@ -57,9 +79,8 @@ function translateQuery(sql) {
   result = result.replace(/\\bBOOLEAN\\b/gi, 'INTEGER');
 
   // 6. Replace date/timestamp intervals
-  result = result.replace(/(datetime\\('now'\\))\\s*-\\s*INTERVAL\\s*'(\\d+)\\s+days?'/gi, "datetime('now', '-$2 days')");
-  result = result.replace(/(datetime\\('now'\\))\\s*-\\s*INTERVAL\\s*'(\\d+)\\s+hours?'/gi, "datetime('now', '-$2 hours')");
-  result = result.replace(/(datetime\\('now'\\))\\s*\\+\\s*INTERVAL\\s*'(\\d+)\\s+days?'/gi, "datetime('now', '+$2 days')");
+  result = result.replace(/(datetime\\('now'\\))\\s*-\\s*INTERVAL\\s*'(\\d+)\\s+(days?|hours?|minutes?|seconds?)'/gi, "datetime('now', '-$2 $3')");
+  result = result.replace(/(datetime\\('now'\\))\\s*\\+\\s*INTERVAL\\s*'(\\d+)\\s+(days?|hours?|minutes?|seconds?)'/gi, "datetime('now', '+$2 $3')");
 
   // 7. Remove PostgreSQL casts like ::int or ::numeric
   result = result.replace(/::[a-zA-Z0-9_()]+/g, '');
@@ -67,7 +88,13 @@ function translateQuery(sql) {
   // 8. Replace ILIKE with LIKE
   result = result.replace(/\\bILIKE\\b/gi, 'LIKE');
 
-  return result;
+  const rawParams = (sql.includes('$') && mappedParams.length > 0) ? mappedParams : params;
+  const finalParams = (rawParams || []).map(p => {
+    if (p === undefined) return null;
+    if (typeof p === 'boolean') return p ? 1 : 0;
+    return p;
+  });
+  return { sql: result, params: finalParams };
 }
 
 function tryParseJson(val) {
@@ -86,10 +113,10 @@ function tryParseJson(val) {
 
 export const db = {
   query: async (sql, params = []) => {
-    const translatedSql = translateQuery(sql);
+    const { sql: translatedSql, params: translatedParams } = translateQuery(sql, params);
     try {
       const stmt = database.prepare(translatedSql);
-      const rows = stmt.all(...params);
+      const rows = stmt.all(...translatedParams);
       
       for (const row of rows) {
         for (const key of Object.keys(row)) {

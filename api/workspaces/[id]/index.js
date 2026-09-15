@@ -134,11 +134,11 @@ export default async function (req, res) {
            status = COALESCE($4, status),
            progress = COALESCE($5, progress),
            shared_notes = COALESCE($6, shared_notes),
-           exchange_agreement = COALESCE($7::jsonb, exchange_agreement),
-           updated_at = now()
+           exchange_agreement = COALESCE($7, exchange_agreement),
+           updated_at = datetime('now')
        WHERE id = $8
        RETURNING *`,
-      [title, description, target_date, status, progress, shared_notes, exchange_agreement ? JSON.stringify(exchange_agreement) : null, workspaceId]
+      [title, description, target_date, status, progress, shared_notes, exchange_agreement ? (typeof exchange_agreement === 'string' ? exchange_agreement : JSON.stringify(exchange_agreement)) : null, workspaceId]
     );
 
     if (!updated[0]) {

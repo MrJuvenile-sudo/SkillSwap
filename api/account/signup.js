@@ -1,6 +1,6 @@
 // api/account/signup.js - Multi-Step User Registration
 import { db } from 'hatchable';
-import { hashPassword } from 'lib/crypto.js';
+import { hashPassword, validatePasswordStrength } from 'lib/crypto.js';
 
 export const access = 'public';
 
@@ -14,6 +14,11 @@ export default async function (req, res) {
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required.' });
+    }
+
+    const passCheck = validatePasswordStrength(password);
+    if (!passCheck.valid) {
+      return res.status(400).json({ error: passCheck.message });
     }
 
     const cleanEmail = email.trim().toLowerCase();
@@ -53,9 +58,8 @@ export default async function (req, res) {
     // 2. Insert Profile
     await db.query(
       `INSERT INTO profiles (user_id, bio, location, preferred_language, availability, timezone, completion_percentage)
-       VALUES ($1, $2, $3, 'English', 'Flexible Evenings & Weekends', 'UTC', 60)`,
-      [newUser.id, bio || 'Excited to share knowledge and acquire new skills on SkillSwapX!', location || 'Remote / Worldwide']
-
+       VALUES ($1, $2, $3, 'English', 'Flexible Evenings & Weekends (IST)', 'IST (UTC+5:30)', 60)`,
+      [newUser.id, bio || 'Excited to share knowledge and acquire new skills on SkillSwapX!', location || 'Bengaluru, Karnataka, India']
     );
 
     // 3. Add initial Teach Skills if provided

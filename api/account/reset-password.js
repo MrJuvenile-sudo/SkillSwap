@@ -1,6 +1,6 @@
 // api/account/reset-password.js - Execute Password Reset
 import { db } from 'hatchable';
-import { hashPassword } from 'lib/crypto.js';
+import { hashPassword, validatePasswordStrength } from 'lib/crypto.js';
 
 export const access = 'public';
 
@@ -10,8 +10,13 @@ export default async function (req, res) {
   }
 
   const { token, newPassword } = req.body || {};
-  if (!token || !newPassword || newPassword.length < 6) {
-    return res.status(400).json({ error: 'Valid reset token and new password (min 6 chars) are required.' });
+  if (!token || !newPassword) {
+    return res.status(400).json({ error: 'Reset token and new password are required.' });
+  }
+
+  const passCheck = validatePasswordStrength(newPassword);
+  if (!passCheck.valid) {
+    return res.status(400).json({ error: passCheck.message });
   }
 
   try {

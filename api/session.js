@@ -88,7 +88,7 @@ export default async function (req, res) {
       const createdUser = userRows[0];
       await db.query(
         `INSERT INTO profiles (user_id, bio, location, preferred_language, availability, timezone)
-         VALUES ($1, 'Excited to share and acquire new practical skills!', 'Remote / Worldwide', 'English', 'Flexible Evenings', 'UTC')
+         VALUES ($1, 'Excited to share and acquire new practical skills across India!', 'Bengaluru, Karnataka, India', 'English', 'Flexible Evenings (IST)', 'IST (UTC+5:30)')
          ON CONFLICT (user_id) DO NOTHING`,
         [createdUser.id]
       );
