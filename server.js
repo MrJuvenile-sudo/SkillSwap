@@ -290,7 +290,9 @@ function getFilesRecursively(dir) {
 }
 
 async function loadRoutes() {
-  const apiDir = path.resolve('api');
+  const apiDir = fs.existsSync(path.resolve('server/api'))
+    ? path.resolve('server/api')
+    : path.resolve('api');
   const files = getFilesRecursively(apiDir);
   const routes = [];
 
@@ -373,7 +375,11 @@ app.get('*', (req, res) => {
   res.sendFile(path.resolve('public/index.html'));
 });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`\n🚀 SkillSwapX Server is running locally at http://localhost:${PORT}\n`);
-});
+// Start Server if running locally (not in Vercel serverless environment)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 SkillSwapX Server is running locally at http://localhost:${PORT}\n`);
+  });
+}
+
+export default app;
