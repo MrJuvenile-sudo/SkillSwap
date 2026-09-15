@@ -1,6 +1,7 @@
 // server.js - Custom Express server simulating Hatchable runtime environment
 import express from 'express';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import { pathToFileURL } from 'url';
@@ -38,10 +39,40 @@ fs.writeFileSync(path.join(hatchableDir, 'package.json'), JSON.stringify({
 }, null, 2));
 fs.writeFileSync(path.join(hatchableDir, 'index.js'), `
 import { DatabaseSync } from 'node:sqlite';
+import pg from 'pg';
 import path from 'path';
 
-const dbPath = process.env.DATABASE_PATH || 'skillswap.db';
-const database = new DatabaseSync(path.resolve(dbPath));
+// Dual-Database Engine: Cloud PostgreSQL (Neon/Supabase/RDS) vs. Local SQLite
+const isCloudPostgres = Boolean(
+  process.env.DATABASE_URL || 
+  (process.env.DB_HOST && process.env.DB_HOST !== 'localhost' && process.env.DB_HOST !== '127.0.0.1')
+);
+
+let pgPool = null;
+let database = null;
+
+if (isCloudPostgres) {
+  const config = process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
+      }
+    : {
+        host: process.env.DB_HOST,
+        port: Number(process.env.DB_PORT) || 5432,
+        user: process.env.DB_USER || 'postgres',
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME || 'skillswap',
+        ssl: { rejectUnauthorized: false }
+      };
+
+  pgPool = new pg.Pool(config);
+  console.log('✓ Connected to Cloud PostgreSQL database (' + (process.env.DB_HOST || 'via DATABASE_URL') + ')');
+} else {
+  const dbPath = process.env.DATABASE_PATH || 'skillswap.db';
+  database = new DatabaseSync(path.resolve(dbPath));
+  console.log('✓ Connected to local SQLite database:', dbPath);
+}
 
 function translateQuery(sql, params = []) {
   let result = sql;
@@ -113,6 +144,21 @@ function tryParseJson(val) {
 
 export const db = {
   query: async (sql, params = []) => {
+    // 1. If connected to Cloud PostgreSQL (Neon/Supabase/RDS)
+    if (pgPool) {
+      try {
+        const res = await pgPool.query(sql, params);
+        return {
+          rows: res.rows || [],
+          rowCount: res.rowCount || 0
+        };
+      } catch (err) {
+        console.error('Cloud PostgreSQL query error:', err.message, 'on SQL:', sql);
+        throw err;
+      }
+    }
+
+    // 2. Local SQLite with query translation
     const { sql: translatedSql, params: translatedParams } = translateQuery(sql, params);
     try {
       const stmt = database.prepare(translatedSql);
@@ -173,10 +219,47 @@ if (!fs.existsSync(libLink)) {
 }
 
 // ----------------------------------------------------
-// 2. Express Server Setup
+// 2. Express Server Setup & CORS Configuration
 // ----------------------------------------------------
 const app = express();
 const PORT = process.env.PORT || 3005;
+
+// CORS configuration supporting local development and production frontends (e.g. Vercel)
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : (process.env.FRONTEND_URL ? [process.env.FRONTEND_URL.trim()] : null);
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow non-browser requests or same-origin requests
+    if (!origin) return callback(null, true);
+    
+    // In development or if allowedOrigins is not explicitly set or contains '*', allow origin
+    if (!allowedOrigins || allowedOrigins.includes('*') || process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    // Check if origin matches allowed list or wildcard subdomains (e.g. *.vercel.app)
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed.startsWith('*.')) {
+        return origin.endsWith(allowed.slice(2));
+      }
+      return allowed === origin;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.warn(`[CORS Blocked]: Origin ${origin} not permitted. Allowed:`, allowedOrigins);
+      callback(new Error(`CORS policy: Origin ${origin} not permitted`));
+    }
+  },
+  credentials: true, // Allow session cookies and auth headers
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'Cookie']
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

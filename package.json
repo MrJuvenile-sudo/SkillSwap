@@ -4,13 +4,15 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "db:init": "node init-db.js"
+    "db:init": "node init-db.js",
+    "db:init:cloud": "node scripts/init_cloud_postgres.mjs"
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "dependencies": {
     "cookie-parser": "^1.4.6",
+    "cors": "^2.8.6",
     "docx": "^9.7.1",
     "express": "^4.19.2",
     "pg": "^8.12.0"
