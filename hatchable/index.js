@@ -2,6 +2,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import pg from 'pg';
 import path from 'path';
+import fs from 'fs';
 
 // Dual-Database Engine: Cloud PostgreSQL (Neon/Supabase/RDS) vs. Local SQLite
 const isCloudPostgres = Boolean(
@@ -30,8 +31,28 @@ if (isCloudPostgres) {
   pgPool = new pg.Pool(config);
   console.log('✓ Connected to Cloud PostgreSQL database (' + (process.env.DB_HOST || 'via DATABASE_URL') + ')');
 } else {
-  const dbPath = process.env.DATABASE_PATH || 'skillswap.db';
-  database = new DatabaseSync(path.resolve(dbPath));
+  let dbPath = process.env.DATABASE_PATH;
+  if (!dbPath) {
+    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || (process.platform === 'linux' && process.env.NODE_ENV === 'production')) {
+      const tmpDbPath = path.join('/tmp', 'skillswap.db');
+      const seedDbPath = path.resolve('skillswap.db');
+      if (!fs.existsSync(tmpDbPath) && fs.existsSync(seedDbPath)) {
+        try {
+          fs.copyFileSync(seedDbPath, tmpDbPath);
+          console.log('✓ Copied seed database to writable /tmp/skillswap.db');
+        } catch (copyErr) {
+          console.warn('Could not copy seed database to /tmp:', copyErr.message);
+        }
+      }
+      dbPath = tmpDbPath;
+    } else {
+      dbPath = path.resolve('skillswap.db');
+    }
+  } else {
+    dbPath = path.resolve(dbPath);
+  }
+
+  database = new DatabaseSync(dbPath);
   console.log('✓ Connected to local SQLite database:', dbPath);
 }
 
