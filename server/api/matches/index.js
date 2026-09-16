@@ -8,7 +8,10 @@ export const access = 'public';
 export default async function (req, res) {
   try {
     const currentUser = await getCurrentUser(req);
-    const currentUserId = currentUser ? currentUser.id : 'user_alice';
+    if (!currentUser) {
+      return res.status(401).json({ error: 'Authentication required to view matches.', matches: [] });
+    }
+    const currentUserId = currentUser.id;
 
     const { sort = 'highest_synergy', language, timezone, category, verified_only, bookmarked_only } = req.query;
 

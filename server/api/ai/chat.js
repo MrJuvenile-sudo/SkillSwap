@@ -122,7 +122,7 @@ function generateResponse(intent, message, ctx) {
       suggestions: ['Open Settings', 'View Notifications']
     },
     AUTHENTICATION: {
-      reply: 'To sign in, click **Login** at the top right. Use your registered email and password. Demo accounts: **alice@skillswap.io** (regular user) or **admin@skillswap.io** (admin), both with password **password123**.',
+      reply: 'To sign in, click **Login** at the top right with your registered email and password. If you are new to SkillSwapX, click **Join Free** to create your original peer profile in seconds.',
       suggestions: ['Go to Login', 'Create Account']
     },
     REVIEWS: {

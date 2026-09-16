@@ -13,7 +13,10 @@ export default async function (req, res) {
     }
 
     const currentUser = await getCurrentUser(req);
-    const currentUserId = currentUser ? currentUser.id : 'user_alice';
+    if (!currentUser) {
+      return res.status(401).json({ error: 'Authentication required. Please sign in.' });
+    }
+    const currentUserId = currentUser.id;
 
     const { rows: users } = await db.query(
       `SELECT u.id, u.name, u.email, u.avatar_url, u.headline,

@@ -53,22 +53,7 @@ export default async function (req, res) {
   }
 
   if (req.method === 'POST') {
-    const { action, userId, name, email, headline, role } = req.body || {};
-
-    if (action === 'switch' && userId) {
-      // Find or switch to user
-      const { rows } = await db.query(
-        `SELECT id, name, email, role, status, avatar_url, headline 
-         FROM app_users 
-         WHERE id = $1`,
-        [userId]
-      );
-      if (!rows[0]) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      res.setHeader('Set-Cookie', `user_id=${encodeURIComponent(rows[0].id)}; Path=/; SameSite=Lax; Max-Age=2592000`);
-      return res.json({ success: true, user: rows[0] });
-    }
+    const { action, name, email, headline, role } = req.body || {};
 
     if (action === 'register') {
       if (!name || !email) {

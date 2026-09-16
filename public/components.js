@@ -249,18 +249,30 @@
     };
 
     const handleMarkAllRead = async () => {
-      await apiFetch('/api/notifications', {
-        method: 'PUT',
-        body: JSON.stringify({ mark_all_read: true })
-      });
+      setUnreadCount(0);
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      try {
+        await apiFetch('/api/notifications', {
+          method: 'PUT',
+          body: JSON.stringify({ mark_all_read: true })
+        });
+      } catch (err) {
+        console.error('Mark all read error:', err);
+      }
       loadNotifications();
     };
 
     const handleReadNotification = async (id) => {
-      await apiFetch('/api/notifications', {
-        method: 'PUT',
-        body: JSON.stringify({ id })
-      });
+      setUnreadCount(prev => Math.max(0, prev - 1));
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+      try {
+        await apiFetch('/api/notifications', {
+          method: 'PUT',
+          body: JSON.stringify({ id })
+        });
+      } catch (err) {
+        console.error('Read notification error:', err);
+      }
       loadNotifications();
     };
 
@@ -303,7 +315,7 @@
                 <span>Live P2P Network</span>
               </span>
               <span class="text-navy-400 hidden sm:inline">•</span>
-              <span class="hidden sm:inline text-cream-200/80">14,200+ Verified Swappers</span>
+              <span class="hidden sm:inline text-cream-200/80">Verified Peer Network</span>
               <span class="text-navy-400 hidden md:inline">•</span>
               <span class="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-navy-800/90 text-sky-300 border border-sky-400/20 shadow-2xs">
                 Zero Fees Forever
@@ -544,9 +556,13 @@
               ` : html`
                 <!-- Notification center dropdown toggle -->
                 <div class="relative" id="notif-menu-container">
-                  <button onClick=${handleToggleNotif} class="p-2 rounded-xl hover:bg-cream-200/70 border border-transparent hover:border-cream-300 relative transition-all duration-200">
+                  <button onClick=${handleToggleNotif} class="p-2 rounded-xl hover:bg-cream-200/70 border border-transparent hover:border-cream-300 relative transition-all duration-200" title="Notifications">
                     <${Icon} name="bell" class="w-5 h-5 text-navy-900" />
-                    ${unreadCount > 0 ? html`<span class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-indigo-600 border-2 border-cream-100 animate-pulse"></span>` : null}
+                    ${unreadCount > 0 ? html`
+                      <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-extrabold flex items-center justify-center border-2 border-white shadow-xs">
+                        ${unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    ` : null}
                   </button>
 
                   <!-- Notifications list dropdown -->

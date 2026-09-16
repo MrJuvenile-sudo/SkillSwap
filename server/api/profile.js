@@ -11,7 +11,11 @@ export default async function (req, res) {
     
     if (!userId) {
       const currentUser = await getCurrentUser(req);
-      userId = currentUser ? currentUser.id : 'user_alice';
+      if (currentUser) {
+        userId = currentUser.id;
+      } else {
+        return res.status(401).json({ error: 'Authentication required. Please sign in.' });
+      }
     }
 
     const { rows: userRows } = await db.query(

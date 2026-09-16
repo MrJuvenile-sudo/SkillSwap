@@ -1321,7 +1321,7 @@
 
             <div>
               <label class="block font-bold text-navy-900 mb-1">Years Experience: ${expYears}</label>
-              <input type="range" min="0" max="15" step="0.5" value=${expYears} onChange=${e => setExpYears(Number(e.target.value))} class="w-full accent-navy-700" />
+              <input type="range" min="0" max="15" step="0.5" value=${expYears} onInput=${e => setExpYears(Number(e.target.value))} onChange=${e => setExpYears(Number(e.target.value))} class="w-full accent-navy-700" />
             </div>
 
             <button type="submit" disabled=${loading} class="w-full py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-sm">
@@ -2085,6 +2085,18 @@
     };
 
     const handleToggleLike = async (postId) => {
+      // Optimistic update so number toggle responds instantly
+      setPosts(prev => prev.map(p => {
+        if (p.id !== postId) return p;
+        const wasLiked = !!p.user_liked;
+        const currentCount = Number(p.likes_count) || 0;
+        return {
+          ...p,
+          user_liked: !wasLiked,
+          likes_count: wasLiked ? Math.max(0, currentCount - 1) : currentCount + 1
+        };
+      }));
+
       try {
         const res = await api('/api/posts', {
           method: 'POST',
@@ -2097,6 +2109,8 @@
           setPosts(prev => prev.map(p => p.id === postId ? { ...p, user_liked: res.liked, likes_count: res.likes_count } : p));
         }
       } catch (err) {
+        // Rollback on failure
+        loadPosts();
         alert(err.message);
       }
     };
@@ -3202,6 +3216,7 @@
                   min="1"
                   max="10"
                   value=${calcHours}
+                  onInput=${e => setCalcHours(Number(e.target.value))}
                   onChange=${e => setCalcHours(Number(e.target.value))}
                   class="w-full h-2 bg-navy-700 rounded-lg appearance-none cursor-pointer accent-navy-700"
                 />

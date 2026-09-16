@@ -437,12 +437,12 @@
               </div>
               <input
                 type="range"
-                min="35"
+                min="0"
                 max="95"
                 value=${minSynergy}
+                onInput=${e => setMinSynergy(Number(e.target.value))}
                 onChange=${e => setMinSynergy(Number(e.target.value))}
                 class="w-full accent-navy-700 cursor-pointer"
-
               />
             </div>
           </div>
@@ -626,7 +626,7 @@
                   <span>Years of Experience</span>
                   <span class="text-navy-700">${expYears} years</span>
                 </div>
-                <input type="range" min="0" max="15" step="0.5" value=${expYears} onChange=${e => setExpYears(Number(e.target.value))} class="w-full accent-navy-700 cursor-pointer" />
+                <input type="range" min="0" max="15" step="0.5" value=${expYears} onInput=${e => setExpYears(Number(e.target.value))} onChange=${e => setExpYears(Number(e.target.value))} class="w-full accent-navy-700 cursor-pointer" />
               </div>
 
               <button type="submit" disabled=${loading} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
@@ -4977,6 +4977,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                       min="40"
                       max="90"
                       value=${settingsForm.synergy_threshold}
+                      onInput=${e => setSettingsForm({ ...settingsForm, synergy_threshold: e.target.value })}
                       onChange=${e => setSettingsForm({ ...settingsForm, synergy_threshold: e.target.value })}
                       class="w-full accent-indigo-600 cursor-pointer"
                     />

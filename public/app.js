@@ -82,7 +82,7 @@
     const [activeTab, setActiveTabState] = useState(initialRoute.tab || 'home');
     const [proposalModalMatch, setProposalModalMatch] = useState(null);
     const [compareModalPeers, setCompareModalPeers] = useState(null);
-    const [viewingUsername, setViewingUsername] = useState(initialRoute.params.user || 'alice');
+    const [viewingUsername, setViewingUsername] = useState(initialRoute.params.user || null);
     const [selectedCategoryId, setSelectedCategoryId] = useState(initialRoute.params.catId ? Number(initialRoute.params.catId) : null);
     const [reportedUserId, setReportedUserId] = useState(initialRoute.params.reportUser || null);
     const [hubResourceId, setHubResourceId] = useState(initialRoute.params.resourceId ? Number(initialRoute.params.resourceId) : null);
@@ -370,7 +370,7 @@
             user=${user}
             activeTab=${activeTab}
             setActiveTab=${setActiveTab}
-            pendingRequestsCount=${(user && user.unread_notifications) || 0}
+            pendingRequestsCount=${(user && user.pending_requests) || 0}
             onLogout=${handleLogout}
             onViewProfile=${handleViewProfile}
           />

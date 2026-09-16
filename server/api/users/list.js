@@ -1,4 +1,4 @@
-// api/users/list.js - Lists Demo Users & Community Members
+// api/users/list.js - Lists Community Members & Profiles
 import { db } from 'hatchable';
 
 export const access = 'public';

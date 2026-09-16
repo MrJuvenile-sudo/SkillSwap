@@ -78,7 +78,7 @@ export default async function (req, res) {
         let liked = false;
         if (existingLike && existingLike.length > 0) {
           await db.query(`DELETE FROM post_likes WHERE post_id = $1 AND user_id = $2`, [Number(post_id), user.id]);
-          await db.query(`UPDATE community_posts SET likes_count = MAX(0, COALESCE(likes_count, 1) - 1) WHERE id = $1`, [Number(post_id)]);
+          await db.query(`UPDATE community_posts SET likes_count = CASE WHEN COALESCE(likes_count, 0) > 0 THEN likes_count - 1 ELSE 0 END WHERE id = $1`, [Number(post_id)]);
           liked = false;
         } else {
           await db.query(`INSERT INTO post_likes (post_id, user_id) VALUES ($1, $2)`, [Number(post_id), user.id]);
