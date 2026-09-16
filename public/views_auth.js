@@ -3418,7 +3418,7 @@
   // ----------------------------------------------------
   // Collapsible FAQ View (Categorized Topic Pills & Real-Time Search)
   // ----------------------------------------------------
-  function FaqView() {
+  function FaqView({ setActiveTab }) {
     const [faqOpen, setFaqOpen] = useState({});
     const [activeFaqCategory, setActiveFaqCategory] = useState('ALL');
     const [faqSearch, setFaqSearch] = useState('');
@@ -3584,9 +3584,9 @@
             <h3 class="font-serif text-xl font-bold text-navy-950">Still have questions?</h3>
             <p class="text-xs text-warmgray-600 max-w-md">Our community team and moderators are available around the clock to help you with your exchange setups.</p>
           </div>
-          <a href="mailto:support@skillswap.io" class="px-6 py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl text-xs shadow-md transition-all shrink-0">
+          <button onClick=${() => (setActiveTab ? setActiveTab('help') : (window.location.hash = 'help'))} class="px-6 py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl text-xs shadow-md transition-all shrink-0">
             Contact Support →
-          </a>
+          </button>
         </div>
       </div>
     `;

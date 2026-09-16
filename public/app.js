@@ -1,4 +1,4 @@
-// public/app.js - Root Application Controller & Router for SkillSwap
+// public/app.js - Root Application Controller & SPA Hash Router for SkillSwap
 (function() {
   const React = window.React;
   const ReactDOM = window.ReactDOM;
@@ -9,7 +9,7 @@
     return;
   }
 
-  const { useState, useEffect } = React;
+  const { useState, useEffect, useCallback, useRef } = React;
   const html = htm.bind(React.createElement);
   const {
     api,
@@ -56,26 +56,235 @@
     SkillSwapAIWidget
   } = window.SkillSwap;
 
+  // Helper: Parse active tab and query params from window.location.hash
+  function parseRouteFromHash() {
+    const raw = (window.location.hash || '').replace(/^#/, '').trim();
+    if (!raw) return { tab: 'home', params: {} };
+    const [tabPart, queryPart] = raw.split('?');
+    const params = {};
+    if (queryPart) {
+      try {
+        const sp = new URLSearchParams(queryPart);
+        for (const [k, v] of sp.entries()) {
+          params[k] = v;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    return { tab: tabPart || 'home', params };
+  }
+
   function App() {
+    const initialRoute = parseRouteFromHash();
+
     const [user, setUser] = useState(null);
-    const [activeTab, setActiveTab] = useState('home');
+    const [activeTab, setActiveTabState] = useState(initialRoute.tab || 'home');
     const [proposalModalMatch, setProposalModalMatch] = useState(null);
     const [compareModalPeers, setCompareModalPeers] = useState(null);
-    const [viewingUsername, setViewingUsername] = useState('alice');
-    const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-    const [reportedUserId, setReportedUserId] = useState(null);
-    const [hubResourceId, setHubResourceId] = useState(null);
-    const [targetChatConnectionId, setTargetChatConnectionId] = useState(null);
-    const [targetChatUserId, setTargetChatUserId] = useState(null);
+    const [viewingUsername, setViewingUsername] = useState(initialRoute.params.user || 'alice');
+    const [selectedCategoryId, setSelectedCategoryId] = useState(initialRoute.params.catId ? Number(initialRoute.params.catId) : null);
+    const [reportedUserId, setReportedUserId] = useState(initialRoute.params.reportUser || null);
+    const [hubResourceId, setHubResourceId] = useState(initialRoute.params.resourceId ? Number(initialRoute.params.resourceId) : null);
+    const [targetChatConnectionId, setTargetChatConnectionId] = useState(initialRoute.params.conn || null);
+    const [targetChatUserId, setTargetChatUserId] = useState(initialRoute.params.chatUser || null);
+
+    // Centralized Navigation that keeps window in-place, synchronizes hash, and enables browser back/forward
+    const navigateToTab = useCallback((tab, params = {}, replace = false) => {
+      setActiveTabState(tab);
+      if (params.user) setViewingUsername(params.user);
+      if (params.catId !== undefined) setSelectedCategoryId(params.catId);
+      if (params.reportUser) setReportedUserId(params.reportUser);
+      if (params.resourceId !== undefined) setHubResourceId(params.resourceId);
+      if (params.conn !== undefined) setTargetChatConnectionId(params.conn);
+      if (params.chatUser !== undefined) setTargetChatUserId(params.chatUser);
+
+      let hash = '#' + tab;
+      const q = new URLSearchParams();
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== null && v !== undefined && v !== '') {
+          q.set(k, String(v));
+        }
+      }
+      const qs = q.toString();
+      if (qs) hash += '?' + qs;
+
+      if (window.location.hash !== hash) {
+        if (replace) {
+          window.history.replaceState({ tab, params }, '', hash);
+        } else {
+          window.history.pushState({ tab, params }, '', hash);
+        }
+      }
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }, []);
+
+    // Primary setter passed to child views
+    const setActiveTab = useCallback((tab, params = {}) => {
+      navigateToTab(tab, params, false);
+    }, [navigateToTab]);
+
+    // Handle Browser Back / Forward shortcut keys (Alt+Left, Alt+Right, browser buttons)
+    useEffect(() => {
+      const handlePopState = () => {
+        const route = parseRouteFromHash();
+        setActiveTabState(route.tab || 'home');
+        if (route.params.user) setViewingUsername(route.params.user);
+        if (route.params.catId) setSelectedCategoryId(Number(route.params.catId));
+        if (route.params.reportUser) setReportedUserId(route.params.reportUser);
+        if (route.params.resourceId) setHubResourceId(Number(route.params.resourceId));
+        if (route.params.conn) setTargetChatConnectionId(route.params.conn);
+        if (route.params.chatUser) setTargetChatUserId(route.params.chatUser);
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      window.addEventListener('hashchange', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+        window.removeEventListener('hashchange', handlePopState);
+      };
+    }, []);
+
+    // Intercept internal link clicks so window NEVER reloads or leaves the application
+    useEffect(() => {
+      const handleGlobalClick = (e) => {
+        const a = e.target.closest('a');
+        if (!a) return;
+
+        // Allow users to open in new tab if they explicitly held Ctrl / Meta / Shift / Alt
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+
+        const href = a.getAttribute('href');
+        if (!href) return;
+
+        // Mailto links redirect to help tab in-app
+        if (href.startsWith('mailto:')) {
+          e.preventDefault();
+          navigateToTab('help');
+          return;
+        }
+
+        // Hash anchors like #matches or #skills-dir
+        if (href.startsWith('#')) {
+          e.preventDefault();
+          const clean = href.slice(1);
+          const [tab, qs] = clean.split('?');
+          const p = {};
+          if (qs) {
+            new URLSearchParams(qs).forEach((v, k) => { p[k] = v; });
+          }
+          navigateToTab(tab || 'home', p);
+          return;
+        }
+
+        // Relative in-app paths
+        if (href.startsWith('/') && !href.startsWith('/api') && !href.startsWith('/theme') && !href.startsWith('/vendor') && !href.startsWith('/favicon') && !href.startsWith('/logo')) {
+          e.preventDefault();
+          const tab = href.replace(/^\//, '').trim() || 'home';
+          navigateToTab(tab);
+          return;
+        }
+      };
+
+      document.addEventListener('click', handleGlobalClick);
+      return () => document.removeEventListener('click', handleGlobalClick);
+    }, [navigateToTab]);
+
+    // Keyboard Shortcuts Listener
+    // - Protects ALL native browser shortcut keys (Ctrl+R, Ctrl+F, Ctrl+T, Ctrl+W, Ctrl+Shift+I, Alt+Left, Alt+Right)
+    // - Adds in-app productivity shortcuts (Alt+1..6, Escape to close modals)
+    useEffect(() => {
+      const handleKeyDown = (e) => {
+        // Never interfere when user is typing in form controls
+        const tag = e.target.tagName;
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || e.target.isContentEditable) {
+          if (e.key === 'Escape') e.target.blur();
+          return;
+        }
+
+        // Escape closes active modal dialogs without altering window
+        if (e.key === 'Escape') {
+          if (proposalModalMatch) {
+            e.preventDefault();
+            setProposalModalMatch(null);
+            return;
+          }
+          if (compareModalPeers) {
+            e.preventDefault();
+            setCompareModalPeers(null);
+            return;
+          }
+          return;
+        }
+
+        // Let browser handle native Ctrl / Cmd shortcuts untouched
+        if (e.ctrlKey || e.metaKey) {
+          return;
+        }
+
+        // Quick Tab Switch Shortcuts (Alt + 1..6 or Alt + Letter)
+        if (e.altKey && !e.shiftKey) {
+          switch (e.key) {
+            case '1':
+              e.preventDefault();
+              navigateToTab(user ? 'dashboard' : 'home');
+              break;
+            case '2':
+              e.preventDefault();
+              navigateToTab('exchange');
+              break;
+            case '3':
+              e.preventDefault();
+              navigateToTab('hub-browse');
+              break;
+            case '4':
+              e.preventDefault();
+              navigateToTab(user ? 'matches' : 'skills-dir');
+              break;
+            case '5':
+              e.preventDefault();
+              navigateToTab(user ? 'chat' : 'community');
+              break;
+            case '6':
+              e.preventDefault();
+              navigateToTab('community');
+              break;
+            case 'h':
+            case 'H':
+              e.preventDefault();
+              navigateToTab(user ? 'dashboard' : 'home');
+              break;
+            case 'm':
+            case 'M':
+              if (user) { e.preventDefault(); navigateToTab('matches'); }
+              break;
+            case 'c':
+            case 'C':
+              if (user) { e.preventDefault(); navigateToTab('chat'); }
+              break;
+            case 's':
+            case 'S':
+              e.preventDefault();
+              navigateToTab('skills-dir');
+              break;
+          }
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [user, proposalModalMatch, compareModalPeers, navigateToTab]);
 
     const checkSession = async () => {
       try {
         const data = await api('/api/session');
         if (data.authenticated && data.user) {
           setUser(data.user);
-          if (activeTab === 'home' || activeTab === 'login' || activeTab === 'signup') {
+          const current = parseRouteFromHash();
+          // Only auto-redirect to dashboard if user landed on home/login/signup without a deep-link hash
+          if (!window.location.hash || window.location.hash === '#' || current.tab === 'home' || current.tab === 'login' || current.tab === 'signup') {
             const isAdmin = data.user.role && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(data.user.role);
-            setActiveTab(isAdmin ? 'admin' : 'dashboard');
+            navigateToTab(isAdmin ? 'admin' : 'dashboard', {}, true);
           }
         } else {
           setUser(null);
@@ -92,12 +301,12 @@
     const handleLogout = async () => {
       await api('/api/account/logout', { method: 'POST' }).catch(() => {});
       setUser(null);
-      setActiveTab('home');
+      navigateToTab('home');
     };
 
     const handleOpenProposal = (match) => {
       if (!user) {
-        setActiveTab('login');
+        navigateToTab('login');
         return;
       }
       setProposalModalMatch(match);
@@ -105,25 +314,28 @@
 
     const handleOpenChat = (target) => {
       if (!user) {
-        setActiveTab('login');
+        navigateToTab('login');
         return;
       }
       if (typeof target === 'object' && target) {
         if (target.connection_id || (target.id && String(target.id).startsWith('conn_'))) {
           setTargetChatConnectionId(target.connection_id || target.id);
           setTargetChatUserId(target.partner_id || (target.partner && target.partner.id));
+          navigateToTab('chat', { conn: target.connection_id || target.id, chatUser: target.partner_id || (target.partner && target.partner.id) });
         } else {
           setTargetChatUserId(target.id);
           setTargetChatConnectionId(null);
+          navigateToTab('chat', { chatUser: target.id });
         }
       } else if (typeof target === 'number') {
         setTargetChatConnectionId(target);
         setTargetChatUserId(null);
+        navigateToTab('chat', { conn: target });
       } else {
         setTargetChatUserId(target);
         setTargetChatConnectionId(null);
+        navigateToTab('chat', { chatUser: target });
       }
-      setActiveTab('chat');
     };
 
     const handleOpenCompare = (p1, p2) => {
@@ -132,23 +344,23 @@
 
     const handleViewProfile = (username) => {
       setViewingUsername(username);
-      setActiveTab('public-profile');
+      navigateToTab('public-profile', { user: username });
     };
 
     const handleViewCategory = (catId) => {
       setSelectedCategoryId(catId);
-      setActiveTab('category-detail');
+      navigateToTab('category-detail', { catId });
     };
 
     const handleOpenReportAbuse = (userId) => {
       setReportedUserId(userId);
-      setActiveTab('report-abuse');
+      navigateToTab('report-abuse', { reportUser: userId });
     };
 
     const handleViewResource = (resource) => {
       const id = typeof resource === 'object' ? resource.id : resource;
       setHubResourceId(id);
-      setActiveTab('hub-detail');
+      navigateToTab('hub-detail', { resourceId: id });
     };
 
     return html`
@@ -191,12 +403,12 @@
           ${activeTab === 'chat' && user && html`<${ChatView} currentUser=${user} targetConnectionId=${targetChatConnectionId} targetUserId=${targetChatUserId} onViewProfile=${handleViewProfile} onProposeSwap=${handleOpenProposal} setActiveTab=${setActiveTab} />`}
           ${activeTab === 'settings' && user && html`<${SettingsView} user=${user} onUserUpdated=${checkSession} />`}
           ${activeTab === 'admin' && user && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role) && html`<${AdminConsoleView} currentUser=${user} setActiveTab=${setActiveTab} onViewProfile=${handleViewProfile} onLogout=${handleLogout} />`}
-          ${activeTab === 'features' && html`<${FeaturesView} />`}
-          ${activeTab === 'faq' && html`<${FaqView} />`}
-          ${activeTab === 'help' && html`<${HelpCenterView} />`}
-          ${activeTab === 'terms' && html`<${TermsView} />`}
-          ${activeTab === 'privacy' && html`<${PrivacyView} />`}
-          ${activeTab === 'guidelines' && html`<${GuidelinesView} />`}
+          ${activeTab === 'features' && html`<${FeaturesView} setActiveTab=${setActiveTab} />`}
+          ${activeTab === 'faq' && html`<${FaqView} setActiveTab=${setActiveTab} />`}
+          ${activeTab === 'help' && html`<${HelpCenterView} setActiveTab=${setActiveTab} />`}
+          ${activeTab === 'terms' && html`<${TermsView} setActiveTab=${setActiveTab} />`}
+          ${activeTab === 'privacy' && html`<${PrivacyView} setActiveTab=${setActiveTab} />`}
+          ${activeTab === 'guidelines' && html`<${GuidelinesView} setActiveTab=${setActiveTab} />`}
 
           <!-- Learning Hub Views (Authenticated Only) -->
           ${(activeTab.startsWith('hub') || activeTab === 'exam-mode') && !user && html`
@@ -219,7 +431,6 @@
           />
         ` : null}
 
-
         <${ProposalModal}
           isOpen=${!!proposalModalMatch}
           onClose=${() => setProposalModalMatch(null)}
@@ -239,7 +450,6 @@
           activeTab=${activeTab}
           setActiveTab=${setActiveTab}
         />
-
       </div>
     `;
   }

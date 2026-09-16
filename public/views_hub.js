@@ -507,8 +507,17 @@
       setDownloading(true);
       try {
         const r = await api('/api/resources/download', { method: 'POST', body: JSON.stringify({ resource_id: resourceId }) });
-        if (r.file_url) window.open(r.file_url, '_blank');
-        else alert('No file link available for this resource. Contact the contributor.');
+        if (r.file_url) {
+          const dlLink = document.createElement('a');
+          dlLink.href = r.file_url;
+          dlLink.download = (r.file_name || r.file_url.split('/').pop()) || 'resource-file';
+          dlLink.style.display = 'none';
+          document.body.appendChild(dlLink);
+          dlLink.click();
+          document.body.removeChild(dlLink);
+        } else {
+          alert('No file link available for this resource. Contact the contributor.');
+        }
         setData(d => d ? ({ ...d, resource: { ...d.resource, downloads: (d.resource.downloads || 0) + 1 } }) : d);
       } catch (e) { alert(e.message || 'Download failed'); }
       finally { setDownloading(false); }

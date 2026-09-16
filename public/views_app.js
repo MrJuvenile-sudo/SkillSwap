@@ -298,7 +298,9 @@
                       <h4 class="font-bold text-navy-900 truncate">${s.title}</h4>
                       <p class="text-[10px] text-warmgray-500 mt-0.5 font-semibold">📅 ${new Date(s.session_date).toLocaleString()}</p>
                       ${s.meeting_link ? html`
-                        <a href=${s.meeting_link} target="_blank" class="block text-center mt-2 py-1 bg-navy-700 text-white rounded font-bold text-[9px]">Join Meet</a>
+                        <button onClick=${() => setActiveTab && setActiveTab('workspaces')} class="w-full text-center mt-2 py-1 bg-navy-700 hover:bg-navy-800 text-white rounded font-bold text-[9px] transition-all">
+                          Join Meet (In-App Workspace)
+                        </button>
                       ` : null}
                     </div>
                   `)}
@@ -2024,10 +2026,14 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
 
                   <div class="w-full sm:w-auto sm:ml-auto flex items-center gap-2 text-xs">
                     <button onClick=${() => {
-                      const meetUrl = `https://meet.google.com/new`;
-                      window.open(meetUrl, '_blank');
+                      if (navigator.clipboard) {
+                        navigator.clipboard.writeText(window.location.href);
+                        alert('Workspace room URL copied to clipboard! Share it directly with your partner.');
+                      } else {
+                        alert('Workspace URL: ' + window.location.href);
+                      }
                     }} class="px-3 py-1.5 bg-navy-800 hover:bg-navy-700 text-cream-200 hover:text-white rounded-lg border border-navy-700 text-[11px] font-semibold transition-all">
-                      Google Meet Link 🔗
+                      Copy Room Link 🔗
                     </button>
                   </div>
                 </div>
@@ -2344,15 +2350,9 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                           <p>👤 Proposer: ${s.proposer_name}</p>
                           ${s.agenda ? html`<p class="text-[10px] text-warmgray-500 italic">"${s.agenda}"</p>` : null}
                         </div>
-                        ${s.meeting_link ? html`
-                          <a href=${s.meeting_link} target="_blank" class="block text-center mt-2 px-3 py-2 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl text-xs shadow-sm">
-                            Join Meeting Link 🔗
-                          </a>
-                        ` : html`
-                          <button onClick=${() => { setActiveSubTab('live-room'); startCall('video'); }} class="w-full text-center mt-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-sm">
-                            Launch In-App Video Call 📹
-                          </button>
-                        `}
+                        <button onClick=${() => { setActiveSubTab('live-room'); startCall('video'); }} class="w-full text-center mt-2 px-3 py-2 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl text-xs shadow-sm transition-all">
+                          Launch In-App Live Room 📹
+                        </button>
                       </div>
                     `)}
                   </div>
