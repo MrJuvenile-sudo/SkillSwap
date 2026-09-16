@@ -88,6 +88,7 @@
     const [hubResourceId, setHubResourceId] = useState(initialRoute.params.resourceId ? Number(initialRoute.params.resourceId) : null);
     const [targetChatConnectionId, setTargetChatConnectionId] = useState(initialRoute.params.conn || null);
     const [targetChatUserId, setTargetChatUserId] = useState(initialRoute.params.chatUser || null);
+    const [targetWorkspaceId, setTargetWorkspaceId] = useState(initialRoute.params.wsId ? Number(initialRoute.params.wsId) : null);
 
     // Centralized Navigation that keeps window in-place, synchronizes hash, and enables browser back/forward
     const navigateToTab = useCallback((tab, params = {}, replace = false) => {
@@ -98,6 +99,7 @@
       if (params.resourceId !== undefined) setHubResourceId(params.resourceId);
       if (params.conn !== undefined) setTargetChatConnectionId(params.conn);
       if (params.chatUser !== undefined) setTargetChatUserId(params.chatUser);
+      if (params.wsId !== undefined) setTargetWorkspaceId(params.wsId ? Number(params.wsId) : null);
 
       let hash = '#' + tab;
       const q = new URLSearchParams();
@@ -135,6 +137,7 @@
         if (route.params.resourceId) setHubResourceId(Number(route.params.resourceId));
         if (route.params.conn) setTargetChatConnectionId(route.params.conn);
         if (route.params.chatUser) setTargetChatUserId(route.params.chatUser);
+        if (route.params.wsId) setTargetWorkspaceId(Number(route.params.wsId));
       };
 
       window.addEventListener('popstate', handlePopState);
@@ -398,8 +401,8 @@
 
           ${activeTab === 'matches' && html`<${MatchesView} currentUser=${user} onProposeSwap=${handleOpenProposal} onOpenChat=${handleOpenChat} onComparePeers=${handleOpenCompare} onViewProfile=${handleViewProfile} />`}
           ${activeTab === 'skills' && user && html`<${MySkillsView} user=${user} onRefresh=${checkSession} />`}
-          ${activeTab === 'requests' && user && html`<${RequestsView} onAcceptRequest=${() => setActiveTab('workspaces')} />`}
-          ${activeTab === 'workspaces' && user && html`<${WorkspaceView} currentUser=${user} onOpenChat=${handleOpenChat} setActiveTab=${setActiveTab} onViewProfile=${handleViewProfile} />`}
+          ${activeTab === 'requests' && user && html`<${RequestsView} onAcceptRequest=${(wsId) => setActiveTab('workspaces', wsId ? { wsId } : {})} />`}
+          ${activeTab === 'workspaces' && user && html`<${WorkspaceView} currentUser=${user} onOpenChat=${handleOpenChat} setActiveTab=${setActiveTab} onViewProfile=${handleViewProfile} targetWorkspaceId=${targetWorkspaceId} />`}
           ${activeTab === 'chat' && user && html`<${ChatView} currentUser=${user} targetConnectionId=${targetChatConnectionId} targetUserId=${targetChatUserId} onViewProfile=${handleViewProfile} onProposeSwap=${handleOpenProposal} setActiveTab=${setActiveTab} />`}
           ${activeTab === 'settings' && user && html`<${SettingsView} user=${user} onUserUpdated=${checkSession} />`}
           ${activeTab === 'admin' && user && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role) && html`<${AdminConsoleView} currentUser=${user} setActiveTab=${setActiveTab} onViewProfile=${handleViewProfile} onLogout=${handleLogout} />`}

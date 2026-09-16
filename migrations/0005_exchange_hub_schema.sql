@@ -38,7 +38,17 @@ CREATE TABLE IF NOT EXISTS teaching_preferences (
   UNIQUE(user_id, skill_id)
 );
 
--- 3. Learning Progress (checklists & session milestones)
+-- 3. Exchange Agreements Table
+CREATE TABLE IF NOT EXISTS exchange_agreements (
+  id BIGSERIAL PRIMARY KEY,
+  workspace_id BIGINT REFERENCES exchange_workspaces(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'ACTIVE',
+  terms JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 4. Learning Progress (checklists & session milestones)
 CREATE TABLE IF NOT EXISTS learning_progress (
   id BIGSERIAL PRIMARY KEY,
   learning_goal_id BIGINT NOT NULL REFERENCES learning_goals(id) ON DELETE CASCADE,

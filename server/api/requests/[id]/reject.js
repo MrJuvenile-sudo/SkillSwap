@@ -38,7 +38,7 @@ export default async function (req, res) {
     if (action === 'COUNTER' && request.receiver_id === user.id) {
       await db.query(
         `UPDATE requests 
-         SET counter_proposal = $1::jsonb,
+         SET counter_proposal = $1,
              decline_reason = $2,
              responded_at = now()
          WHERE id = $3`,

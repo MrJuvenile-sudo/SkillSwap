@@ -67,12 +67,17 @@ export default async function (req, res) {
     };
 
     const targetDays = (request.duration_weeks || 4) * 7;
+    const now = new Date();
+    const startDate = now.toISOString().split('T')[0];
+    const targetDate = new Date(now.getTime() + targetDays * 86400000).toISOString().split('T')[0];
+    const task1DueDate = new Date(now.getTime() + 3 * 86400000).toISOString().split('T')[0];
+    const task2DueDate = new Date(now.getTime() + 5 * 86400000).toISOString().split('T')[0];
 
     const { rows: wsRows } = await db.query(
       `INSERT INTO exchange_workspaces (connection_id, title, description, status, start_date, target_date, progress, user1_skill_id, user2_skill_id, exchange_agreement)
-       VALUES ($1, $2, $3, 'ACTIVE', CURRENT_DATE, CURRENT_DATE + $4, 0, $5, $6, $7::jsonb)
+       VALUES ($1, $2, $3, 'ACTIVE', $4, $5, 0, $6, $7, $8)
        RETURNING *`,
-      [connection.id, wsTitle, wsDesc, targetDays, request.teach_skill_id, request.learn_skill_id, JSON.stringify(agreement)]
+      [connection.id, wsTitle, wsDesc, startDate, targetDate, request.teach_skill_id, request.learn_skill_id, JSON.stringify(agreement)]
     );
 
     const workspace = wsRows[0];
@@ -89,10 +94,21 @@ export default async function (req, res) {
     await db.query(
       `INSERT INTO tasks (workspace_id, assigned_to, title, description, status, due_date)
        VALUES 
-         ($1, $2, 'Kickoff Video/Chat & Outline Goals', 'Introduce skill backgrounds and agree on weekly meeting time.', 'TODO', CURRENT_DATE + 3),
-         ($1, $3, 'Share Resources & First Exercise', 'Share recommended starter docs, repos, or tutorial files.', 'TODO', CURRENT_DATE + 5)`,
-      [workspace.id, request.sender_id, user.id]
+         ($1, $2, 'Kickoff Video/Chat & Outline Goals', 'Introduce skill backgrounds and agree on weekly meeting time.', 'TODO', $4),
+         ($1, $3, 'Share Resources & First Exercise', 'Share recommended starter docs, repos, or tutorial files.', 'TODO', $5)`,
+      [workspace.id, request.sender_id, user.id, task1DueDate, task2DueDate]
     );
+
+    // Initialize pinned exchange_agreements entry
+    try {
+      await db.query(
+        `INSERT INTO exchange_agreements (workspace_id, status, terms)
+         VALUES ($1, 'ACTIVE', $2)`,
+        [workspace.id, JSON.stringify(agreement)]
+      );
+    } catch (e) {
+      // ignore
+    }
 
     // Initial greeting chat message
     await db.query(
@@ -105,7 +121,7 @@ export default async function (req, res) {
     await db.query(
       `INSERT INTO notifications (user_id, type, title, message, link)
        VALUES ($1, 'ACCEPTED', 'Exchange Proposal Accepted! 🎉', $2, $3)`,
-      [request.sender_id, `${user.name} accepted your skill exchange proposal! Your shared workspace is ready.`, `/workspaces/${workspace.id}`]
+      [request.sender_id, `${user.name} accepted your skill exchange proposal! Your shared workspace is ready.`, '/workspaces']
     );
 
     try {

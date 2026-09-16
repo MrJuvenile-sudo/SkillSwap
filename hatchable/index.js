@@ -156,7 +156,10 @@ export const db = {
     if (pgPool) {
       await ensureCloudSchema();
       try {
-        const res = await pgPool.query(sql, params);
+        const pgSql = sql
+          .replace(/datetime\('now'\)/gi, 'now()')
+          .replace(/date\('now'\)/gi, 'CURRENT_DATE');
+        const res = await pgPool.query(pgSql, params);
         return {
           rows: res.rows || [],
           rowCount: res.rowCount || 0

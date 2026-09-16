@@ -713,9 +713,15 @@
     };
 
     const handleAccept = async (reqId) => {
-      await api('/api/requests/' + reqId + '/accept', { method: 'PUT' });
-      loadRequests();
-      onAcceptRequest && onAcceptRequest();
+      try {
+        const res = await api('/api/requests/' + reqId + '/accept', { method: 'PUT' });
+        loadRequests();
+        if (onAcceptRequest) {
+          onAcceptRequest(res.workspace?.id);
+        }
+      } catch (err) {
+        alert(err.message || 'Failed to accept exchange proposal');
+      }
     };
 
     const handleReject = async (reqId) => {
@@ -839,7 +845,7 @@
                         Decline
                       </button>
                     ` : r.status === 'ACCEPTED' ? html`
-                      <button onClick=${() => onAcceptRequest && onAcceptRequest()} class="px-4 py-2.5 bg-navy-700 hover:bg-navy-800 text-white rounded-xl font-bold text-xs shadow-sm transition-all">
+                      <button onClick=${() => onAcceptRequest && onAcceptRequest(r.workspace_id)} class="px-4 py-2.5 bg-navy-700 hover:bg-navy-800 text-white rounded-xl font-bold text-xs shadow-sm transition-all">
                         Open Workspace →
                       </button>
                     ` : html`
@@ -922,7 +928,7 @@
                   <!-- Actions -->
                   <div class="flex items-center gap-2.5 shrink-0 w-full lg:w-auto pt-2 lg:pt-0">
                     ${r.status === 'ACCEPTED' ? html`
-                      <button onClick=${() => onAcceptRequest && onAcceptRequest()} class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs shadow-sm transition-all">
+                      <button onClick=${() => onAcceptRequest && onAcceptRequest(r.workspace_id)} class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs shadow-sm transition-all">
                         Open Workspace →
                       </button>
                     ` : html`
@@ -942,7 +948,7 @@
   // ----------------------------------------------------
   // Workspace View (Interactive Teach & Learn Collaboration Hub)
   // ----------------------------------------------------
-  function WorkspaceView({ currentUser, onOpenChat, setActiveTab, onViewProfile }) {
+  function WorkspaceView({ currentUser, onOpenChat, setActiveTab, onViewProfile, targetWorkspaceId }) {
     const [workspaces, setWorkspaces] = useState([]);
     const [activeWorkspace, setActiveWorkspace] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -1220,7 +1226,8 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
         const list = data.workspaces || [];
         setWorkspaces(list);
         if (list.length > 0) {
-          await loadWorkspaceDetails(list[0].id);
+          const selected = targetWorkspaceId ? (list.find(w => w.id === targetWorkspaceId) || list[0]) : list[0];
+          await loadWorkspaceDetails(selected.id);
         }
       } catch (err) {
         console.error('Failed to load workspaces:', err);
@@ -1228,6 +1235,12 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
         setLoading(false);
       }
     };
+
+    useEffect(() => {
+      if (targetWorkspaceId && workspaces.length > 0) {
+        loadWorkspaceDetails(targetWorkspaceId);
+      }
+    }, [targetWorkspaceId]);
 
     const loadWorkspaceDetails = async (id) => {
       try {
