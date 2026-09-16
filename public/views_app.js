@@ -5278,10 +5278,10 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
     const [avatarUrl, setAvatarUrl] = useState('');
     const [bio, setBio] = useState('');
     const [headline, setHeadline] = useState('');
-    const [location, setLocation] = useState('Bengaluru, Karnataka, India');
+    const [location, setLocation] = useState('Jabalpur, Madhya Pradesh, India');
     const [weeklyHours, setWeeklyHours] = useState(4);
     const [timezone, setTimezone] = useState('IST (UTC+5:30)');
-    const [preferredLanguage, setPreferredLanguage] = useState('English');
+    const [preferredLanguage, setPreferredLanguage] = useState('English, Hindi');
 
     // Section 3: Portfolio links
     const [github, setGithub] = useState('');
@@ -5306,10 +5306,10 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
         setAvatarUrl(s.avatar_url || (user && user.avatar_url) || '');
         setBio(s.bio || '');
         setHeadline(s.headline || '');
-        setLocation(s.location || 'Bengaluru, Karnataka, India');
+        setLocation(s.location || 'Jabalpur, Madhya Pradesh, India');
         setWeeklyHours(s.weekly_hours || 4);
         setTimezone(s.timezone || 'IST (UTC+5:30)');
-        setPreferredLanguage(s.preferred_language || 'English');
+        setPreferredLanguage(s.preferred_language || 'English, Hindi');
 
         setGithub(s.github_url || '');
         setLinkedin(s.linkedin_url || '');

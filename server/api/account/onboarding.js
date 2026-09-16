@@ -28,9 +28,9 @@ export default async function (req, res) {
         [
           user.id,
           bio || 'Passionate about sharing skills and acquiring new knowledge across India.',
-          location || 'Bengaluru, Karnataka, India',
+          location || 'Jabalpur, Madhya Pradesh, India',
           timezone || 'IST (UTC+5:30)',
-          preferred_language || 'English',
+          preferred_language || 'English, Hindi',
           weekly_hours || 4,
           JSON.stringify(availability_schedule || { monday: ['evening'], wednesday: ['evening'], saturday: ['morning'] })
         ]

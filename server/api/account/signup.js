@@ -50,7 +50,7 @@ export default async function (req, res) {
       `INSERT INTO app_users (id, name, username, email, password_hash, role, status, avatar_url, headline, email_verified, onboarding_completed)
        VALUES ($1, $2, $3, $4, $5, 'USER', 'ACTIVE', $6, $7, true, false)
        RETURNING id, name, username, email, role, status, avatar_url, headline, onboarding_completed, theme_preference`,
-      [userId, name.trim(), cleanUsername, cleanEmail, passwordHash, avatarUrl, headline || 'Skill Enthusiast & Learner']
+      [userId, name.trim(), cleanUsername, cleanEmail, passwordHash, avatarUrl, headline || 'Skill Enthusiast & Tech Learner (India)']
     );
 
     const newUser = userRows[0];
@@ -58,8 +58,8 @@ export default async function (req, res) {
     // 2. Insert Profile
     await db.query(
       `INSERT INTO profiles (user_id, bio, location, preferred_language, availability, timezone, completion_percentage)
-       VALUES ($1, $2, $3, 'English', 'Flexible Evenings & Weekends (IST)', 'IST (UTC+5:30)', 60)`,
-      [newUser.id, bio || 'Excited to share knowledge and acquire new skills on SkillSwapX!', location || 'Bengaluru, Karnataka, India']
+       VALUES ($1, $2, $3, 'English, Hindi', 'Flexible Evenings & Weekends (IST)', 'IST (UTC+5:30)', 60)`,
+      [newUser.id, bio || 'Excited to share knowledge and acquire new skills on SkillSwapX India!', location || 'Jabalpur, Madhya Pradesh, India']
     );
 
     // 3. Add initial Teach Skills if provided

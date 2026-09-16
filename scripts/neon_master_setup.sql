@@ -37,12 +37,12 @@ CREATE TABLE IF NOT EXISTS profiles (
   id BIGSERIAL PRIMARY KEY,
   user_id TEXT NOT NULL UNIQUE REFERENCES app_users(id) ON DELETE CASCADE,
   bio TEXT,
-  location TEXT,
+  location TEXT DEFAULT 'Jabalpur, Madhya Pradesh, India',
   profile_image TEXT,
   experience TEXT,
-  preferred_language TEXT DEFAULT 'English',
-  availability TEXT,
-  timezone TEXT DEFAULT 'UTC',
+  preferred_language TEXT DEFAULT 'English, Hindi',
+  availability TEXT DEFAULT 'Flexible Evenings & Weekends (IST)',
+  timezone TEXT DEFAULT 'IST (UTC+5:30)',
   weekly_hours INT DEFAULT 4,
   completion_percentage INT DEFAULT 50,
   availability_schedule JSONB DEFAULT '{"monday":["evening"],"tuesday":["evening"],"wednesday":["evening"],"thursday":["evening"],"friday":["evening"],"saturday":["morning","afternoon"],"sunday":["morning"]}'::jsonb,
@@ -268,7 +268,7 @@ CREATE TABLE IF NOT EXISTS scheduled_sessions (
   title TEXT NOT NULL,
   session_date TIMESTAMPTZ NOT NULL,
   duration_minutes INT NOT NULL DEFAULT 60,
-  timezone TEXT DEFAULT 'UTC',
+  timezone TEXT DEFAULT 'IST (UTC+5:30)',
   meeting_link TEXT,
   agenda TEXT,
   notes TEXT,
@@ -656,10 +656,34 @@ VALUES (
 )
 ON CONFLICT (user_id) DO NOTHING;
 
--- 4. Demo Indian Tech Swappers (Priya Sharma & Aarav Sharma)
+-- 4. Demo Indian Tech Swappers (JEC Jabalpur & Indian Tech Hubs)
 INSERT INTO app_users (
   id, name, username, email, password_hash, role, status, avatar_url, headline, email_verified, onboarding_completed
 ) VALUES (
+  'user_shubhank_parihar',
+  'Shubhank Parihar',
+  'shubhank',
+  'shubhank@jecjabalpur.ac.in',
+  '8e9c0a30e97709d7b6513caea03b9022:4189ef6a298c4f9dd90ad03fa8b46998c51c19668ed8eb68d00f033447873562',
+  'USER',
+  'ACTIVE',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=shubhank',
+  'MCA Final Year | Full-Stack Architect & Web Engineering (JEC Jabalpur)',
+  true,
+  true
+), (
+  'user_anushka_patel',
+  'Anushka Patel',
+  'anushka',
+  'anushka@jecjabalpur.ac.in',
+  '8e9c0a30e97709d7b6513caea03b9022:4189ef6a298c4f9dd90ad03fa8b46998c51c19668ed8eb68d00f033447873562',
+  'USER',
+  'ACTIVE',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=anushka',
+  'MCA Final Year | UI/UX & Frontend Design Lead (JEC Jabalpur)',
+  true,
+  true
+), (
   'user_priya_sharma',
   'Priya Sharma',
   'priya_architect',
@@ -683,14 +707,56 @@ INSERT INTO app_users (
   'Full-Stack Developer & AI Researcher (Jabalpur)',
   true,
   true
+), (
+  'user_rohan_verma',
+  'Rohan Verma',
+  'rohan_dev',
+  'rohan.verma@jecjabalpur.ac.in',
+  '8e9c0a30e97709d7b6513caea03b9022:4189ef6a298c4f9dd90ad03fa8b46998c51c19668ed8eb68d00f033447873562',
+  'USER',
+  'ACTIVE',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=rohan_dev',
+  'Backend Engineer & Database Optimization Specialist (Indore, MP)',
+  true,
+  true
+), (
+  'user_ananya_patel',
+  'Ananya Patel',
+  'ananya_uiux',
+  'ananya.patel@jecjabalpur.ac.in',
+  '8e9c0a30e97709d7b6513caea03b9022:4189ef6a298c4f9dd90ad03fa8b46998c51c19668ed8eb68d00f033447873562',
+  'USER',
+  'ACTIVE',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=ananya_uiux',
+  'Product Designer & Creative Specialist (Bhopal, MP)',
+  true,
+  true
 )
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO profiles (user_id, bio, location, preferred_language, availability, timezone, weekly_hours, completion_percentage)
 VALUES (
+  'user_shubhank_parihar',
+  'MCA student at Jabalpur Engineering College (JEC), MP. Core developer of SkillSwapX. Teaching React, Node.js, and Modern Cloud Systems. Looking to master Advanced AI & PyTorch.',
+  'Jabalpur Engineering College, MP, India',
+  'English, Hindi',
+  'Evenings & Weekends (IST)',
+  'Asia/Kolkata (IST)',
+  8,
+  100
+), (
+  'user_anushka_patel',
+  'MCA student at Jabalpur Engineering College (JEC), MP. Co-creator of SkillSwapX. Passionate about interactive UI/UX design, Figma design systems, and responsive web accessibility.',
+  'Jabalpur Engineering College, MP, India',
+  'English, Hindi',
+  'Evenings 6-9 PM IST',
+  'Asia/Kolkata (IST)',
+  8,
+  100
+), (
   'user_priya_sharma',
   'Building high-throughput payment pipelines and cloud infrastructure. Want to teach Kafka & AWS and learn advanced React 19.',
-  'Bengaluru, Karnataka',
+  'Bengaluru, Karnataka, India',
   'English, Hindi',
   'Weekends & Evenings',
   'Asia/Kolkata (IST)',
@@ -699,16 +765,54 @@ VALUES (
 ), (
   'user_aarav_sharma',
   'MCA student at Jabalpur Engineering College building peer learning algorithms. Teaching Python & FastApi, learning Next.js.',
-  'Jabalpur, Madhya Pradesh',
+  'Jabalpur, Madhya Pradesh, India',
   'Hindi, English',
   'Evenings 6-9 PM IST',
   'Asia/Kolkata (IST)',
   8,
   90
+), (
+  'user_rohan_verma',
+  'Specializing in high-performance SQL indexing, Redis caching, and microservices architecture in Indore.',
+  'Indore, Madhya Pradesh, India',
+  'Hindi, English',
+  'Flexible Evenings (IST)',
+  'Asia/Kolkata (IST)',
+  6,
+  90
+), (
+  'user_ananya_patel',
+  'Product design enthusiast building wireframes, component libraries, and interactive prototypes in Bhopal.',
+  'Bhopal, Madhya Pradesh, India',
+  'Hindi, English',
+  'Weekends (IST)',
+  'Asia/Kolkata (IST)',
+  5,
+  85
 )
 ON CONFLICT (user_id) DO NOTHING;
 
--- 5. Seed Skills for Priya and Aarav
+-- 5. Seed Skills for Swappers
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified, description)
+SELECT 'user_shubhank_parihar', s.id, 'TEACH', 'Expert', 3.0, true, 'Full-Stack Web Development with React, Node.js, Express, and Database Design.'
+FROM skills s WHERE s.name = 'React'
+ON CONFLICT (user_id, skill_id, type) DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified, description)
+SELECT 'user_shubhank_parihar', s.id, 'LEARN', 'Intermediate', 1.0, false, 'Exploring deep learning models, embeddings, and machine learning pipelines.'
+FROM skills s WHERE s.name = 'Machine Learning'
+ON CONFLICT (user_id, skill_id, type) DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified, description)
+SELECT 'user_anushka_patel', s.id, 'TEACH', 'Expert', 3.0, true, 'UI/UX Prototyping, Wireframing, User Research, and Design Systems in Figma.'
+FROM skills s WHERE s.name = 'UI/UX Design'
+ON CONFLICT (user_id, skill_id, type) DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified, description)
+SELECT 'user_anushka_patel', s.id, 'LEARN', 'Intermediate', 1.0, false, 'Type-safe frontend development and component architecture with TypeScript.'
+FROM skills s WHERE s.name = 'TypeScript'
+ON CONFLICT (user_id, skill_id, type) DO NOTHING;
+
 INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified, description)
 SELECT 'user_priya_sharma', s.id, 'TEACH', 'Expert', 5.0, true, 'Microservices, Docker, Kubernetes, and high availability system design.'
 FROM skills s WHERE s.name = 'Python'
@@ -729,14 +833,24 @@ SELECT 'user_aarav_sharma', s.id, 'LEARN', 'Beginner', 0.5, false, 'Eager to lea
 FROM skills s WHERE s.name = 'SQL & Analytics'
 ON CONFLICT (user_id, skill_id, type) DO NOTHING;
 
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified, description)
+SELECT 'user_rohan_verma', s.id, 'TEACH', 'Advanced', 3.0, true, 'Relational database schema modeling, indexing strategies, and query tuning.'
+FROM skills s WHERE s.name = 'SQL & Analytics'
+ON CONFLICT (user_id, skill_id, type) DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified, description)
+SELECT 'user_ananya_patel', s.id, 'TEACH', 'Advanced', 2.0, true, 'Visual hierarchy, typography, mobile-first design, and user journey mapping.'
+FROM skills s WHERE s.name = 'Figma'
+ON CONFLICT (user_id, skill_id, type) DO NOTHING;
+
 -- 6. Initial Community Feed Post
 INSERT INTO community_posts (user_id, title, content, post_type, tags, likes_count, read_time)
 VALUES (
   'user_admin',
-  'Welcome to SkillSwapX — The Peer-to-Peer Knowledge Exchange Network!',
-  'We are thrilled to launch SkillSwapX at Jabalpur Engineering College! List skills you want to teach, discover skills you wish to learn, and collaborate in real-time with shared notes, live code runners, and interactive whiteboards.',
+  'Welcome to SkillSwapX — The Peer-to-Peer Knowledge Exchange Network at JEC!',
+  'We are thrilled to launch SkillSwapX at Jabalpur Engineering College (JEC), Madhya Pradesh! List skills you want to teach, discover skills you wish to learn, and collaborate in real-time with shared notes, live code runners, and interactive whiteboards.',
   'POST',
-  '#Welcome,#SkillSwapX,#MCA,#JEC,#PeerLearning',
-  12,
+  '#Welcome,#SkillSwapX,#MCA,#JEC,#Jabalpur,#PeerLearning',
+  24,
   '2 min read'
 );

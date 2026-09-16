@@ -334,8 +334,8 @@
               ${[
                 { key: 'title', label: 'Title *', placeholder: 'e.g. Complete DBMS Notes', type: 'text' },
                 { key: 'subject', label: 'Subject *', placeholder: 'e.g. Database Management Systems', type: 'text' },
-                { key: 'university', label: 'University', placeholder: 'e.g. VTU, MIT, Delhi University', type: 'text' },
-                { key: 'course', label: 'Course', placeholder: 'e.g. B.Tech CSE', type: 'text' },
+                { key: 'university', label: 'University / College', placeholder: 'e.g. Jabalpur Engineering College (JEC), RGPV Bhopal', type: 'text' },
+                { key: 'course', label: 'Course', placeholder: 'e.g. MCA, B.Tech CSE, BCA', type: 'text' },
                 { key: 'unit_topic', label: 'Unit / Topic', placeholder: 'e.g. Unit 3: Normalization', type: 'text' }
               ].map(f => html`
                 <div key=${f.key}>
@@ -937,12 +937,12 @@
                 <input value=${form.subject} onInput=${e => setForm(f => ({...f, subject: e.target.value}))} placeholder="e.g. Operating Systems" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-navy-500" />
               </div>
               <div>
-                <label class="block text-xs font-bold text-navy-950 mb-1">University</label>
-                <input value=${form.university} onInput=${e => setForm(f => ({...f, university: e.target.value}))} placeholder="e.g. VTU, Anna University" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-navy-500" />
+                <label class="block text-xs font-bold text-navy-950 mb-1">University / College</label>
+                <input value=${form.university} onInput=${e => setForm(f => ({...f, university: e.target.value}))} placeholder="e.g. Jabalpur Engineering College (JEC), RGPV Bhopal" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-navy-500" />
               </div>
               <div>
                 <label class="block text-xs font-bold text-navy-950 mb-1">Course</label>
-                <input value=${form.course} onInput=${e => setForm(f => ({...f, course: e.target.value}))} placeholder="e.g. B.Tech CSE" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-navy-500" />
+                <input value=${form.course} onInput=${e => setForm(f => ({...f, course: e.target.value}))} placeholder="e.g. MCA, B.Tech CSE, BCA" class="w-full p-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-navy-500" />
               </div>
               <div>
                 <label class="block text-xs font-bold text-navy-950 mb-1">Semester</label>

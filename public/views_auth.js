@@ -1131,8 +1131,8 @@
   // ----------------------------------------------------
   function OnboardingWizardView({ user, setActiveTab, onComplete }) {
     const [timezone, setTimezone] = useState('IST (UTC+5:30)');
-    const [location, setLocation] = useState('Bengaluru, Karnataka, India');
-    const [preferredLanguage, setPreferredLanguage] = useState('English');
+    const [location, setLocation] = useState('Jabalpur, Madhya Pradesh, India');
+    const [preferredLanguage, setPreferredLanguage] = useState('English, Hindi');
     const [weeklyHours, setWeeklyHours] = useState(4);
     const [bio, setBio] = useState('');
 
@@ -1144,7 +1144,7 @@
           timezone,
           location,
           weekly_hours: weeklyHours,
-          bio: bio.trim() || 'Excited to exchange skills with motivated peers across India!',
+          bio: bio.trim() || 'Excited to exchange skills with motivated peers at Jabalpur Engineering College and across India!',
           preferred_language: preferredLanguage,
           availability_schedule: { monday: ['evening'], saturday: ['morning'] }
         })
@@ -1170,18 +1170,19 @@
               <div>
                 <label class="block font-bold text-navy-950 mb-1.5">Your Location / City (India)</label>
                 <select value=${location} onChange=${e => setLocation(e.target.value)} class="w-full p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 font-semibold text-navy-900">
+                  <option value="Jabalpur, Madhya Pradesh, India">Jabalpur, Madhya Pradesh (JEC)</option>
+                  <option value="Bhopal, Madhya Pradesh, India">Bhopal, Madhya Pradesh</option>
+                  <option value="Indore, Madhya Pradesh, India">Indore, Madhya Pradesh</option>
+                  <option value="Gwalior, Madhya Pradesh, India">Gwalior, Madhya Pradesh</option>
                   <option value="Bengaluru, Karnataka, India">Bengaluru, Karnataka</option>
-                  <option value="Mumbai, Maharashtra, India">Mumbai, Maharashtra</option>
                   <option value="Delhi NCR, India">Delhi NCR</option>
+                  <option value="Mumbai, Maharashtra, India">Mumbai, Maharashtra</option>
                   <option value="Hyderabad, Telangana, India">Hyderabad, Telangana</option>
                   <option value="Pune, Maharashtra, India">Pune, Maharashtra</option>
                   <option value="Chennai, Tamil Nadu, India">Chennai, Tamil Nadu</option>
                   <option value="Kolkata, West Bengal, India">Kolkata, West Bengal</option>
                   <option value="Ahmedabad, Gujarat, India">Ahmedabad, Gujarat</option>
                   <option value="Jaipur, Rajasthan, India">Jaipur, Rajasthan</option>
-                  <option value="Chandigarh, India">Chandigarh</option>
-                  <option value="Kochi, Kerala, India">Kochi, Kerala</option>
-                  <option value="Indore, Madhya Pradesh, India">Indore, Madhya Pradesh</option>
                   <option value="Remote, India">Remote (India)</option>
                 </select>
               </div>

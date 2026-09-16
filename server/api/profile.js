@@ -138,7 +138,16 @@ export default async function (req, res) {
          completion_percentage = $8,
          updated_at = now()
        RETURNING *`,
-      [currentUser.id, bio, location, preferred_language, availability, timezone || 'UTC', weekly_hours || 4, completion]
+      [
+        currentUser.id,
+        bio,
+        location || 'Jabalpur, Madhya Pradesh, India',
+        preferred_language || 'English, Hindi',
+        availability || 'Flexible Evenings & Weekends (IST)',
+        timezone || 'IST (UTC+5:30)',
+        weekly_hours || 4,
+        completion
+      ]
     );
 
     return res.json({ success: true, profile: updatedProfile[0] });
