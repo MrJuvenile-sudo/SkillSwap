@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import pg from 'pg';
 import path from 'path';
 import fs from 'fs';
+import { MASTER_SCHEMA_SQL } from './schema.js';
 
 // Dual-Database Engine: Cloud PostgreSQL (Neon/Supabase/RDS) vs. Local SQLite
 const isCloudPostgres = Boolean(
@@ -12,6 +13,31 @@ const isCloudPostgres = Boolean(
 
 let pgPool = null;
 let database = null;
+let isCloudSchemaReady = false;
+let cloudSchemaPromise = null;
+
+async function ensureCloudSchema() {
+  if (isCloudSchemaReady || !pgPool) return;
+  if (!cloudSchemaPromise) {
+    cloudSchemaPromise = (async () => {
+      try {
+        const check = await pgPool.query(
+          "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'app_users' LIMIT 1"
+        );
+        if (check.rows.length === 0) {
+          console.log('⚡ Detected uninitialized Cloud PostgreSQL database. Running master schema migration...');
+          await pgPool.query(MASTER_SCHEMA_SQL);
+          console.log('✓ Master schema & seed catalog successfully created in Cloud PostgreSQL!');
+        }
+        isCloudSchemaReady = true;
+      } catch (err) {
+        console.error('Cloud schema auto-init error/notice:', err.message);
+        isCloudSchemaReady = true;
+      }
+    })();
+  }
+  await cloudSchemaPromise;
+}
 
 if (isCloudPostgres) {
   const config = process.env.DATABASE_URL
@@ -128,6 +154,7 @@ export const db = {
   query: async (sql, params = []) => {
     // 1. If connected to Cloud PostgreSQL (Neon/Supabase/RDS)
     if (pgPool) {
+      await ensureCloudSchema();
       try {
         const res = await pgPool.query(sql, params);
         return {
