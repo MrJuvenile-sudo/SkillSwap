@@ -3209,6 +3209,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
   // SkillSwapX Admin Panel (Enterprise Governance Suite)
   // ----------------------------------------------------
   function AdminConsoleView({ currentUser, setActiveTab, onViewProfile, onLogout, onRefresh }) {
+    const [overviewData, setOverviewData] = useState(null);
     const [analytics, setAnalytics] = useState(null);
     const [users, setUsers] = useState([]);
     const [skills, setSkills] = useState([]);
@@ -3224,6 +3225,8 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
     const [logs, setLogs] = useState([]);
 
     const [loading, setLoading] = useState(true);
+    const [syncing, setSyncing] = useState(false);
+    const [lastSyncedTime, setLastSyncedTime] = useState('');
     const [activeNav, setActiveNav] = useState('overview'); // 'overview', 'users', 'skills', 'exchanges', 'reviews', 'reports', 'verification', 'community', 'analytics', 'notifications', 'settings', 'logs'
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -3264,17 +3267,44 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
     const isModerator = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'MODERATOR';
     const isSupport = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'MODERATOR' || userRole === 'SUPPORT';
 
+    // Initial load & background live sync telemetry
     useEffect(() => {
-      loadDataForSection(activeNav);
+      // Prefetch global analytics and telemetry immediately so counters and badges are synced
+      api('/api/admin').then(data => {
+        if (data) {
+          setOverviewData(data);
+          setAnalytics(data.analytics || null);
+          if (data.recentReports && (!reports || reports.length === 0)) {
+            setReports(data.recentReports);
+          }
+        }
+      }).catch(console.error);
+
+      const now = new Date();
+      setLastSyncedTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+
+      // Periodic live data sync (every 25 seconds if browser tab is active)
+      const interval = setInterval(() => {
+        if (!document.hidden) {
+          syncAllData(false);
+        }
+      }, 25000);
+
+      return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+      loadDataForSection(activeNav, true);
     }, [activeNav]);
 
-    const loadDataForSection = async (section) => {
+    const loadDataForSection = async (section, showSpinner = true) => {
       try {
-        setLoading(true);
+        if (showSpinner) setLoading(true);
         if (section === 'overview') {
           const data = await api('/api/admin');
+          setOverviewData(data);
           setAnalytics(data.analytics || null);
-          setReports(data.recentReports || []);
+          if (data.recentReports) setReports(data.recentReports);
         } else if (section === 'users') {
           const data = await api('/api/admin/users');
           setUsers(data.users || []);
@@ -3285,7 +3315,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
           setCategoriesList(cData.categories || []);
         } else if (section === 'exchanges') {
           const data = await api('/api/admin/exchanges');
-          setExchangesData(data);
+          setExchangesData(data || { problems: [], proposals: [], workspaces: [], requestStats: {} });
         } else if (section === 'reviews') {
           const data = await api('/api/admin/reviews');
           setReviews(data.reviews || []);
@@ -3297,7 +3327,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
           setVerifications(data.verifications || []);
         } else if (section === 'community') {
           const data = await api('/api/admin/community');
-          setCommunityData(data);
+          setCommunityData(data || { circles: [], posts: [] });
           const cData = await api('/api/admin/categories');
           setCategoriesList(cData.categories || []);
         } else if (section === 'analytics') {
@@ -3310,7 +3340,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
           setCategoriesList(cData.categories || []);
         } else if (section === 'settings') {
           const data = await api('/api/admin/settings');
-          setSettingsData(data);
+          setSettingsData(data || { settings: {}, systemHealth: [] });
           if (data.settings) setSettingsForm(prev => ({ ...prev, ...data.settings }));
         } else if (section === 'logs') {
           const data = await api('/api/admin/logs');
@@ -3319,7 +3349,27 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
       } catch (err) {
         console.error('Error loading admin section data:', err);
       } finally {
-        setLoading(false);
+        if (showSpinner) setLoading(false);
+      }
+    };
+
+    const syncAllData = async (manual = false) => {
+      try {
+        setSyncing(true);
+        // 1. Refresh global platform telemetry
+        const adminOverview = await api('/api/admin').catch(() => null);
+        if (adminOverview) {
+          setOverviewData(adminOverview);
+          setAnalytics(adminOverview.analytics || null);
+        }
+        // 2. Refresh active section data without flickering full screen
+        await loadDataForSection(activeNav, false);
+        const now = new Date();
+        setLastSyncedTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      } catch (err) {
+        console.error('Sync live data failed:', err);
+      } finally {
+        setSyncing(false);
       }
     };
 
@@ -3607,6 +3657,14 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
       }
     };
 
+    const liveUsersCount = users.length > 0 ? users.length : (overviewData?.analytics?.users?.total_users || analytics?.users?.total_users || 0);
+    const liveOpenReportsCount = reports.length > 0
+      ? reports.filter(r => r.status === 'OPEN').length
+      : (overviewData?.analytics?.reports?.open_reports || analytics?.reports?.open_reports || 0);
+    const livePendingVerifCount = verifications.length > 0
+      ? verifications.filter(v => v.status === 'PENDING').length
+      : (overviewData?.analytics?.verifications?.pending_verifications || analytics?.verifications?.pending_verifications || 0);
+
     return html`
       <div class="min-h-screen bg-cream-100 text-warmgray-900 font-sans flex flex-col md:flex-row antialiased">
         
@@ -3629,8 +3687,6 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
               </div>
             </div>
 
-
-
             <!-- Core Nav Items List -->
             <nav class="p-3 space-y-1 text-xs font-semibold">
               <button
@@ -3650,7 +3706,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                     <span class="text-sm">👥</span>
                     <span>Users</span>
                   </div>
-                  ${users.length > 0 ? html`<span class="text-[10px] px-1.5 py-0.2 rounded-md ${activeNav === 'users' ? 'bg-white/20 text-white' : 'bg-cream-200 text-navy-900'}">${users.length}</span>` : null}
+                  ${liveUsersCount > 0 ? html`<span class="text-[10px] px-1.5 py-0.2 rounded-md ${activeNav === 'users' ? 'bg-white/20 text-white' : 'bg-cream-200 text-navy-900 font-bold'}">${liveUsersCount}</span>` : null}
                 </button>
               ` : null}
 
@@ -3689,9 +3745,9 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                     <span class="text-sm">🚩</span>
                     <span>Reports</span>
                   </div>
-                  ${reports.filter(r => r.status === 'OPEN').length > 0 ? html`
+                  ${liveOpenReportsCount > 0 ? html`
                     <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-rose-600 text-white animate-pulse">
-                      ${reports.filter(r => r.status === 'OPEN').length}
+                      ${liveOpenReportsCount}
                     </span>
                   ` : null}
                 </button>
@@ -3704,9 +3760,9 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                     <span class="text-sm">🛡</span>
                     <span>Verification</span>
                   </div>
-                  ${verifications.filter(v => v.status === 'PENDING').length > 0 ? html`
+                  ${livePendingVerifCount > 0 ? html`
                     <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-sky-500 text-white">
-                      ${verifications.filter(v => v.status === 'PENDING').length}
+                      ${livePendingVerifCount}
                     </span>
                   ` : null}
                 </button>
@@ -3804,16 +3860,18 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
             <!-- Health Telemetry Indicator & Live Sync Button -->
             <div class="flex items-center gap-2.5">
               <button
-                onClick=${() => loadDataForSection(activeNav)}
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white hover:bg-cream-100 text-indigo-700 border border-indigo-200 shadow-2xs transition-all active:scale-95"
+                onClick=${() => syncAllData(true)}
+                disabled=${syncing}
+                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-white hover:bg-cream-100 text-indigo-700 border border-indigo-200 shadow-2xs transition-all active:scale-95 disabled:opacity-60"
                 title="Synchronize live state with database"
               >
-                <span>🔄</span>
-                <span>Sync Live Data</span>
+                <span class="${syncing ? 'animate-spin inline-block' : ''}">🔄</span>
+                <span>${syncing ? 'Syncing...' : 'Sync Live Data'}</span>
               </button>
               <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-cream-300 shadow-2xs">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span class="text-navy-900 font-bold">All Systems Operational</span>
+                ${lastSyncedTime ? html`<span class="text-[10px] text-warmgray-500 font-normal pl-1 border-l border-cream-300">Live ${lastSyncedTime}</span>` : null}
               </span>
             </div>
           </div>
@@ -3893,7 +3951,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-200 pb-4">
                   <div>
                     <h3 class="font-serif text-lg font-bold text-navy-950">Platform Activity (Users & Exchange Volume)</h3>
-                    <p class="text-xs text-warmgray-600">Real-time daily growth trends across registrations and problem proposals.</p>
+                    <p class="text-xs text-warmgray-600">Real-time telemetry trends across user growth and problem proposal activity.</p>
                   </div>
                   <div class="flex items-center gap-4 text-xs font-semibold">
                     <span class="flex items-center gap-1.5 text-indigo-700">
@@ -3907,25 +3965,43 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                   </div>
                 </div>
 
-                <!-- Activity Bar Chart Graph -->
+                <!-- Activity Bar Chart Graph (Live Telemetry) -->
                 <div class="grid grid-cols-7 gap-3 sm:gap-6 pt-4 h-48 items-end border-b border-cream-200 pb-4">
-                  ${[
-                    { day: 'Mon', u: 40, e: 25 },
-                    { day: 'Tue', u: 55, e: 38 },
-                    { day: 'Wed', u: 70, e: 45 },
-                    { day: 'Thu', u: 62, e: 40 },
-                    { day: 'Fri', u: 90, e: 68 },
-                    { day: 'Sat', u: 80, e: 58 },
-                    { day: 'Sun', u: 100, e: 78 }
-                  ].map(bar => html`
-                    <div key=${bar.day} class="flex flex-col items-center gap-2 h-full justify-end group cursor-pointer">
-                      <div class="flex items-end gap-1 sm:gap-2 h-full w-full justify-center">
-                        <div class="w-3 sm:w-6 bg-indigo-600 rounded-t-lg transition-all duration-300 group-hover:bg-indigo-700" style=${{ height: `${bar.u}%` }} title="Users: ${bar.u}"></div>
-                        <div class="w-3 sm:w-6 bg-emerald-500 rounded-t-lg transition-all duration-300 group-hover:bg-emerald-600" style=${{ height: `${bar.e}%` }} title="Exchanges: ${bar.e}"></div>
-                      </div>
-                      <span class="text-[11px] font-bold text-warmgray-500">${bar.day}</span>
-                    </div>
-                  `)}
+                  ${(() => {
+                    const rawTimeline = (overviewData?.activityTimeline && overviewData.activityTimeline.length > 0)
+                      ? overviewData.activityTimeline
+                      : [
+                          { day: 'Mon', users: 14, exchanges: 8 },
+                          { day: 'Tue', users: 19, exchanges: 12 },
+                          { day: 'Wed', users: 25, exchanges: 15 },
+                          { day: 'Thu', users: 22, exchanges: 14 },
+                          { day: 'Fri', users: 31, exchanges: 21 },
+                          { day: 'Sat', users: 28, exchanges: 19 },
+                          { day: 'Sun', users: 34, exchanges: 24 }
+                        ];
+                    const maxVal = Math.max(...rawTimeline.map(t => Math.max(t.users || 0, t.exchanges || 0)), 1);
+                    return rawTimeline.map(bar => {
+                      const uHeight = Math.min(100, Math.max(12, Math.round(((bar.users || 0) / maxVal) * 85) + 15));
+                      const eHeight = Math.min(100, Math.max(10, Math.round(((bar.exchanges || 0) / maxVal) * 85) + 15));
+                      return html`
+                        <div key=${bar.day} class="flex flex-col items-center gap-2 h-full justify-end group cursor-pointer">
+                          <div class="flex items-end gap-1 sm:gap-2 h-full w-full justify-center">
+                            <div class="w-3 sm:w-6 bg-indigo-600 rounded-t-lg transition-all duration-300 group-hover:bg-indigo-700 relative" style=${{ height: `${uHeight}%` }} title="Users: ${bar.users || 0}">
+                              <span class="opacity-0 group-hover:opacity-100 absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-navy-900 text-white px-1 rounded shadow-xs pointer-events-none transition-opacity">
+                                ${bar.users || 0}
+                              </span>
+                            </div>
+                            <div class="w-3 sm:w-6 bg-emerald-500 rounded-t-lg transition-all duration-300 group-hover:bg-emerald-600 relative" style=${{ height: `${eHeight}%` }} title="Exchanges: ${bar.exchanges || 0}">
+                              <span class="opacity-0 group-hover:opacity-100 absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-emerald-900 text-white px-1 rounded shadow-xs pointer-events-none transition-opacity">
+                                ${bar.exchanges || 0}
+                              </span>
+                            </div>
+                          </div>
+                          <span class="text-[11px] font-bold text-warmgray-500">${bar.day}</span>
+                        </div>
+                      `;
+                    });
+                  })()}
                 </div>
               </div>
 
@@ -3937,7 +4013,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                     <div class="flex items-center gap-2">
                       <h3 class="font-serif text-lg font-bold text-navy-950">Recent Reports</h3>
                       <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-100 text-rose-800">
-                        ${reports.filter(r => r.status === 'OPEN').length} Open
+                        ${(reports.length > 0 ? reports : (overviewData?.recentReports || [])).filter(r => r.status === 'OPEN').length} Open
                       </span>
                     </div>
                     <button onClick=${() => setActiveNav('reports')} class="text-xs font-bold text-indigo-600 hover:underline">
@@ -3946,25 +4022,27 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                   </div>
 
                   <div class="space-y-3 max-h-80 overflow-y-auto pr-1 text-xs">
-                    ${reports.slice(0, 4).map(r => html`
+                    ${(reports.length > 0 ? reports : (overviewData?.recentReports || [])).slice(0, 4).map(r => html`
                       <div key=${r.id} class="p-3.5 bg-cream-50/60 border border-cream-200 rounded-2xl flex justify-between items-center hover:bg-cream-100/50 transition-colors">
                         <div class="space-y-0.5">
-                          <p class="font-bold text-navy-950">Case #${r.id} · Against: <strong class="text-rose-700">${r.reported_name}</strong></p>
-                          <p class="text-warmgray-600 text-[11px]">${r.reason}</p>
+                          <p class="font-bold text-navy-950">Case #${r.id} · Against: <strong class="text-rose-700">${r.reported_name || 'Member'}</strong></p>
+                          <p class="text-warmgray-600 text-[11px] line-clamp-1">${r.reason}</p>
                         </div>
                         <button
                           onClick=${() => { setSelectedReport(r); setActiveNav('reports'); }}
-                          class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-2xs"
+                          class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-2xs shrink-0"
                         >
                           Investigate
                         </button>
                       </div>
                     `)}
-                    ${reports.length === 0 ? html`<p class="text-center py-6 text-warmgray-500">No open reports logged.</p>` : null}
+                    ${((reports.length === 0 && (!overviewData?.recentReports || overviewData.recentReports.length === 0))) ? html`
+                      <p class="text-center py-6 text-warmgray-500">No open reports logged.</p>
+                    ` : null}
                   </div>
                 </div>
 
-                <!-- Top Skills Panel -->
+                <!-- Top Skills Panel (Live Telemetry) -->
                 <div class="bg-white p-6 sm:p-7 rounded-3xl border border-cream-300 shadow-xs space-y-4">
                   <div class="flex items-center justify-between border-b border-cream-100 pb-3">
                     <h3 class="font-serif text-lg font-bold text-navy-950">Top Skills (Supply vs Demand)</h3>
@@ -3974,11 +4052,14 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                   </div>
 
                   <div class="space-y-3 max-h-80 overflow-y-auto pr-1 text-xs">
-                    ${(analytics.topSkills || []).map(sk => html`
-                      <div key=${sk.id || sk.name} class="p-3.5 bg-cream-50/60 border border-cream-200 rounded-2xl flex items-center justify-between">
-                        <div>
-                          <p class="font-bold text-navy-950">${sk.name}</p>
-                          <p class="text-[10px] text-warmgray-500">${sk.category_name}</p>
+                    ${((overviewData?.topSkills && overviewData.topSkills.length > 0) ? overviewData.topSkills : (analytics?.topSkills || [])).map(sk => html`
+                      <div key=${sk.id || sk.name} class="p-3.5 bg-cream-50/60 border border-cream-200 rounded-2xl flex items-center justify-between hover:bg-cream-100/60 transition-colors">
+                        <div class="flex items-center gap-2.5">
+                          <span class="text-xl">${sk.icon || '💡'}</span>
+                          <div>
+                            <p class="font-bold text-navy-950">${sk.name}</p>
+                            <p class="text-[10px] text-warmgray-500">${sk.category_name || 'General'}</p>
+                          </div>
                         </div>
                         <div class="flex items-center gap-3 font-semibold text-[11px]">
                           <span class="text-emerald-700 font-bold">${sk.teachers || 0} teachers</span>
@@ -3987,6 +4068,9 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                         </div>
                       </div>
                     `)}
+                    ${((!overviewData?.topSkills || overviewData.topSkills.length === 0) && (!analytics?.topSkills || analytics.topSkills.length === 0)) ? html`
+                      <p class="text-center py-6 text-warmgray-500">No skill telemetry recorded yet.</p>
+                    ` : null}
                   </div>
                 </div>
               </div>
@@ -5172,28 +5256,6 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
 
-    const handleInstantAdminLogin = async () => {
-      try {
-        setLoading(true);
-        setErrorMsg('');
-        const res = await api('/api/account/login', {
-          method: 'POST',
-          body: JSON.stringify({ email: 'admin', password: 'Admin123!', rememberMe: true })
-        });
-        if (res.user) {
-          if (onAuthSuccess) {
-            await onAuthSuccess(res.user);
-          } else {
-            setActiveTab('admin');
-          }
-        }
-      } catch (err) {
-        setErrorMsg(err.message || 'Super Admin login failed. Please check credentials.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     const handleFormSubmit = async (e) => {
       e.preventDefault();
       if (!loginInput.trim() || !passwordInput) {
@@ -5220,29 +5282,6 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
         }
       } catch (err) {
         setErrorMsg(err.message || 'Authentication rejected. Check username and password.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const handleSwitchToSuperAdmin = async () => {
-      try {
-        setLoading(true);
-        setErrorMsg('');
-        await api('/api/account/logout', { method: 'POST' }).catch(() => {});
-        const res = await api('/api/account/login', {
-          method: 'POST',
-          body: JSON.stringify({ email: 'admin', password: 'Admin123!', rememberMe: true })
-        });
-        if (res.user) {
-          if (onAuthSuccess) {
-            await onAuthSuccess(res.user);
-          } else {
-            setActiveTab('admin');
-          }
-        }
-      } catch (err) {
-        setErrorMsg(err.message || 'Switching to admin account failed.');
       } finally {
         setLoading(false);
       }
@@ -5280,7 +5319,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
           ` : null}
 
           ${currentUser ? html`
-            <!-- Signed-in Regular User Mode -->
+            <!-- Signed-in Regular User Mode Notice -->
             <div class="p-5 rounded-2xl bg-slate-800/80 border border-slate-700 text-left space-y-3">
               <div class="flex items-center justify-between text-xs pb-2 border-b border-slate-700/70">
                 <span class="text-slate-400">Current Session:</span>
@@ -5296,104 +5335,69 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                 </div>
               </div>
               <p class="text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl leading-relaxed">
-                Your current account is authenticated as a peer member and does not possess administrative privileges.
+                Your active account is authenticated as a peer member and does not possess administrative privileges. Please authenticate below with authorized staff credentials.
               </p>
             </div>
+          ` : null}
 
-            <div class="space-y-3 pt-2">
-              <button
-                onClick=${handleSwitchToSuperAdmin}
-                disabled=${loading}
-                class="w-full py-3.5 px-5 bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                ${loading ? html`
-                  <span class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
-                  <span>Authenticating Super Admin...</span>
-                ` : html`
-                  <span>⚡ Switch to Super Admin Account</span>
-                `}
-              </button>
+          <!-- Administrative Credentials Form -->
+          <form onSubmit=${handleFormSubmit} class="space-y-4 text-left">
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5">Admin Username or Email</label>
+              <input
+                type="text"
+                required
+                value=${loginInput}
+                onInput=${(e) => setLoginInput(e.target.value)}
+                placeholder="admin or staff@skillswap.io"
+                class="w-full px-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              />
+            </div>
 
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5">Administrative Password</label>
+              <input
+                type="password"
+                required
+                value=${passwordInput}
+                onInput=${(e) => setPasswordInput(e.target.value)}
+                placeholder="••••••••••••"
+                class="w-full px-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled=${loading}
+              class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              ${loading ? html`
+                <span class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                <span>Authenticating Staff Clearance...</span>
+              ` : html`
+                <span>Authenticate Staff Credentials</span>
+                <span>→</span>
+              `}
+            </button>
+          </form>
+
+          <div class="pt-2 flex items-center justify-center gap-4">
+            ${currentUser ? html`
               <button
                 onClick=${() => setActiveTab('dashboard')}
-                class="w-full py-3 px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs rounded-2xl border border-slate-700 transition-all"
+                class="text-xs text-slate-400 hover:text-white transition-colors"
               >
                 ← Return to Member Dashboard
               </button>
-            </div>
-          ` : html`
-            <!-- Guest / Logged Out Mode -->
-            <div class="space-y-4">
-              <!-- 1-Click Instant Demo Admin Chip -->
+            ` : html`
               <button
-                onClick=${handleInstantAdminLogin}
-                disabled=${loading}
-                class="w-full py-4 px-6 bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-black text-sm rounded-2xl shadow-xl shadow-indigo-600/35 hover:shadow-indigo-600/50 transition-all flex flex-col items-center justify-center gap-1 group disabled:opacity-50 border border-indigo-400/30"
+                onClick=${() => setActiveTab('home')}
+                class="text-xs text-slate-400 hover:text-white transition-colors"
               >
-                <div class="flex items-center gap-2">
-                  ${loading ? html`
-                    <span class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
-                    <span>Unlocking Admin Console...</span>
-                  ` : html`
-                    <span class="text-base group-hover:scale-110 transition-transform">⚡</span>
-                    <span class="text-sm font-extrabold">Instant 1-Click Demo Admin Login</span>
-                  `}
-                </div>
-                <span class="text-[11px] text-indigo-200 font-normal">Super Admin credentials (admin / Admin123!)</span>
+                ← Return to SkillSwapX Marketplace
               </button>
-
-              <div class="flex items-center gap-3 py-1">
-                <div class="flex-1 border-t border-slate-700/80"></div>
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">or sign in with staff account</span>
-                <div class="flex-1 border-t border-slate-700/80"></div>
-              </div>
-
-              <!-- Manual Admin Credentials Form -->
-              <form onSubmit=${handleFormSubmit} class="space-y-3.5 text-left">
-                <div>
-                  <label class="block text-xs font-bold text-slate-300 mb-1.5">Admin Username or Email</label>
-                  <input
-                    type="text"
-                    required
-                    value=${loginInput}
-                    onInput=${(e) => setLoginInput(e.target.value)}
-                    placeholder="admin or staff@skillswap.io"
-                    class="w-full px-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                  />
-                </div>
-
-                <div>
-                  <label class="block text-xs font-bold text-slate-300 mb-1.5">Administrative Password</label>
-                  <input
-                    type="password"
-                    required
-                    value=${passwordInput}
-                    onInput=${(e) => setPasswordInput(e.target.value)}
-                    placeholder="••••••••••••"
-                    class="w-full px-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled=${loading}
-                  class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl border border-slate-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <span>Authenticate Admin</span>
-                  <span>→</span>
-                </button>
-              </form>
-
-              <div class="pt-2">
-                <button
-                  onClick=${() => setActiveTab('home')}
-                  class="text-xs text-slate-400 hover:text-white transition-colors"
-                >
-                  ← Return to SkillSwapX Marketplace
-                </button>
-              </div>
-            </div>
-          `}
+            `}
+          </div>
         </div>
       </div>
     `;

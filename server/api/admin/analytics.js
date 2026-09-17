@@ -22,9 +22,9 @@ export default async function (req, res) {
     // 2. Supply vs Demand Imbalance Matrix (Top 10 skills)
     const { rows: skillMatrix } = await db.query(
       `SELECT s.id, s.name, c.name as category_name,
-              COUNT(us.id) FILTER (WHERE us.type = 'TEACH')::int as teachers,
-              COUNT(us.id) FILTER (WHERE us.type = 'LEARN')::int as learners,
-              (COUNT(us.id) FILTER (WHERE us.type = 'LEARN') - COUNT(us.id) FILTER (WHERE us.type = 'TEACH')) as gap
+              SUM(CASE WHEN us.type = 'TEACH' THEN 1 ELSE 0 END)::int as teachers,
+              SUM(CASE WHEN us.type = 'LEARN' THEN 1 ELSE 0 END)::int as learners,
+              (SUM(CASE WHEN us.type = 'LEARN' THEN 1 ELSE 0 END) - SUM(CASE WHEN us.type = 'TEACH' THEN 1 ELSE 0 END)) as gap
        FROM skills s
        JOIN categories c ON s.category_id = c.id
        LEFT JOIN user_skills us ON s.id = us.skill_id

@@ -17,9 +17,9 @@ export default async function (req, res) {
     );
 
     const { rows: skills } = await db.query(
-      `SELECT s.*, c.name as category_name, c.icon as category_icon,
-              COUNT(us.id) FILTER (WHERE us.type = 'TEACH')::int as teachers_count,
-              COUNT(us.id) FILTER (WHERE us.type = 'LEARN')::int as learners_count,
+       `SELECT s.*, c.name as category_name, c.icon as category_icon,
+              SUM(CASE WHEN us.type = 'TEACH' THEN 1 ELSE 0 END)::int as teachers_count,
+              SUM(CASE WHEN us.type = 'LEARN' THEN 1 ELSE 0 END)::int as learners_count,
               COUNT(DISTINCT us.user_id)::int as total_members
        FROM skills s
        JOIN categories c ON s.category_id = c.id

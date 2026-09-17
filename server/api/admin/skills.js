@@ -17,11 +17,11 @@ export default async function (req, res) {
                 COALESCE(s.is_disabled, false) as is_disabled,
                 s.created_at,
                 c.name as category_name,
-                COUNT(us.id) FILTER (WHERE us.type = 'TEACH')::int as teacher_count,
-                COUNT(us.id) FILTER (WHERE us.type = 'LEARN')::int as learner_count,
+                SUM(CASE WHEN us.type = 'TEACH' THEN 1 ELSE 0 END)::int as teacher_count,
+                SUM(CASE WHEN us.type = 'LEARN' THEN 1 ELSE 0 END)::int as learner_count,
                 CASE 
-                  WHEN COUNT(us.id) FILTER (WHERE us.type = 'LEARN') > COUNT(us.id) FILTER (WHERE us.type = 'TEACH') THEN 'High Demand'
-                  WHEN COUNT(us.id) FILTER (WHERE us.type = 'TEACH') > COUNT(us.id) FILTER (WHERE us.type = 'LEARN') THEN 'High Supply'
+                  WHEN SUM(CASE WHEN us.type = 'LEARN' THEN 1 ELSE 0 END) > SUM(CASE WHEN us.type = 'TEACH' THEN 1 ELSE 0 END) THEN 'High Demand'
+                  WHEN SUM(CASE WHEN us.type = 'TEACH' THEN 1 ELSE 0 END) > SUM(CASE WHEN us.type = 'LEARN' THEN 1 ELSE 0 END) THEN 'High Supply'
                   ELSE 'Balanced'
                 END as demand_level
          FROM skills s

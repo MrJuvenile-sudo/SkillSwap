@@ -82,7 +82,7 @@ export default async function (req, res) {
     const { rows: workspaceStats } = await db.query(
       `SELECT 
          COUNT(DISTINCT c.id)::int as total_connections,
-         COUNT(DISTINCT w.id) FILTER (WHERE w.status = 'COMPLETED')::int as completed_workspaces
+         COUNT(DISTINCT CASE WHEN w.status = 'COMPLETED' THEN w.id ELSE NULL END)::int as completed_workspaces
        FROM connections c
        LEFT JOIN exchange_workspaces w ON w.connection_id = c.id
        WHERE (c.user1_id = $1 OR c.user2_id = $1)`,

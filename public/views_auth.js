@@ -959,19 +959,6 @@
       }
     };
 
-    const demoAccounts = [
-      { label: 'Super Admin', id: 'admin', pass: 'Admin123!', role: 'SUPER_ADMIN', icon: '🛡️', desc: 'Full Console & Moderation' },
-      { label: 'Shubhank (JEC)', id: 'shubhank', pass: 'Admin123!', role: 'Creator', icon: '🎓', desc: 'MCA Full-Stack Dev' },
-      { label: 'Anushka (JEC)', id: 'anushka', pass: 'Admin123!', role: 'Creator', icon: '🎨', desc: 'MCA UI/UX Lead' },
-      { label: 'Priya (Bengaluru)', id: 'priya_architect', pass: 'Admin123!', role: 'Mentor', icon: '☁️', desc: 'Cloud Architect' }
-    ];
-
-    const fillAndLogin = (acc) => {
-      setIdentifier(acc.id);
-      setPassword(acc.pass);
-      handleLogin(null, acc.id, acc.pass);
-    };
-
     return html`
       <div class="max-w-md mx-auto my-14 px-4 text-left animate-fadeIn relative">
         <!-- Ambient Glowing Backdrop Aura -->
@@ -988,45 +975,7 @@
               </span>
             </div>
             <h2 class="font-serif text-2xl font-bold text-navy-950 mt-2">Welcome to SkillSwapX</h2>
-            <p class="text-xs text-warmgray-500 font-medium">Sign in with your verified ID or 1-click demo accounts</p>
-          </div>
-
-          <!-- ⚡ 1-Click Quick Demo Sign-In Panel -->
-          <div class="p-4 bg-gradient-to-br from-navy-50/90 via-cream-50/70 to-indigo-50/40 rounded-2xl border border-navy-100 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <span class="text-[11px] font-black uppercase tracking-wider text-navy-900 flex items-center gap-1.5">
-                <span class="text-amber-500">⚡</span>
-                <span>Instant 1-Click Demo Logins</span>
-              </span>
-              <span class="text-[9.5px] font-bold text-navy-700 bg-white px-2 py-0.5 rounded-full border border-navy-100 shadow-2xs">
-                Password: Admin123!
-              </span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 pt-1">
-              ${demoAccounts.map(acc => html`
-                <button
-                  type="button"
-                  key=${acc.id}
-                  onClick=${() => fillAndLogin(acc)}
-                  disabled=${loading}
-                  class="p-2.5 bg-white hover:bg-navy-50/80 border border-cream-200 hover:border-navy-300 rounded-xl text-left transition-all duration-150 shadow-2xs hover:shadow-xs group flex flex-col justify-between"
-                  title="Click to auto-fill & login as ${acc.label}"
-                >
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-base">${acc.icon}</span>
-                    <span class="font-bold text-navy-950 text-xs truncate group-hover:text-navy-700">${acc.label}</span>
-                  </div>
-                  <span class="text-[10px] text-warmgray-500 mt-1 truncate">${acc.desc}</span>
-                </button>
-              `)}
-            </div>
-          </div>
-
-          <div class="relative flex py-1 items-center">
-            <div class="flex-grow border-t border-cream-200"></div>
-            <span class="flex-shrink mx-3 text-[10px] uppercase font-bold text-warmgray-400">or sign in with credentials</span>
-            <div class="flex-grow border-t border-cream-200"></div>
+            <p class="text-xs text-warmgray-500 font-medium">Sign in with your verified account credentials</p>
           </div>
 
           ${error ? html`<div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold animate-fadeIn">${error}</div>` : null}

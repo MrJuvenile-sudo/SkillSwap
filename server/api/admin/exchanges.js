@@ -62,10 +62,10 @@ export default async function (req, res) {
       const { rows: requestStats } = await db.query(
         `SELECT 
            COUNT(*)::int as total_requests,
-           COUNT(*) FILTER (WHERE date(created_at) = date('now'))::int as requests_today,
-           COUNT(*) FILTER (WHERE status = 'ACCEPTED')::int as accepted_requests,
-           COUNT(*) FILTER (WHERE status = 'PENDING')::int as pending_requests,
-           COUNT(*) FILTER (WHERE status = 'REJECTED')::int as declined_requests
+           SUM(CASE WHEN date(created_at) = date('now') THEN 1 ELSE 0 END)::int as requests_today,
+           SUM(CASE WHEN status = 'ACCEPTED' THEN 1 ELSE 0 END)::int as accepted_requests,
+           SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END)::int as pending_requests,
+           SUM(CASE WHEN status = 'REJECTED' THEN 1 ELSE 0 END)::int as declined_requests
          FROM requests`
       );
 
