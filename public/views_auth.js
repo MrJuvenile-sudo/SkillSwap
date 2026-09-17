@@ -249,7 +249,129 @@
             </div>
             <div class="flex items-center gap-2">
               <span class="font-extrabold text-navy-900 text-lg sm:text-xl font-serif">$0</span> Cost Forever
+            </div>
+          </div>
 
+          <!-- Hero Graphical Visualization: Live Reciprocal Exchange Animation -->
+          <div class="pt-10 max-w-4xl mx-auto relative">
+            <div class="relative bg-gradient-to-b from-white/90 to-cream-50/90 rounded-3xl p-6 sm:p-8 border border-cream-300 shadow-2xl backdrop-blur-xl overflow-hidden text-left">
+              <!-- Glow Aura -->
+              <div class="absolute -top-24 -right-24 w-72 h-72 bg-navy-600/10 rounded-full blur-3xl pointer-events-none"></div>
+              <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+              <!-- Top Bar -->
+              <div class="flex items-center justify-between border-b border-cream-200/80 pb-4 mb-6">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+                  <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                  <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+                  <span class="ml-2 text-xs font-extrabold uppercase tracking-wider text-navy-900">Live Reciprocal Exchange Simulation</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="flex h-2 w-2 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    Live Mutual Synergy: 98%
+                  </span>
+                </div>
+              </div>
+
+              <!-- 2-Way Exchange Graphic Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-11 items-center gap-4 relative">
+                <!-- Peer 1 Card -->
+                <div class="md:col-span-4 bg-white p-5 rounded-2xl border border-cream-300 shadow-sm space-y-3 card-hover-lift">
+                  <div class="flex items-center gap-3">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=shubhank" class="w-12 h-12 rounded-2xl p-1 bg-navy-50 border border-navy-200 shadow-xs" />
+                    <div>
+                      <h4 class="font-bold text-navy-950 text-sm flex items-center gap-1">
+                        Shubhank Parihar
+                        <span class="text-navy-600 text-xs font-black" title="Verified Creator">✓</span>
+                      </h4>
+                      <p class="text-[11px] text-warmgray-500">MCA Final Year • JEC Jabalpur</p>
+                      <p class="text-[10px] text-sky-700 font-semibold">📍 Jabalpur, MP (IST)</p>
+                    </div>
+                  </div>
+                  <div class="space-y-1.5 pt-1 text-xs">
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-emerald-50/80 border border-emerald-200/80">
+                      <span class="text-[10px] font-bold uppercase text-emerald-800">Teaching:</span>
+                      <span class="font-extrabold text-emerald-900">React & Node.js</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-sky-50/80 border border-sky-200/80">
+                      <span class="text-[10px] font-bold uppercase text-sky-800">Learning:</span>
+                      <span class="font-extrabold text-sky-900">AI & PyTorch</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Animated SVG Data Beam Flow (Middle) -->
+                <div class="md:col-span-3 flex flex-col items-center justify-center py-2 text-center space-y-2">
+                  <div class="w-full relative flex items-center justify-center">
+                    <svg class="w-full h-14 overflow-visible" viewBox="0 0 160 40">
+                      <!-- Base Line -->
+                      <line x1="10" y1="20" x2="150" y2="20" stroke="#CBD5E1" stroke-width="2" stroke-dasharray="4 4" />
+                      <!-- Animated Energy Flow Line -->
+                      <line x1="10" y1="20" x2="150" y2="20" stroke="#0066EE" stroke-width="2.5" class="animate-beam" />
+                      <!-- Left Arrow Pulse -->
+                      <circle cx="30" cy="20" r="4" fill="#0066EE" class="animate-pulse" />
+                      <!-- Right Arrow Pulse -->
+                      <circle cx="130" cy="20" r="4" fill="#10B981" class="animate-pulse" />
+                    </svg>
+                    <!-- Floating Center Synergy Pill -->
+                    <div class="absolute px-3 py-1 bg-navy-900 text-white rounded-full text-[10px] font-black shadow-lg border border-navy-700 flex items-center gap-1.5 animate-pulse-glow">
+                      <span>⚡</span>
+                      <span>Zero-Cost Barter</span>
+                    </div>
+                  </div>
+                  <span class="text-[10px] text-warmgray-500 font-bold uppercase tracking-wider">
+                    Mutual 1:1 Co-Mentorship
+                  </span>
+                </div>
+
+                <!-- Peer 2 Card -->
+                <div class="md:col-span-4 bg-white p-5 rounded-2xl border border-cream-300 shadow-sm space-y-3 card-hover-lift">
+                  <div class="flex items-center gap-3">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=priya_architect" class="w-12 h-12 rounded-2xl p-1 bg-navy-50 border border-navy-200 shadow-xs" />
+                    <div>
+                      <h4 class="font-bold text-navy-950 text-sm flex items-center gap-1">
+                        Priya Sharma
+                        <span class="text-navy-600 text-xs font-black" title="Verified Practitioner">✓</span>
+                      </h4>
+                      <p class="text-[11px] text-warmgray-500">Senior Cloud Architect</p>
+                      <p class="text-[10px] text-sky-700 font-semibold">📍 Bengaluru, Karnataka (IST)</p>
+                    </div>
+                  </div>
+                  <div class="space-y-1.5 pt-1 text-xs">
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-emerald-50/80 border border-emerald-200/80">
+                      <span class="text-[10px] font-bold uppercase text-emerald-800">Teaching:</span>
+                      <span class="font-extrabold text-emerald-900">AI & PyTorch</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-sky-50/80 border border-sky-200/80">
+                      <span class="text-[10px] font-bold uppercase text-sky-800">Learning:</span>
+                      <span class="font-extrabold text-sky-900">React & Node.js</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Interactive Collaboration Highlights Footer -->
+              <div class="mt-6 pt-4 border-t border-cream-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2.5 py-1 rounded-lg bg-cream-100 text-navy-900 text-[11px] font-bold border border-cream-300">
+                    📹 Real-time Classroom & Audio
+                  </span>
+                  <span class="px-2.5 py-1 rounded-lg bg-cream-100 text-navy-900 text-[11px] font-bold border border-cream-300">
+                    📝 Real-time Notes & Scratchpad
+                  </span>
+                  <span class="px-2.5 py-1 rounded-lg bg-cream-100 text-navy-900 text-[11px] font-bold border border-cream-300">
+                    💻 Live Multi-Lang Code Sandbox
+                  </span>
+                </div>
+                <button onClick=${() => setActiveTab('signup')} class="text-xs font-extrabold text-navy-700 hover:text-navy-900 hover:underline flex items-center gap-1">
+                  Experience Live Synergy →
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -702,30 +824,40 @@
     };
 
     return html`
-      <div class="max-w-md mx-auto my-16 px-4 text-left animate-fadeIn">
-        <div class="bg-white rounded-3xl p-8 border border-cream-300 shadow-xl space-y-6">
+      <div class="max-w-md mx-auto my-14 px-4 text-left animate-fadeIn relative">
+        <!-- Ambient Glowing Backdrop Aura -->
+        <div class="absolute -top-12 -right-12 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-12 -left-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="bg-white/95 rounded-3xl p-8 border border-cream-300 shadow-2xl backdrop-blur-xl space-y-6 relative">
           <div class="space-y-2 text-center">
-            <img src="/logo-icon.png" alt="SkillSwapX Logo" class="w-13 h-13 rounded-2xl object-contain mx-auto shadow-sm bg-white p-1 border border-cream-200" />
-            <h2 class="font-serif text-2xl font-bold text-navy-950 mt-3">Create your account</h2>
-            <p class="text-xs text-warmgray-500">Join verified peer mentors exchanging skills</p>
+            <div class="relative inline-block">
+              <img src="/logo-icon.png" alt="SkillSwapX Logo" class="w-14 h-14 rounded-2xl object-contain mx-auto shadow-md bg-white p-1 border border-cream-200 animate-float-slow" />
+              <span class="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+              </span>
+            </div>
+            <h2 class="font-serif text-2xl font-bold text-navy-950 mt-2">Create your account</h2>
+            <p class="text-xs text-warmgray-500 font-medium">Join verified peer practitioners exchanging skills across India</p>
           </div>
 
-          ${error ? html`<div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold">${error}</div>` : null}
+          ${error ? html`<div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold animate-fadeIn">${error}</div>` : null}
 
           <form onSubmit=${handleSignup} class="space-y-4 text-xs">
             <div>
               <label class="block font-bold text-navy-950 mb-1">Full Name</label>
-              <input required type="text" value=${name} onInput=${e => setName(e.target.value)} class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
+              <input required type="text" value=${name} onInput=${e => setName(e.target.value)} placeholder="e.g. Rahul Sharma" class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold transition-colors" />
             </div>
 
             <div>
               <label class="block font-bold text-navy-950 mb-1">Username</label>
-              <input required type="text" value=${username} onInput=${e => setUsername(e.target.value)} class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
+              <input required type="text" value=${username} onInput=${e => setUsername(e.target.value)} placeholder="e.g. rahul_dev" class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold transition-colors" />
             </div>
 
             <div>
               <label class="block font-bold text-navy-950 mb-1">Email Address</label>
-              <input required type="email" value=${email} onInput=${e => setEmail(e.target.value)} class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
+              <input required type="email" value=${email} onInput=${e => setEmail(e.target.value)} placeholder="e.g. rahul@example.com" class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold transition-colors" />
             </div>
 
             <div>
@@ -736,7 +868,8 @@
                   type=${showPassword ? "text" : "password"}
                   value=${password}
                   onInput=${e => setPassword(e.target.value)}
-                  class="w-full pr-11 px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold"
+                  placeholder="Min 8 chars, Capital start, 1 symbol"
+                  class="w-full pr-11 px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold transition-colors"
                 />
                 <button
                   type="button"
@@ -749,33 +882,36 @@
               </div>
 
               <!-- Password Policy Real-time Requirements Indicator -->
-              <div class="mt-2.5 p-3 bg-cream-50/80 rounded-xl border border-cream-200/80 space-y-1.5 text-[11px]">
+              <div class="mt-2.5 p-3 bg-cream-50/90 rounded-xl border border-cream-200/80 space-y-1.5 text-[11px]">
                 <div class="flex items-center gap-2 ${rules.hasLength ? 'text-emerald-700 font-bold' : 'text-warmgray-500'}">
-                  <span>${rules.hasLength ? '✓' : '○'}</span>
+                  <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${rules.hasLength ? 'bg-emerald-100 text-emerald-800 font-black' : 'bg-cream-200 text-warmgray-500'}">${rules.hasLength ? '✓' : '○'}</span>
                   <span>Minimum 8 characters length</span>
                 </div>
                 <div class="flex items-center gap-2 ${rules.hasCapStart ? 'text-emerald-700 font-bold' : 'text-warmgray-500'}">
-                  <span>${rules.hasCapStart ? '✓' : '○'}</span>
+                  <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${rules.hasCapStart ? 'bg-emerald-100 text-emerald-800 font-black' : 'bg-cream-200 text-warmgray-500'}">${rules.hasCapStart ? '✓' : '○'}</span>
                   <span>First letter must be Capital (A-Z)</span>
                 </div>
                 <div class="flex items-center gap-2 ${rules.hasSymbol ? 'text-emerald-700 font-bold' : 'text-warmgray-500'}">
-                  <span>${rules.hasSymbol ? '✓' : '○'}</span>
+                  <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${rules.hasSymbol ? 'bg-emerald-100 text-emerald-800 font-black' : 'bg-cream-200 text-warmgray-500'}">${rules.hasSymbol ? '✓' : '○'}</span>
                   <span>Must include at least 1 symbol (!@#$%...)</span>
                 </div>
               </div>
             </div>
 
             <div>
-              <label class="block font-bold text-navy-950 mb-1">Professional Headline</label>
-              <input type="text" value=${headline} onInput=${e => setHeadline(e.target.value)} class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold" />
+              <label class="block font-bold text-navy-950 mb-1">Headline / Tech Interest</label>
+              <input type="text" value=${headline} onInput=${e => setHeadline(e.target.value)} placeholder="e.g. Student at JEC / Frontend Learner" class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold transition-colors" />
             </div>
 
-            <button type="submit" disabled=${loading || (password.length > 0 && !isPasswordValid)} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 disabled:opacity-60 text-white font-bold rounded-xl shadow-lg transition-all duration-200 text-sm mt-2">
-              ${loading ? 'Creating Account...' : 'Complete & Launch Onboarding →'}
+            <button type="submit" disabled=${loading || (password.length > 0 && !isPasswordValid)} class="w-full py-3.5 bg-gradient-to-r from-navy-700 to-navy-800 hover:from-navy-800 hover:to-navy-900 disabled:opacity-50 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-sm mt-2 flex items-center justify-center gap-2">
+              ${loading ? html`
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span>Creating Account...</span>
+              ` : 'Complete & Launch Onboarding →'}
             </button>
           </form>
 
-          <div class="text-center pt-4 border-t border-cream-200 text-xs text-warmgray-600">
+          <div class="text-center pt-3 border-t border-cream-200 text-xs text-warmgray-600">
             Already have an account? <button onClick=${() => setActiveTab('login')} class="font-bold text-navy-700 hover:underline">Log in</button>
           </div>
         </div>
@@ -823,16 +959,77 @@
       }
     };
 
+    const demoAccounts = [
+      { label: 'Super Admin', id: 'admin', pass: 'Admin123!', role: 'SUPER_ADMIN', icon: '🛡️', desc: 'Full Console & Moderation' },
+      { label: 'Shubhank (JEC)', id: 'shubhank', pass: 'Admin123!', role: 'Creator', icon: '🎓', desc: 'MCA Full-Stack Dev' },
+      { label: 'Anushka (JEC)', id: 'anushka', pass: 'Admin123!', role: 'Creator', icon: '🎨', desc: 'MCA UI/UX Lead' },
+      { label: 'Priya (Bengaluru)', id: 'priya_architect', pass: 'Admin123!', role: 'Mentor', icon: '☁️', desc: 'Cloud Architect' }
+    ];
+
+    const fillAndLogin = (acc) => {
+      setIdentifier(acc.id);
+      setPassword(acc.pass);
+      handleLogin(null, acc.id, acc.pass);
+    };
+
     return html`
-      <div class="max-w-md mx-auto my-16 px-4 text-left animate-fadeIn">
-        <div class="bg-white rounded-3xl p-8 border border-cream-300 shadow-xl space-y-6">
+      <div class="max-w-md mx-auto my-14 px-4 text-left animate-fadeIn relative">
+        <!-- Ambient Glowing Backdrop Aura -->
+        <div class="absolute -top-12 -left-12 w-64 h-64 bg-navy-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-12 -right-12 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="bg-white/95 rounded-3xl p-8 border border-cream-300 shadow-2xl backdrop-blur-xl space-y-6 relative">
           <div class="space-y-2 text-center">
-            <img src="/logo-icon.png" alt="SkillSwapX Logo" class="w-14 h-14 rounded-2xl object-contain mx-auto shadow-sm bg-white p-1 border border-cream-200" />
-            <h2 class="font-serif text-2xl font-bold text-navy-950 mt-3">Welcome Back</h2>
-            <p class="text-xs text-warmgray-500">Sign in to your SkillSwapX account</p>
+            <div class="relative inline-block">
+              <img src="/logo-icon.png" alt="SkillSwapX Logo" class="w-14 h-14 rounded-2xl object-contain mx-auto shadow-md bg-white p-1 border border-cream-200 animate-float-slow" />
+              <span class="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+              </span>
+            </div>
+            <h2 class="font-serif text-2xl font-bold text-navy-950 mt-2">Welcome to SkillSwapX</h2>
+            <p class="text-xs text-warmgray-500 font-medium">Sign in with your verified ID or 1-click demo accounts</p>
           </div>
 
-          ${error ? html`<div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold">${error}</div>` : null}
+          <!-- ⚡ 1-Click Quick Demo Sign-In Panel -->
+          <div class="p-4 bg-gradient-to-br from-navy-50/90 via-cream-50/70 to-indigo-50/40 rounded-2xl border border-navy-100 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-black uppercase tracking-wider text-navy-900 flex items-center gap-1.5">
+                <span class="text-amber-500">⚡</span>
+                <span>Instant 1-Click Demo Logins</span>
+              </span>
+              <span class="text-[9.5px] font-bold text-navy-700 bg-white px-2 py-0.5 rounded-full border border-navy-100 shadow-2xs">
+                Password: Admin123!
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              ${demoAccounts.map(acc => html`
+                <button
+                  type="button"
+                  key=${acc.id}
+                  onClick=${() => fillAndLogin(acc)}
+                  disabled=${loading}
+                  class="p-2.5 bg-white hover:bg-navy-50/80 border border-cream-200 hover:border-navy-300 rounded-xl text-left transition-all duration-150 shadow-2xs hover:shadow-xs group flex flex-col justify-between"
+                  title="Click to auto-fill & login as ${acc.label}"
+                >
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-base">${acc.icon}</span>
+                    <span class="font-bold text-navy-950 text-xs truncate group-hover:text-navy-700">${acc.label}</span>
+                  </div>
+                  <span class="text-[10px] text-warmgray-500 mt-1 truncate">${acc.desc}</span>
+                </button>
+              `)}
+            </div>
+          </div>
+
+          <div class="relative flex py-1 items-center">
+            <div class="flex-grow border-t border-cream-200"></div>
+            <span class="flex-shrink mx-3 text-[10px] uppercase font-bold text-warmgray-400">or sign in with credentials</span>
+            <div class="flex-grow border-t border-cream-200"></div>
+          </div>
+
+          ${error ? html`<div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold animate-fadeIn">${error}</div>` : null}
 
           <form onSubmit=${handleLogin} class="space-y-4 text-xs">
             <div>
@@ -842,7 +1039,8 @@
                 type="text"
                 value=${identifier}
                 onInput=${e => setIdentifier(e.target.value)}
-                class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold"
+                placeholder="e.g. admin or shubhank"
+                class="w-full px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold transition-colors"
               />
             </div>
 
@@ -863,7 +1061,8 @@
                   type=${showPassword ? "text" : "password"}
                   value=${password}
                   onInput=${e => setPassword(e.target.value)}
-                  class="w-full pr-11 px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold"
+                  placeholder="••••••••"
+                  class="w-full pr-11 px-4 py-3 bg-cream-50/50 border border-cream-300 rounded-xl focus:outline-none focus:border-navy-600 focus:bg-white text-navy-900 text-xs font-semibold transition-colors"
                 />
                 <button
                   type="button"
@@ -876,12 +1075,15 @@
               </div>
             </div>
 
-            <button type="submit" disabled=${loading} class="w-full py-3.5 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-lg transition-all duration-200 text-sm">
-              ${loading ? 'Signing In...' : 'Sign In'}
+            <button type="submit" disabled=${loading} class="w-full py-3.5 bg-gradient-to-r from-navy-700 to-navy-800 hover:from-navy-800 hover:to-navy-900 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-sm flex items-center justify-center gap-2">
+              ${loading ? html`
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span>Authenticating...</span>
+              ` : 'Sign In to SkillSwapX →'}
             </button>
           </form>
 
-          <div class="text-center pt-4 border-t border-cream-200 text-xs text-warmgray-600">
+          <div class="text-center pt-3 border-t border-cream-200 text-xs text-warmgray-600">
             Don't have an account? <button onClick=${() => setActiveTab('signup')} class="font-bold text-navy-700 hover:underline">Sign up free</button>
           </div>
         </div>

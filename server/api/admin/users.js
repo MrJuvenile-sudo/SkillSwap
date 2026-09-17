@@ -45,15 +45,15 @@ export default async function (req, res) {
       return res.status(403).json({ error: 'Only Administrators can change user roles.' });
     }
 
-    // Single Admin Policy Enforcement: Only ONE admin account allowed on the platform
-    if (role && (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'MODERATOR' || role === 'SUPPORT')) {
-      const { rows: existingAdmins } = await db.query(
-        `SELECT id FROM app_users WHERE role IN ('SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT') AND id != $1`,
+    // Single Super Admin Policy Enforcement: Only ONE Super Admin account allowed on the platform
+    if (role === 'SUPER_ADMIN') {
+      const { rows: existingSuperAdmins } = await db.query(
+        `SELECT id FROM app_users WHERE role = 'SUPER_ADMIN' AND id != $1`,
         [userId]
       );
-      if (existingAdmins.length > 0) {
+      if (existingSuperAdmins.length > 0) {
         return res.status(400).json({
-          error: 'Platform Rule: Only ONE Admin account ("Super Admin") is permitted on SkillSwapX.'
+          error: 'Platform Rule: Only ONE Super Admin account is permitted on SkillSwapX.'
         });
       }
     }

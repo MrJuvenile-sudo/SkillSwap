@@ -185,7 +185,10 @@
               <button onClick=${() => setActiveTab('privacy')} class="hover:text-navy-800 transition-colors">Privacy</button>
               <button onClick=${() => setActiveTab('terms')} class="hover:text-navy-800 transition-colors">Terms of Service</button>
               <button onClick=${() => setActiveTab('guidelines')} class="hover:text-navy-800 transition-colors">Guidelines</button>
-
+              <button onClick=${() => setActiveTab('admin')} class="text-indigo-600 hover:text-indigo-800 font-bold transition-colors flex items-center gap-1">
+                <span>🛡️</span>
+                <span>Staff Admin</span>
+              </button>
             </div>
           </div>
         </div>
@@ -339,7 +342,17 @@
                   <span>${activeTab === 'admin' ? 'Switch to User Portal' : 'Admin Panel'}</span>
                 </button>
                 <span class="text-navy-500">•</span>
-              ` : null}
+              ` : html`
+                <button
+                  onClick=${() => handleNavClick('admin')}
+                  class="px-2 py-0.5 rounded-md hover:bg-navy-800 text-cream-200/70 hover:text-indigo-200 transition-all font-semibold flex items-center gap-1 text-[10px]"
+                  title="Administrative Portal"
+                >
+                  <span>🛡️</span>
+                  <span>Admin</span>
+                </button>
+                <span class="text-navy-500">•</span>
+              `}
               <button onClick=${() => handleNavClick('help')} class="hover:text-white transition-colors flex items-center gap-1">
                 <span>How It Works</span>
               </button>
@@ -379,19 +392,19 @@
             <!-- Desktop Navigation Bar -->
             <nav class="hidden lg:flex items-center gap-1.5 text-xs font-bold tracking-tight">
               ${!user ? html`
-                <button onClick=${() => handleNavClick('home')} class="px-3.5 py-2.5 rounded-xl transition-all ${activeTab === 'home' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                <button onClick=${() => handleNavClick('home')} class="px-3.5 py-2 rounded-xl transition-all duration-200 ${activeTab === 'home' ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold'}">
                   Home
                 </button>
-                <button onClick=${() => handleNavClick('features')} class="px-3.5 py-2.5 rounded-xl transition-all ${activeTab === 'features' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                <button onClick=${() => handleNavClick('features')} class="px-3.5 py-2 rounded-xl transition-all duration-200 ${activeTab === 'features' ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold'}">
                   Features
                 </button>
-                <button onClick=${() => handleNavClick('community')} class="px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1 ${activeTab === 'community' ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                <button onClick=${() => handleNavClick('community')} class="px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1 ${activeTab === 'community' ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold'}">
                   <span>Community Feed</span>
                 </button>
 
                 <!-- Explore Dropdown (Left Aligned) -->
                 <div class="relative text-left" id="explore-dropdown-container">
-                  <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1 hover:bg-cream-200/60 text-warmgray-700 hover:text-navy-900">
+                  <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1 hover:bg-cream-200/60 text-warmgray-700 hover:text-navy-900 font-semibold">
                     <span>Explore</span>
                     <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${exploreDropdownOpen ? 'rotate-180' : ''}" />
                   </button>
@@ -436,26 +449,26 @@
                   ` : null}
                 </div>
               ` : html`
-                <button onClick=${() => handleNavClick('dashboard')} class="px-3 py-2 rounded-xl transition-all duration-200 ${activeTab === 'dashboard' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                <button onClick=${() => handleNavClick('dashboard')} class="px-3.5 py-2 rounded-xl transition-all duration-200 ${activeTab === 'dashboard' ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold'}">
                   Dashboard
                 </button>
 
                 <!-- Exchange Hub Top Level Nav Item -->
-                <button onClick=${() => handleNavClick('exchange')} class="px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'exchange' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                <button onClick=${() => handleNavClick('exchange')} class="px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'exchange' ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold'}">
                   <${Icon} name="book-open" class="w-4 h-4" />
                   <span>Exchange</span>
-                  <span class="px-1 py-0.2 text-[8px] font-black rounded-md ${activeTab === 'exchange' ? 'bg-white/20 text-white' : 'bg-navy-100 text-navy-700'}">Hub</span>
+                  <span class="px-1 py-0.2 text-[8px] font-black rounded-md ${activeTab === 'exchange' ? 'bg-white/25 text-white' : 'bg-navy-100 text-navy-700'}">Hub</span>
                 </button>
 
                 <!-- Learning Hub Top Level Nav Item (Directly in Navbar) -->
-                <button onClick=${() => handleNavClick('hub-browse')} class="px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'hub-browse' || activeTab.startsWith('hub') ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                <button onClick=${() => handleNavClick('hub-browse')} class="px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'hub-browse' || activeTab.startsWith('hub') ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold'}">
                   <${Icon} name="book-open" class="w-4 h-4" />
                   <span>Learning Hub</span>
                 </button>
 
                 <!-- Discover Dropdown (People, Problems, Skill Circles, How It Works) -->
                 <div class="relative text-left" id="explore-dropdown-container">
-                  <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['skills-dir', 'problems', 'circles', 'help', 'faq'].includes(activeTab) ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                  <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['skills-dir', 'problems', 'circles', 'help', 'faq'].includes(activeTab) ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold'}">
                     <span>Discover</span>
                     <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${exploreDropdownOpen ? 'rotate-180' : ''}" />
                   </button>
@@ -495,7 +508,7 @@
 
                 <!-- Workspace Dropdown (Matches, Exchanges, Requests, Community) -->
                 <div class="relative text-left" id="resources-dropdown-container">
-                  <button onClick=${() => setResourcesDropdownOpen(!resourcesDropdownOpen)} class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['matches', 'workspaces', 'requests', 'community'].includes(activeTab) ? 'bg-navy-700 text-white font-extrabold shadow-sm' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                  <button onClick=${() => setResourcesDropdownOpen(!resourcesDropdownOpen)} class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['matches', 'workspaces', 'requests', 'community'].includes(activeTab) ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold'}">
                     <span>Workspace</span>
                     ${pendingRequestsCount > 0 ? html`<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-sky-500 text-white shadow-xs">${pendingRequestsCount}</span>` : null}
                     <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${resourcesDropdownOpen ? 'rotate-180' : ''}" />
@@ -537,9 +550,20 @@
                   ` : null}
                 </div>
 
-                <button onClick=${() => handleNavClick('chat')} class="px-3 py-2 rounded-xl transition-all duration-200 ${activeTab === 'chat' ? 'bg-navy-700 text-white shadow-sm font-extrabold' : 'text-warmgray-600 hover:text-navy-900 hover:bg-cream-200/60'}">
+                <button onClick=${() => handleNavClick('chat')} class="px-3.5 py-2 rounded-xl transition-all duration-200 ${activeTab === 'chat' ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold'}">
                   Chat
                 </button>
+
+                ${user && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role) ? html`
+                  <button
+                    onClick=${() => handleNavClick(activeTab === 'admin' ? 'dashboard' : 'admin')}
+                    class="px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'admin' ? 'tab-pill-active font-extrabold shadow-md ring-2 ring-indigo-400/60' : 'bg-indigo-50/90 hover:bg-indigo-100/90 text-indigo-900 border border-indigo-200/80 font-bold shadow-2xs'}"
+                    title="Platform Governance & Control Center"
+                  >
+                    <span class="text-sm">🛡️</span>
+                    <span>${activeTab === 'admin' ? 'User Portal' : 'Admin Panel'}</span>
+                  </button>
+                ` : null}
               `}
             </nav>
 
@@ -651,21 +675,25 @@
                           </div>
                         </div>
                       </div>
-                      ${['SUPER_ADMIN', 'ADMIN'].includes(user.role) ? html`
-                        <button onClick=${() => { setUserMenuOpen(false); handleNavClick(activeTab === 'admin' ? 'dashboard' : 'admin'); }} class="w-full text-left px-4 py-2.5 hover:bg-indigo-50 text-indigo-900 flex items-center gap-2.5 transition-colors font-bold">
+                      ${['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role) ? html`
+                        <button onClick=${() => { setUserMenuOpen(false); handleNavClick(activeTab === 'admin' ? 'dashboard' : 'admin'); }} class="w-full text-left px-4 py-2.5 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-900 flex items-center gap-2.5 transition-colors font-bold border-y border-indigo-100">
                           <${Icon} name="shield" class="w-4 h-4 text-indigo-600" /> ${activeTab === 'admin' ? 'Switch to User Portal' : 'Admin Panel'}
                         </button>
-                      ` : html`
-                        <button onClick=${() => { setUserMenuOpen(false); if (onViewProfile && user) { onViewProfile(user.username || user.id); } else { handleNavClick('public-profile'); } }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
-                          <${Icon} name="user" class="w-4 h-4 text-navy-600" /> View Public Profile
+                      ` : null}
+                      <button onClick=${() => { setUserMenuOpen(false); if (onViewProfile && user) { onViewProfile(user.username || user.id); } else { handleNavClick('public-profile'); } }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
+                        <${Icon} name="user" class="w-4 h-4 text-navy-600" /> View Public Profile
+                      </button>
+                      <button onClick=${() => { setUserMenuOpen(false); handleNavClick('skills'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
+                        <${Icon} name="layers" class="w-4 h-4 text-navy-600" /> Manage Teach & Learn
+                      </button>
+                      <button onClick=${() => { setUserMenuOpen(false); handleNavClick('settings'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
+                        <${Icon} name="settings" class="w-4 h-4 text-navy-600" /> Account & Preferences
+                      </button>
+                      ${!['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role) ? html`
+                        <button onClick=${() => { setUserMenuOpen(false); handleNavClick('admin'); }} class="w-full text-left px-4 py-2 hover:bg-cream-100 text-slate-500 hover:text-indigo-600 flex items-center gap-2.5 transition-colors text-xs font-semibold">
+                          <${Icon} name="shield" class="w-3.5 h-3.5 text-slate-400" /> Staff Admin Portal
                         </button>
-                        <button onClick=${() => { setUserMenuOpen(false); handleNavClick('skills'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
-                          <${Icon} name="layers" class="w-4 h-4 text-navy-600" /> Manage Teach & Learn
-                        </button>
-                        <button onClick=${() => { setUserMenuOpen(false); handleNavClick('settings'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
-                          <${Icon} name="settings" class="w-4 h-4 text-navy-600" /> Account & Preferences
-                        </button>
-                      `}
+                      ` : null}
                       <div class="border-t border-cream-100 my-2"></div>
                       <button onClick=${() => { setUserMenuOpen(false); onLogout(); }} class="w-full text-left px-4 py-2.5 hover:bg-rose-50 text-rose-700 flex items-center gap-2.5 font-bold transition-colors">
                         <${Icon} name="log-out" class="w-4 h-4 text-rose-500" /> Log Out

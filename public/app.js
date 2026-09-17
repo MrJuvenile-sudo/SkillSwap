@@ -35,6 +35,7 @@
     ChatView,
     CommunityFeedView,
     AdminConsoleView,
+    AdminAuthGateView,
     TermsView,
     PrivacyView,
     GuidelinesView,
@@ -405,7 +406,11 @@
           ${activeTab === 'workspaces' && user && html`<${WorkspaceView} currentUser=${user} onOpenChat=${handleOpenChat} setActiveTab=${setActiveTab} onViewProfile=${handleViewProfile} targetWorkspaceId=${targetWorkspaceId} />`}
           ${activeTab === 'chat' && user && html`<${ChatView} currentUser=${user} targetConnectionId=${targetChatConnectionId} targetUserId=${targetChatUserId} onViewProfile=${handleViewProfile} onProposeSwap=${handleOpenProposal} setActiveTab=${setActiveTab} />`}
           ${activeTab === 'settings' && user && html`<${SettingsView} user=${user} onUserUpdated=${checkSession} />`}
-          ${activeTab === 'admin' && user && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role) && html`<${AdminConsoleView} currentUser=${user} setActiveTab=${setActiveTab} onViewProfile=${handleViewProfile} onLogout=${handleLogout} />`}
+          ${activeTab === 'admin' && (
+            (user && ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user.role))
+              ? html`<${AdminConsoleView} currentUser=${user} setActiveTab=${setActiveTab} onViewProfile=${handleViewProfile} onLogout=${handleLogout} onRefresh=${checkSession} />`
+              : html`<${AdminAuthGateView} currentUser=${user} setActiveTab=${setActiveTab} onAuthSuccess=${async (u) => { await checkSession(); setActiveTab('admin'); }} />`
+          )}
           ${activeTab === 'features' && html`<${FeaturesView} setActiveTab=${setActiveTab} />`}
           ${activeTab === 'faq' && html`<${FaqView} setActiveTab=${setActiveTab} />`}
           ${activeTab === 'help' && html`<${HelpCenterView} setActiveTab=${setActiveTab} />`}
@@ -426,7 +431,7 @@
           ${activeTab === 'exam-mode' && user && html`<${ExamModeView} setActiveTab=${setActiveTab} />`}
         </main>
 
-        ${activeTab !== 'admin' ? html`
+        ${(activeTab !== 'admin' || (!user || !['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(user?.role))) ? html`
           <${Footer}
             setActiveTab=${setActiveTab}
             onOpenRegister=${() => setActiveTab(user ? 'matches' : 'signup')}

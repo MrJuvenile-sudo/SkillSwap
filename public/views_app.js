@@ -134,11 +134,11 @@
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 ${matches.map(m => html`
-                  <div key=${m.user.id} class="bg-white rounded-3xl p-6 border border-cream-300 shadow-sm flex flex-col justify-between space-y-5 hover:shadow-md hover:border-navy-300 hover:scale-[1.01] transition-all duration-200">
+                  <div key=${m.user.id} class="bg-white rounded-3xl p-6 border border-cream-300 shadow-sm flex flex-col justify-between space-y-5 card-hover-lift transition-all duration-200">
                     <div class="space-y-4">
                       <div class="flex items-start justify-between gap-3">
                         <div class="flex items-center gap-3">
-                          <img src=${m.user.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop'} alt=${m.user.name} class="w-12 h-12 rounded-2xl object-cover border border-cream-200 shadow-sm" />
+                          <img src=${m.user.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop'} alt=${m.user.name} class="w-12 h-12 rounded-2xl object-cover border border-cream-200 shadow-sm ring-2 ring-navy-600/10" />
                           <div>
                             <h4 class="font-bold text-navy-900 text-sm">${m.user.name}</h4>
                             <p class="text-[11px] text-warmgray-500 font-semibold">${m.user.location || 'Remote'}</p>
@@ -218,7 +218,7 @@
               ` : html`
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   ${workspaces.slice(0, 2).map(w => html`
-                    <div key=${w.id} onClick=${() => setActiveTab('workspaces')} class="p-6 bg-white rounded-3xl border border-cream-300 shadow-sm hover:border-navy-400 hover:shadow hover:scale-[1.01] transition-all duration-200 cursor-pointer space-y-4 border-l-4 border-l-navy-600">
+                    <div key=${w.id} onClick=${() => setActiveTab('workspaces')} class="p-6 bg-white rounded-3xl border border-cream-300 shadow-sm card-hover-lift cursor-pointer space-y-4 border-l-4 border-l-navy-600 transition-all duration-200">
                       <div class="flex items-center justify-between">
                         <div>
                           <h3 class="font-serif text-lg font-bold text-navy-900 leading-snug">${w.title}</h3>
@@ -3208,7 +3208,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
   // ----------------------------------------------------
   // SkillSwapX Admin Panel (Enterprise Governance Suite)
   // ----------------------------------------------------
-  function AdminConsoleView({ currentUser, setActiveTab, onViewProfile, onLogout }) {
+  function AdminConsoleView({ currentUser, setActiveTab, onViewProfile, onLogout, onRefresh }) {
     const [analytics, setAnalytics] = useState(null);
     const [users, setUsers] = useState([]);
     const [skills, setSkills] = useState([]);
@@ -3326,135 +3326,217 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
     // User actions
     const handleUpdateUserStatus = async (userId, newStatus) => {
       if (!confirm(`Are you sure you want to change user status to ${newStatus}?`)) return;
-      await api('/api/admin/users', { method: 'PUT', body: JSON.stringify({ userId, status: newStatus }) });
-      loadDataForSection('users');
+      try {
+        await api('/api/admin/users', { method: 'PUT', body: JSON.stringify({ userId, status: newStatus }) });
+        await loadDataForSection('users');
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to update user status.');
+      }
     };
 
     const handleUpdateUserRole = async (userId, newRole) => {
       if (!confirm(`Are you sure you want to change user role to ${newRole}?`)) return;
-      await api('/api/admin/users', { method: 'PUT', body: JSON.stringify({ userId, role: newRole }) });
-      loadDataForSection('users');
+      try {
+        await api('/api/admin/users', { method: 'PUT', body: JSON.stringify({ userId, role: newRole }) });
+        await loadDataForSection('users');
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to update user role.');
+      }
     };
 
     const handleDeleteUser = async (userId) => {
       if (!confirm('Permanently delete this user and all associated data? This action cannot be undone.')) return;
-      await api('/api/admin/users?userId=' + userId, { method: 'DELETE' });
-      setSelectedUserDetail(null);
-      loadDataForSection('users');
+      try {
+        await api('/api/admin/users?userId=' + userId, { method: 'DELETE' });
+        setSelectedUserDetail(null);
+        await loadDataForSection('users');
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to delete user.');
+      }
     };
 
     // Skill & Category actions
     const handleCreateSkill = async (e) => {
       e.preventDefault();
       if (!newSkillForm.name || !newSkillForm.category_id) return;
-      await api('/api/admin/skills', { method: 'POST', body: JSON.stringify(newSkillForm) });
-      setNewSkillModal(false);
-      setNewSkillForm({ name: '', category_id: '', description: '', is_popular: false, is_trending: false });
-      loadDataForSection('skills');
+      try {
+        await api('/api/admin/skills', { method: 'POST', body: JSON.stringify(newSkillForm) });
+        setNewSkillModal(false);
+        setNewSkillForm({ name: '', category_id: '', description: '', is_popular: false, is_trending: false });
+        await loadDataForSection('skills');
+        window.dispatchEvent(new CustomEvent('skillswap:skills-updated'));
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to create skill.');
+      }
     };
 
     const handleToggleSkillFlag = async (skill, flagName) => {
       const updatedValue = !skill[flagName];
-      await api('/api/admin/skills', { method: 'PUT', body: JSON.stringify({ id: skill.id, [flagName]: updatedValue }) });
-      loadDataForSection('skills');
+      try {
+        await api('/api/admin/skills', { method: 'PUT', body: JSON.stringify({ id: skill.id, [flagName]: updatedValue }) });
+        await loadDataForSection('skills');
+        window.dispatchEvent(new CustomEvent('skillswap:skills-updated'));
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to update skill flag.');
+      }
     };
 
     const handleDeleteSkill = async (skillId) => {
       if (!confirm('Are you sure you want to delete this skill?')) return;
-      await api('/api/admin/skills?id=' + skillId, { method: 'DELETE' });
-      loadDataForSection('skills');
+      try {
+        await api('/api/admin/skills?id=' + skillId, { method: 'DELETE' });
+        await loadDataForSection('skills');
+        window.dispatchEvent(new CustomEvent('skillswap:skills-updated'));
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to delete skill.');
+      }
     };
 
     const handleCreateCategory = async (e) => {
       e.preventDefault();
       if (!newCatForm.name) return;
-      await api('/api/admin/categories', { method: 'POST', body: JSON.stringify(newCatForm) });
-      setNewCatModal(false);
-      setNewCatForm({ name: '', description: '', icon: 'Sparkles', is_featured: false });
-      loadDataForSection('skills');
+      try {
+        await api('/api/admin/categories', { method: 'POST', body: JSON.stringify(newCatForm) });
+        setNewCatModal(false);
+        setNewCatForm({ name: '', description: '', icon: 'Sparkles', is_featured: false });
+        await loadDataForSection('skills');
+        window.dispatchEvent(new CustomEvent('skillswap:skills-updated'));
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to create category.');
+      }
     };
 
     const handleDeleteCategory = async (catId) => {
       if (!confirm('Delete this category? Associated skills will also be detached.')) return;
-      await api('/api/admin/categories?id=' + catId, { method: 'DELETE' });
-      loadDataForSection('skills');
+      try {
+        await api('/api/admin/categories?id=' + catId, { method: 'DELETE' });
+        await loadDataForSection('skills');
+        window.dispatchEvent(new CustomEvent('skillswap:skills-updated'));
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to delete category.');
+      }
     };
 
     // Report Actions
     const handleResolveReport = async (e) => {
       e.preventDefault();
       if (!selectedReport) return;
-      await api('/api/admin/reports', {
-        method: 'PUT',
-        body: JSON.stringify({
-          report_id: selectedReport.id,
-          status: 'RESOLVED',
-          resolution_notes: reportResolutionNotes.trim(),
-          block_user: reportBlockUser
-        })
-      });
-      setSelectedReport(null);
-      setReportResolutionNotes('');
-      setReportBlockUser(false);
-      loadDataForSection('reports');
+      try {
+        await api('/api/admin/reports', {
+          method: 'PUT',
+          body: JSON.stringify({
+            report_id: selectedReport.id,
+            status: 'RESOLVED',
+            resolution_notes: reportResolutionNotes.trim(),
+            block_user: reportBlockUser
+          })
+        });
+        setSelectedReport(null);
+        setReportResolutionNotes('');
+        setReportBlockUser(false);
+        await loadDataForSection('reports');
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to resolve report.');
+      }
     };
 
     const handleDismissReport = async (reportId) => {
       const reason = prompt('Enter dismissal reason (e.g. False report / Insufficient evidence):');
       if (reason === null) return;
-      await api('/api/admin/reports', {
-        method: 'PUT',
-        body: JSON.stringify({ report_id: reportId, status: 'DISMISSED', resolution_notes: reason })
-      });
-      setSelectedReport(null);
-      loadDataForSection('reports');
+      try {
+        await api('/api/admin/reports', {
+          method: 'PUT',
+          body: JSON.stringify({ report_id: reportId, status: 'DISMISSED', resolution_notes: reason })
+        });
+        setSelectedReport(null);
+        await loadDataForSection('reports');
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to dismiss report.');
+      }
     };
 
     // Verification Actions
     const handleProcessVerification = async (verifId, status) => {
       const notes = prompt(`Enter notes for ${status.toLowerCase()} status:`) || '';
-      await api('/api/admin/verifications', {
-        method: 'PUT',
-        body: JSON.stringify({ id: verifId, status, admin_notes: notes })
-      });
-      loadDataForSection('verification');
+      try {
+        await api('/api/admin/verifications', {
+          method: 'PUT',
+          body: JSON.stringify({ id: verifId, status, admin_notes: notes })
+        });
+        await loadDataForSection('verification');
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to process verification.');
+      }
     };
 
     // Review Actions
     const handleToggleReviewFlag = async (review) => {
       const willFlag = !review.is_flagged;
       const reason = willFlag ? prompt('Reason for flagging review:') || 'Suspicious rating pattern' : '';
-      await api('/api/admin/reviews', {
-        method: 'PUT',
-        body: JSON.stringify({ id: review.id, is_flagged: willFlag, flag_reason: reason })
-      });
-      loadDataForSection('reviews');
+      try {
+        await api('/api/admin/reviews', {
+          method: 'PUT',
+          body: JSON.stringify({ id: review.id, is_flagged: willFlag, flag_reason: reason })
+        });
+        await loadDataForSection('reviews');
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to update review flag.');
+      }
     };
 
     const handleDeleteReview = async (reviewId) => {
       if (!confirm('Permanently remove this review?')) return;
-      await api('/api/admin/reviews?id=' + reviewId, { method: 'DELETE' });
-      loadDataForSection('reviews');
+      try {
+        await api('/api/admin/reviews?id=' + reviewId, { method: 'DELETE' });
+        await loadDataForSection('reviews');
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to delete review.');
+      }
     };
 
     // Announcement Broadcast
     const handleBroadcastAnnouncement = async (e) => {
       e.preventDefault();
       if (!announcementForm.title || !announcementForm.message) return;
-      const res = await api('/api/admin/notifications', { method: 'POST', body: JSON.stringify(announcementForm) });
-      setAnnouncementSentMsg(res.message || 'Announcement broadcasted successfully!');
-      setTimeout(() => setAnnouncementSentMsg(''), 4000);
-      setAnnouncementForm({ title: '', message: '', type: 'ANNOUNCEMENT', target_segment: 'ALL', target_category_id: '', target_user_id: '' });
-      loadDataForSection('notifications');
+      try {
+        const res = await api('/api/admin/notifications', { method: 'POST', body: JSON.stringify(announcementForm) });
+        setAnnouncementSentMsg(res.message || 'Announcement broadcasted successfully!');
+        setTimeout(() => setAnnouncementSentMsg(''), 4000);
+        setAnnouncementForm({ title: '', message: '', type: 'ANNOUNCEMENT', target_segment: 'ALL', target_category_id: '', target_user_id: '' });
+        await loadDataForSection('notifications');
+        window.dispatchEvent(new CustomEvent('skillswap:notification-received'));
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to broadcast announcement.');
+      }
     };
 
     // Settings Update
     const handleSaveSettings = async (e) => {
       e.preventDefault();
-      await api('/api/admin/settings', { method: 'PUT', body: JSON.stringify({ settings: settingsForm }) });
-      setSettingsSavedMsg(true);
-      setTimeout(() => setSettingsSavedMsg(false), 3000);
-      loadDataForSection('settings');
+      try {
+        await api('/api/admin/settings', { method: 'PUT', body: JSON.stringify({ settings: settingsForm }) });
+        setSettingsSavedMsg(true);
+        setTimeout(() => setSettingsSavedMsg(false), 3000);
+        await loadDataForSection('settings');
+        window.dispatchEvent(new CustomEvent('skillswap:settings-updated'));
+        onRefresh?.();
+      } catch (err) {
+        alert(err.message || 'Failed to save settings.');
+      }
     };
 
     // Filtered lists
@@ -3719,8 +3801,16 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
               </p>
             </div>
 
-            <!-- Health Telemetry Indicator -->
-            <div class="flex items-center gap-3">
+            <!-- Health Telemetry Indicator & Live Sync Button -->
+            <div class="flex items-center gap-2.5">
+              <button
+                onClick=${() => loadDataForSection(activeNav)}
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white hover:bg-cream-100 text-indigo-700 border border-indigo-200 shadow-2xs transition-all active:scale-95"
+                title="Synchronize live state with database"
+              >
+                <span>🔄</span>
+                <span>Sync Live Data</span>
+              </button>
               <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-cream-300 shadow-2xs">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span class="text-navy-900 font-bold">All Systems Operational</span>
@@ -5072,6 +5162,243 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
     `;
   }
   window.SkillSwap.AdminConsoleView = AdminConsoleView;
+
+  // ----------------------------------------------------
+  // Admin Authentication & Access Gate View
+  // ----------------------------------------------------
+  function AdminAuthGateView({ currentUser, setActiveTab, onAuthSuccess }) {
+    const [loginInput, setLoginInput] = useState('');
+    const [passwordInput, setPasswordInput] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+
+    const handleInstantAdminLogin = async () => {
+      try {
+        setLoading(true);
+        setErrorMsg('');
+        const res = await api('/api/account/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: 'admin', password: 'Admin123!', rememberMe: true })
+        });
+        if (res.user) {
+          if (onAuthSuccess) {
+            await onAuthSuccess(res.user);
+          } else {
+            setActiveTab('admin');
+          }
+        }
+      } catch (err) {
+        setErrorMsg(err.message || 'Super Admin login failed. Please check credentials.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleFormSubmit = async (e) => {
+      e.preventDefault();
+      if (!loginInput.trim() || !passwordInput) {
+        setErrorMsg('Please provide both username/email and password.');
+        return;
+      }
+      try {
+        setLoading(true);
+        setErrorMsg('');
+        const res = await api('/api/account/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: loginInput.trim(), password: passwordInput, rememberMe: true })
+        });
+        if (res.user) {
+          if (['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(res.user.role)) {
+            if (onAuthSuccess) {
+              await onAuthSuccess(res.user);
+            } else {
+              setActiveTab('admin');
+            }
+          } else {
+            setErrorMsg('Account verified, but lacks administrative credentials (Role: ' + (res.user.role || 'USER') + ').');
+          }
+        }
+      } catch (err) {
+        setErrorMsg(err.message || 'Authentication rejected. Check username and password.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleSwitchToSuperAdmin = async () => {
+      try {
+        setLoading(true);
+        setErrorMsg('');
+        await api('/api/account/logout', { method: 'POST' }).catch(() => {});
+        const res = await api('/api/account/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: 'admin', password: 'Admin123!', rememberMe: true })
+        });
+        if (res.user) {
+          if (onAuthSuccess) {
+            await onAuthSuccess(res.user);
+          } else {
+            setActiveTab('admin');
+          }
+        }
+      } catch (err) {
+        setErrorMsg(err.message || 'Switching to admin account failed.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return html`
+      <div class="min-h-[85vh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-b from-navy-950 via-slate-900 to-navy-950 text-white relative overflow-hidden">
+        <!-- Ambient Glowing Orbs -->
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative w-full max-w-xl bg-slate-900/80 backdrop-blur-2xl border border-slate-700/80 rounded-3xl p-6 sm:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] text-center space-y-6 animate-fadeIn">
+          
+          <!-- Shield Header Badge -->
+          <div class="inline-flex items-center justify-center p-3.5 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl shadow-lg shadow-indigo-500/30 text-white ring-4 ring-indigo-500/20">
+            <span class="text-3xl">🛡️</span>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+              <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+              Security Clearance Required
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-serif font-extrabold text-white tracking-tight">Admin Governance Portal</h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-md mx-auto">
+              Restricted management console for platform analytics, user moderation, taxonomy controls, and system telemetry.
+            </p>
+          </div>
+
+          ${errorMsg ? html`
+            <div class="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-semibold flex items-center gap-2.5 text-left animate-fadeIn">
+              <span class="text-base shrink-0">⚠️</span>
+              <span class="flex-1">${errorMsg}</span>
+            </div>
+          ` : null}
+
+          ${currentUser ? html`
+            <!-- Signed-in Regular User Mode -->
+            <div class="p-5 rounded-2xl bg-slate-800/80 border border-slate-700 text-left space-y-3">
+              <div class="flex items-center justify-between text-xs pb-2 border-b border-slate-700/70">
+                <span class="text-slate-400">Current Session:</span>
+                <span class="px-2 py-0.5 rounded bg-slate-700 text-slate-300 font-bold uppercase text-[10px]">
+                  ${currentUser.role || 'USER'}
+                </span>
+              </div>
+              <div class="flex items-center gap-3">
+                <img src=${currentUser.avatar_url || '/logo-icon.png'} class="w-10 h-10 rounded-xl object-cover border border-slate-600" />
+                <div>
+                  <p class="text-sm font-bold text-white">${currentUser.name}</p>
+                  <p class="text-xs text-slate-400">@${currentUser.username || 'member'}</p>
+                </div>
+              </div>
+              <p class="text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl leading-relaxed">
+                Your current account is authenticated as a peer member and does not possess administrative privileges.
+              </p>
+            </div>
+
+            <div class="space-y-3 pt-2">
+              <button
+                onClick=${handleSwitchToSuperAdmin}
+                disabled=${loading}
+                class="w-full py-3.5 px-5 bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                ${loading ? html`
+                  <span class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                  <span>Authenticating Super Admin...</span>
+                ` : html`
+                  <span>⚡ Switch to Super Admin Account</span>
+                `}
+              </button>
+
+              <button
+                onClick=${() => setActiveTab('dashboard')}
+                class="w-full py-3 px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs rounded-2xl border border-slate-700 transition-all"
+              >
+                ← Return to Member Dashboard
+              </button>
+            </div>
+          ` : html`
+            <!-- Guest / Logged Out Mode -->
+            <div class="space-y-4">
+              <!-- 1-Click Instant Demo Admin Chip -->
+              <button
+                onClick=${handleInstantAdminLogin}
+                disabled=${loading}
+                class="w-full py-4 px-6 bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-black text-sm rounded-2xl shadow-xl shadow-indigo-600/35 hover:shadow-indigo-600/50 transition-all flex flex-col items-center justify-center gap-1 group disabled:opacity-50 border border-indigo-400/30"
+              >
+                <div class="flex items-center gap-2">
+                  ${loading ? html`
+                    <span class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                    <span>Unlocking Admin Console...</span>
+                  ` : html`
+                    <span class="text-base group-hover:scale-110 transition-transform">⚡</span>
+                    <span class="text-sm font-extrabold">Instant 1-Click Demo Admin Login</span>
+                  `}
+                </div>
+                <span class="text-[11px] text-indigo-200 font-normal">Super Admin credentials (admin / Admin123!)</span>
+              </button>
+
+              <div class="flex items-center gap-3 py-1">
+                <div class="flex-1 border-t border-slate-700/80"></div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">or sign in with staff account</span>
+                <div class="flex-1 border-t border-slate-700/80"></div>
+              </div>
+
+              <!-- Manual Admin Credentials Form -->
+              <form onSubmit=${handleFormSubmit} class="space-y-3.5 text-left">
+                <div>
+                  <label class="block text-xs font-bold text-slate-300 mb-1.5">Admin Username or Email</label>
+                  <input
+                    type="text"
+                    required
+                    value=${loginInput}
+                    onInput=${(e) => setLoginInput(e.target.value)}
+                    placeholder="admin or staff@skillswap.io"
+                    class="w-full px-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-slate-300 mb-1.5">Administrative Password</label>
+                  <input
+                    type="password"
+                    required
+                    value=${passwordInput}
+                    onInput=${(e) => setPasswordInput(e.target.value)}
+                    placeholder="••••••••••••"
+                    class="w-full px-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled=${loading}
+                  class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl border border-slate-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <span>Authenticate Admin</span>
+                  <span>→</span>
+                </button>
+              </form>
+
+              <div class="pt-2">
+                <button
+                  onClick=${() => setActiveTab('home')}
+                  class="text-xs text-slate-400 hover:text-white transition-colors"
+                >
+                  ← Return to SkillSwapX Marketplace
+                </button>
+              </div>
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+  }
+  window.SkillSwap.AdminAuthGateView = AdminAuthGateView;
 
   // ----------------------------------------------------
   // Public Shareable Profile View
