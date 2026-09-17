@@ -813,6 +813,11 @@
           })
         });
         if (res.user) {
+          try {
+            localStorage.setItem('skillswap_user_id', res.user.id);
+            localStorage.setItem('skillswap_user', JSON.stringify(res.user));
+            if (res.token) localStorage.setItem('skillswap_token', res.token);
+          } catch (e) {}
           onAuthSuccess(res.user);
           setActiveTab('onboarding');
         }
@@ -948,8 +953,13 @@
           body: JSON.stringify({ email: loginId, password: loginPass, rememberMe: true })
         });
         if (res.user) {
+          try {
+            localStorage.setItem('skillswap_user_id', res.user.id);
+            localStorage.setItem('skillswap_user', JSON.stringify(res.user));
+            if (res.token) localStorage.setItem('skillswap_token', res.token);
+          } catch (e) {}
           onAuthSuccess(res.user);
-          const isAdmin = res.user.role === 'ADMIN' || res.user.role === 'SUPER_ADMIN';
+          const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(res.user.role);
           setActiveTab(isAdmin ? 'admin' : 'dashboard');
         }
       } catch (err) {

@@ -15,11 +15,20 @@
   // ----------------------------------------------------
   async function apiFetch(path, options) {
     const opt = options || {};
+    let userId = null;
+    let token = null;
+    try {
+      userId = localStorage.getItem('skillswap_user_id');
+      token = localStorage.getItem('skillswap_token');
+    } catch (e) {}
+
     const headers = {
       'Content-Type': 'application/json',
+      ...(userId ? { 'x-user-id': userId } : {}),
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...(opt.headers || {})
     };
-    const res = await fetch(path, { credentials: 'same-origin', ...opt, headers });
+    const res = await fetch(path, { credentials: 'include', ...opt, headers });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       throw new Error(data.error || 'Request failed with status ' + res.status);

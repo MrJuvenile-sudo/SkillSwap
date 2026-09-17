@@ -3223,6 +3223,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
     const [notificationsHistory, setNotificationsHistory] = useState([]);
     const [settingsData, setSettingsData] = useState({ settings: {}, systemHealth: [] });
     const [logs, setLogs] = useState([]);
+    const [sectionError, setSectionError] = useState('');
 
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
@@ -3300,6 +3301,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
     const loadDataForSection = async (section, showSpinner = true) => {
       try {
         if (showSpinner) setLoading(true);
+        setSectionError('');
         if (section === 'overview') {
           const data = await api('/api/admin');
           setOverviewData(data);
@@ -3348,6 +3350,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
         }
       } catch (err) {
         console.error('Error loading admin section data:', err);
+        setSectionError(err.message || 'Unable to retrieve live data from server. Please re-authenticate or retry.');
       } finally {
         if (showSpinner) setLoading(false);
       }
@@ -3356,11 +3359,16 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
     const syncAllData = async (manual = false) => {
       try {
         setSyncing(true);
+        if (manual) setSectionError('');
         // 1. Refresh global platform telemetry
-        const adminOverview = await api('/api/admin').catch(() => null);
+        const adminOverview = await api('/api/admin').catch(err => {
+          if (manual) throw err;
+          return null;
+        });
         if (adminOverview) {
           setOverviewData(adminOverview);
           setAnalytics(adminOverview.analytics || null);
+          if (adminOverview.recentReports) setReports(adminOverview.recentReports);
         }
         // 2. Refresh active section data without flickering full screen
         await loadDataForSection(activeNav, false);
@@ -3368,6 +3376,9 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
         setLastSyncedTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
       } catch (err) {
         console.error('Sync live data failed:', err);
+        if (manual) {
+          setSectionError(err.message || 'Manual live data synchronization failed.');
+        }
       } finally {
         setSyncing(false);
       }
@@ -3671,11 +3682,11 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
         <!-- ============================================== -->
         <!-- SIDEBAR NAVIGATION (Tight & Minimalist)       -->
         <!-- ============================================== -->
-        <aside class="w-full md:w-64 bg-white border-r border-cream-300 flex flex-col justify-between shrink-0 shadow-xs">
+        <aside class="w-full md:w-64 bg-white border-r border-cream-300 flex flex-col justify-between shrink-0 shadow-xs md:sticky md:top-0 md:h-screen md:overflow-y-auto">
           <div>
             <!-- Sidebar Header Brand -->
-            <div class="p-6 border-b border-cream-200 flex items-center justify-between">
-              <div class="flex items-center gap-3 cursor-pointer" onClick=${() => setActiveNav('overview')}>
+            <div class="p-5 sm:p-6 border-b border-cream-200 flex items-center justify-between">
+              <div class="flex items-center gap-3 cursor-pointer" onClick=${() => { setActiveNav('overview'); setSidebarCollapsed(false); }}>
                 <img src="/logo-icon.png" alt="SkillSwapX Logo" class="w-8 h-8 rounded-xl object-contain shadow-xs bg-white p-0.5 border border-cream-200" />
                 <div>
                   <div class="flex items-center gap-1.5">
@@ -3685,9 +3696,19 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                   <p class="text-[9px] font-semibold text-warmgray-500">Platform Governance</p>
                 </div>
               </div>
+
+              <!-- Mobile Toggle Hamburger Button -->
+              <button
+                onClick=${() => setSidebarCollapsed(!sidebarCollapsed)}
+                class="md:hidden px-3 py-1.5 rounded-xl bg-cream-100 hover:bg-cream-200 text-navy-950 text-xs font-bold transition-colors border border-cream-200"
+                title="Toggle Admin Menu"
+              >
+                ${sidebarCollapsed ? '☰ Menu' : '✕ Close'}
+              </button>
             </div>
 
-            <!-- Core Nav Items List -->
+            <!-- Core Nav Items List (collapsible on mobile, permanent on desktop) -->
+            <div class="${sidebarCollapsed ? 'hidden md:block' : 'block'}">
             <nav class="p-3 space-y-1 text-xs font-semibold">
               <button
                 onClick=${() => setActiveNav('overview')}
@@ -3816,23 +3837,24 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
             </nav>
           </div>
 
-          <!-- Bottom Switcher & Profile Section -->
-          <div class="p-4 border-t border-cream-200 space-y-2">
-            <button
-              onClick=${() => setActiveTab && setActiveTab('dashboard')}
-              class="w-full py-2.5 px-3 bg-cream-100 hover:bg-cream-200 border border-cream-300 text-navy-950 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2"
-            >
-              <span>←</span>
-              <span>Switch to User Portal</span>
-            </button>
+            <!-- Bottom Switcher & Profile Section -->
+            <div class="p-4 border-t border-cream-200 space-y-2">
+              <button
+                onClick=${() => setActiveTab && setActiveTab('dashboard')}
+                class="w-full py-2.5 px-3 bg-cream-100 hover:bg-cream-200 border border-cream-300 text-navy-950 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2"
+              >
+                <span>←</span>
+                <span>Switch to User Portal</span>
+              </button>
 
-            <button
-              onClick=${onLogout}
-              class="w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2"
-            >
-              <span>🚪</span>
-              <span>Log Out Admin</span>
-            </button>
+              <button
+                onClick=${onLogout}
+                class="w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2"
+              >
+                <span>🚪</span>
+                <span>Log Out Admin</span>
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -3883,199 +3905,246 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
             </div>
           ` : null}
 
+          <!-- Section Error Notice Banner -->
+          ${sectionError ? html`
+            <div class="mb-6 p-4 bg-amber-50 border border-amber-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 shadow-xs animate-fadeIn">
+              <div class="flex items-center gap-3">
+                <span class="text-xl">⚠️</span>
+                <div>
+                  <p class="font-bold text-xs">Live Telemetry Sync Notice</p>
+                  <p class="text-[11px] text-amber-800">${sectionError}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 self-end sm:self-auto">
+                <button onClick=${() => syncAllData(true)} class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition-colors shadow-xs">
+                  Retry Sync ↻
+                </button>
+                <button onClick=${() => setSectionError('')} class="p-1 text-amber-600 hover:text-amber-900 text-xs font-bold" title="Dismiss">
+                  ✕
+                </button>
+              </div>
+            </div>
+          ` : null}
+
           <!-- ============================================== -->
           <!-- 1. OVERVIEW DASHBOARD VIEW                     -->
           <!-- ============================================== -->
-          ${!loading && activeNav === 'overview' && analytics && html`
-            <div class="space-y-8 animate-fadeIn text-left">
-              
-              <!-- 4 Primary KPI Cards (Four-Across Card Grid Layout) -->
-              <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
-                <!-- Card 1: Users -->
-                <div class="p-6 bg-white border border-cream-300 rounded-3xl shadow-xs space-y-2 hover:shadow-md transition-all">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-black text-warmgray-500 uppercase tracking-wider">Total Users</span>
-                    <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">+12% this week</span>
-                  </div>
-                  <div class="text-3xl font-serif font-extrabold text-navy-950">${analytics.users?.total_users || 0}</div>
-                  <div class="text-xs text-warmgray-600">
-                    <strong>${analytics.users?.active_users || 0}</strong> Active · <strong>${analytics.users?.new_users_today || 0}</strong> new today
-                  </div>
-                </div>
-
-                <!-- Card 2: Exchanges -->
-                <div class="p-6 bg-white border border-cream-300 rounded-3xl shadow-xs space-y-2 hover:shadow-md transition-all">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-black text-warmgray-500 uppercase tracking-wider">Active Exchanges</span>
-                    <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">+8% active</span>
-                  </div>
-                  <div class="text-3xl font-serif font-extrabold text-navy-950">${(analytics.exchanges?.active_problems || 0) + (analytics.exchanges?.active_workspaces || 0)}</div>
-                  <div class="text-xs text-warmgray-600">
-                    <strong>${analytics.exchanges?.completed_workspaces || 0}</strong> completed swaps
-                  </div>
-                </div>
-
-                <!-- Card 3: Skills -->
-                <div class="p-6 bg-white border border-cream-300 rounded-3xl shadow-xs space-y-2 hover:shadow-md transition-all">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-black text-warmgray-500 uppercase tracking-wider">Total Skills</span>
-                    <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">${analytics.skills?.total_categories || 0} categories</span>
-                  </div>
-                  <div class="text-3xl font-serif font-extrabold text-navy-950">${analytics.skills?.total_skills || 0}</div>
-                  <div class="text-xs text-warmgray-600">
-                    <strong>${analytics.skills?.total_teach_offerings || 0}</strong> taught · <strong>${analytics.skills?.total_learn_demands || 0}</strong> sought
-                  </div>
-                </div>
-
-                <!-- Card 4: Reports -->
-                <div class="p-6 bg-white border border-cream-300 rounded-3xl shadow-xs space-y-2 hover:shadow-md transition-all">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-black text-warmgray-500 uppercase tracking-wider">Reported Content</span>
-                    ${(analytics.reports?.open_reports || 0) > 0 ? html`
-                      <span class="text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 animate-pulse">Action Needed</span>
-                    ` : html`
-                      <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">Clear</span>
-                    `}
-                  </div>
-                  <div class="text-3xl font-serif font-extrabold ${(analytics.reports?.open_reports || 0) > 0 ? 'text-rose-600' : 'text-navy-950'}">
-                    ${analytics.reports?.open_reports || 0}
-                  </div>
-                  <div class="text-xs text-warmgray-600">
-                    ${analytics.reports?.resolved_reports || 0} resolved incidents
-                  </div>
-                </div>
-              </div>
-
-              <!-- Platform Activity Chart Visual Section -->
-              <div class="bg-white p-6 sm:p-8 rounded-3xl border border-cream-300 shadow-xs space-y-6">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-200 pb-4">
-                  <div>
-                    <h3 class="font-serif text-lg font-bold text-navy-950">Platform Activity (Users & Exchange Volume)</h3>
-                    <p class="text-xs text-warmgray-600">Real-time telemetry trends across user growth and problem proposal activity.</p>
-                  </div>
-                  <div class="flex items-center gap-4 text-xs font-semibold">
-                    <span class="flex items-center gap-1.5 text-indigo-700">
-                      <span class="w-3 h-3 rounded-sm bg-indigo-600"></span>
-                      <span>New Users</span>
-                    </span>
-                    <span class="flex items-center gap-1.5 text-emerald-700">
-                      <span class="w-3 h-3 rounded-sm bg-emerald-500"></span>
-                      <span>Exchanges Active</span>
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Activity Bar Chart Graph (Live Telemetry) -->
-                <div class="grid grid-cols-7 gap-3 sm:gap-6 pt-4 h-48 items-end border-b border-cream-200 pb-4">
-                  ${(() => {
-                    const rawTimeline = (overviewData?.activityTimeline && overviewData.activityTimeline.length > 0)
-                      ? overviewData.activityTimeline
-                      : [
-                          { day: 'Mon', users: 14, exchanges: 8 },
-                          { day: 'Tue', users: 19, exchanges: 12 },
-                          { day: 'Wed', users: 25, exchanges: 15 },
-                          { day: 'Thu', users: 22, exchanges: 14 },
-                          { day: 'Fri', users: 31, exchanges: 21 },
-                          { day: 'Sat', users: 28, exchanges: 19 },
-                          { day: 'Sun', users: 34, exchanges: 24 }
-                        ];
-                    const maxVal = Math.max(...rawTimeline.map(t => Math.max(t.users || 0, t.exchanges || 0)), 1);
-                    return rawTimeline.map(bar => {
-                      const uHeight = Math.min(100, Math.max(12, Math.round(((bar.users || 0) / maxVal) * 85) + 15));
-                      const eHeight = Math.min(100, Math.max(10, Math.round(((bar.exchanges || 0) / maxVal) * 85) + 15));
-                      return html`
-                        <div key=${bar.day} class="flex flex-col items-center gap-2 h-full justify-end group cursor-pointer">
-                          <div class="flex items-end gap-1 sm:gap-2 h-full w-full justify-center">
-                            <div class="w-3 sm:w-6 bg-indigo-600 rounded-t-lg transition-all duration-300 group-hover:bg-indigo-700 relative" style=${{ height: `${uHeight}%` }} title="Users: ${bar.users || 0}">
-                              <span class="opacity-0 group-hover:opacity-100 absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-navy-900 text-white px-1 rounded shadow-xs pointer-events-none transition-opacity">
-                                ${bar.users || 0}
-                              </span>
-                            </div>
-                            <div class="w-3 sm:w-6 bg-emerald-500 rounded-t-lg transition-all duration-300 group-hover:bg-emerald-600 relative" style=${{ height: `${eHeight}%` }} title="Exchanges: ${bar.exchanges || 0}">
-                              <span class="opacity-0 group-hover:opacity-100 absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-emerald-900 text-white px-1 rounded shadow-xs pointer-events-none transition-opacity">
-                                ${bar.exchanges || 0}
-                              </span>
-                            </div>
-                          </div>
-                          <span class="text-[11px] font-bold text-warmgray-500">${bar.day}</span>
-                        </div>
-                      `;
-                    });
-                  })()}
-                </div>
-              </div>
-
-              <!-- Split Row: Recent Reports Queue & Top Skills Matrix -->
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Recent Reports Panel -->
-                <div class="bg-white p-6 sm:p-7 rounded-3xl border border-cream-300 shadow-xs space-y-4">
-                  <div class="flex items-center justify-between border-b border-cream-100 pb-3">
-                    <div class="flex items-center gap-2">
-                      <h3 class="font-serif text-lg font-bold text-navy-950">Recent Reports</h3>
-                      <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-100 text-rose-800">
-                        ${(reports.length > 0 ? reports : (overviewData?.recentReports || [])).filter(r => r.status === 'OPEN').length} Open
-                      </span>
+          ${!loading && activeNav === 'overview' && html`
+            ${(() => {
+              const liveAnalytics = analytics || overviewData?.analytics || null;
+              if (!liveAnalytics && !overviewData) {
+                return html`
+                  <div class="p-12 bg-white rounded-3xl border border-cream-300 text-center space-y-4 shadow-xs animate-fadeIn">
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-2xl font-bold shadow-xs">📊</div>
+                    <div>
+                      <h3 class="font-serif text-lg font-bold text-navy-950">Synchronizing Telemetry Records</h3>
+                      <p class="text-xs text-warmgray-500 max-w-md mx-auto mt-1">Platform telemetry database is reconnecting to sync active user counts, problem exchange flows, and security verifications.</p>
                     </div>
-                    <button onClick=${() => setActiveNav('reports')} class="text-xs font-bold text-indigo-600 hover:underline">
-                      View All Reports →
+                    <button onClick=${() => syncAllData(true)} class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors inline-flex items-center gap-2">
+                      <span>Synchronize Telemetry Now</span>
+                      <span>↻</span>
                     </button>
                   </div>
+                `;
+              }
 
-                  <div class="space-y-3 max-h-80 overflow-y-auto pr-1 text-xs">
-                    ${(reports.length > 0 ? reports : (overviewData?.recentReports || [])).slice(0, 4).map(r => html`
-                      <div key=${r.id} class="p-3.5 bg-cream-50/60 border border-cream-200 rounded-2xl flex justify-between items-center hover:bg-cream-100/50 transition-colors">
-                        <div class="space-y-0.5">
-                          <p class="font-bold text-navy-950">Case #${r.id} · Against: <strong class="text-rose-700">${r.reported_name || 'Member'}</strong></p>
-                          <p class="text-warmgray-600 text-[11px] line-clamp-1">${r.reason}</p>
+              const uKpi = liveAnalytics?.users || {};
+              const eKpi = liveAnalytics?.exchanges || {};
+              const sKpi = liveAnalytics?.skills || {};
+              const rKpi = liveAnalytics?.reports || {};
+
+              return html`
+                <div class="space-y-8 animate-fadeIn text-left">
+                  
+                  <!-- 4 Primary KPI Cards (Four-Across Card Grid Layout) -->
+                  <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+                    <!-- Card 1: Users -->
+                    <div class="p-6 bg-white border border-cream-300 rounded-3xl shadow-xs space-y-2 hover:shadow-md transition-all">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black text-warmgray-500 uppercase tracking-wider">Total Users</span>
+                        <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">+12% this week</span>
+                      </div>
+                      <div class="text-3xl font-serif font-extrabold text-navy-950">${uKpi.total_users || 0}</div>
+                      <div class="text-xs text-warmgray-600">
+                        <strong>${uKpi.active_users || 0}</strong> Active · <strong>${uKpi.new_users_today || 0}</strong> new today
+                      </div>
+                    </div>
+
+                    <!-- Card 2: Exchanges -->
+                    <div class="p-6 bg-white border border-cream-300 rounded-3xl shadow-xs space-y-2 hover:shadow-md transition-all">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black text-warmgray-500 uppercase tracking-wider">Active Exchanges</span>
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">+8% active</span>
+                      </div>
+                      <div class="text-3xl font-serif font-extrabold text-navy-950">${(eKpi.active_problems || 0) + (eKpi.active_workspaces || 0)}</div>
+                      <div class="text-xs text-warmgray-600">
+                        <strong>${eKpi.completed_workspaces || 0}</strong> completed swaps
+                      </div>
+                    </div>
+
+                    <!-- Card 3: Skills -->
+                    <div class="p-6 bg-white border border-cream-300 rounded-3xl shadow-xs space-y-2 hover:shadow-md transition-all">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black text-warmgray-500 uppercase tracking-wider">Total Skills</span>
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">${sKpi.total_categories || 0} categories</span>
+                      </div>
+                      <div class="text-3xl font-serif font-extrabold text-navy-950">${sKpi.total_skills || 0}</div>
+                      <div class="text-xs text-warmgray-600">
+                        <strong>${sKpi.total_teach_offerings || 0}</strong> taught · <strong>${sKpi.total_learn_demands || 0}</strong> sought
+                      </div>
+                    </div>
+
+                    <!-- Card 4: Reports -->
+                    <div class="p-6 bg-white border border-cream-300 rounded-3xl shadow-xs space-y-2 hover:shadow-md transition-all">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black text-warmgray-500 uppercase tracking-wider">Reported Content</span>
+                        ${(rKpi.open_reports || 0) > 0 ? html`
+                          <span class="text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 animate-pulse">Action Needed</span>
+                        ` : html`
+                          <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">Clear</span>
+                        `}
+                      </div>
+                      <div class="text-3xl font-serif font-extrabold ${(rKpi.open_reports || 0) > 0 ? 'text-rose-600' : 'text-navy-950'}">
+                        ${rKpi.open_reports || 0}
+                      </div>
+                      <div class="text-xs text-warmgray-600">
+                        ${rKpi.resolved_reports || 0} resolved incidents
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Platform Activity Chart Visual Section -->
+                  <div class="bg-white p-6 sm:p-8 rounded-3xl border border-cream-300 shadow-xs space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-200 pb-4">
+                      <div>
+                        <h3 class="font-serif text-lg font-bold text-navy-950">Platform Activity (Users & Exchange Volume)</h3>
+                        <p class="text-xs text-warmgray-600">Real-time telemetry trends across user growth and problem proposal activity.</p>
+                      </div>
+                      <div class="flex items-center gap-4 text-xs font-semibold">
+                        <span class="flex items-center gap-1.5 text-indigo-700">
+                          <span class="w-3 h-3 rounded-sm bg-indigo-600"></span>
+                          <span>New Users</span>
+                        </span>
+                        <span class="flex items-center gap-1.5 text-emerald-700">
+                          <span class="w-3 h-3 rounded-sm bg-emerald-500"></span>
+                          <span>Exchanges Active</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Activity Bar Chart Graph (Live Telemetry) -->
+                    <div class="grid grid-cols-7 gap-3 sm:gap-6 pt-4 h-48 items-end border-b border-cream-200 pb-4">
+                      ${(() => {
+                        const rawTimeline = (overviewData?.activityTimeline && overviewData.activityTimeline.length > 0)
+                          ? overviewData.activityTimeline
+                          : [
+                              { day: 'Mon', users: 14, exchanges: 8 },
+                              { day: 'Tue', users: 19, exchanges: 12 },
+                              { day: 'Wed', users: 25, exchanges: 15 },
+                              { day: 'Thu', users: 22, exchanges: 14 },
+                              { day: 'Fri', users: 31, exchanges: 21 },
+                              { day: 'Sat', users: 28, exchanges: 19 },
+                              { day: 'Sun', users: 34, exchanges: 24 }
+                            ];
+                        const maxVal = Math.max(...rawTimeline.map(t => Math.max(t.users || 0, t.exchanges || 0)), 1);
+                        return rawTimeline.map(bar => {
+                          const uHeight = Math.min(100, Math.max(12, Math.round(((bar.users || 0) / maxVal) * 85) + 15));
+                          const eHeight = Math.min(100, Math.max(10, Math.round(((bar.exchanges || 0) / maxVal) * 85) + 15));
+                          return html`
+                            <div key=${bar.day} class="flex flex-col items-center gap-2 h-full justify-end group cursor-pointer">
+                              <div class="flex items-end gap-1 sm:gap-2 h-full w-full justify-center">
+                                <div class="w-3 sm:w-6 bg-indigo-600 rounded-t-lg transition-all duration-300 group-hover:bg-indigo-700 relative" style=${{ height: `${uHeight}%` }} title="Users: ${bar.users || 0}">
+                                  <span class="opacity-0 group-hover:opacity-100 absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-navy-900 text-white px-1 rounded shadow-xs pointer-events-none transition-opacity">
+                                    ${bar.users || 0}
+                                  </span>
+                                </div>
+                                <div class="w-3 sm:w-6 bg-emerald-500 rounded-t-lg transition-all duration-300 group-hover:bg-emerald-600 relative" style=${{ height: `${eHeight}%` }} title="Exchanges: ${bar.exchanges || 0}">
+                                  <span class="opacity-0 group-hover:opacity-100 absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-emerald-900 text-white px-1 rounded shadow-xs pointer-events-none transition-opacity">
+                                    ${bar.exchanges || 0}
+                                  </span>
+                                </div>
+                              </div>
+                              <span class="text-[11px] font-bold text-warmgray-500">${bar.day}</span>
+                            </div>
+                          `;
+                        });
+                      })()}
+                    </div>
+                  </div>
+
+                  <!-- Split Row: Recent Reports Queue & Top Skills Matrix -->
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Recent Reports Panel -->
+                    <div class="bg-white p-6 sm:p-7 rounded-3xl border border-cream-300 shadow-xs space-y-4">
+                      <div class="flex items-center justify-between border-b border-cream-100 pb-3">
+                        <div class="flex items-center gap-2">
+                          <h3 class="font-serif text-lg font-bold text-navy-950">Recent Reports</h3>
+                          <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-100 text-rose-800">
+                            ${(reports.length > 0 ? reports : (overviewData?.recentReports || [])).filter(r => r.status === 'OPEN').length} Open
+                          </span>
                         </div>
-                        <button
-                          onClick=${() => { setSelectedReport(r); setActiveNav('reports'); }}
-                          class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-2xs shrink-0"
-                        >
-                          Investigate
+                        <button onClick=${() => setActiveNav('reports')} class="text-xs font-bold text-indigo-600 hover:underline">
+                          View All Reports →
                         </button>
                       </div>
-                    `)}
-                    ${((reports.length === 0 && (!overviewData?.recentReports || overviewData.recentReports.length === 0))) ? html`
-                      <p class="text-center py-6 text-warmgray-500">No open reports logged.</p>
-                    ` : null}
-                  </div>
-                </div>
 
-                <!-- Top Skills Panel (Live Telemetry) -->
-                <div class="bg-white p-6 sm:p-7 rounded-3xl border border-cream-300 shadow-xs space-y-4">
-                  <div class="flex items-center justify-between border-b border-cream-100 pb-3">
-                    <h3 class="font-serif text-lg font-bold text-navy-950">Top Skills (Supply vs Demand)</h3>
-                    <button onClick=${() => setActiveNav('skills')} class="text-xs font-bold text-indigo-600 hover:underline">
-                      Manage Skills →
-                    </button>
-                  </div>
-
-                  <div class="space-y-3 max-h-80 overflow-y-auto pr-1 text-xs">
-                    ${((overviewData?.topSkills && overviewData.topSkills.length > 0) ? overviewData.topSkills : (analytics?.topSkills || [])).map(sk => html`
-                      <div key=${sk.id || sk.name} class="p-3.5 bg-cream-50/60 border border-cream-200 rounded-2xl flex items-center justify-between hover:bg-cream-100/60 transition-colors">
-                        <div class="flex items-center gap-2.5">
-                          <span class="text-xl">${sk.icon || '💡'}</span>
-                          <div>
-                            <p class="font-bold text-navy-950">${sk.name}</p>
-                            <p class="text-[10px] text-warmgray-500">${sk.category_name || 'General'}</p>
+                      <div class="space-y-3 max-h-80 overflow-y-auto pr-1 text-xs">
+                        ${(reports.length > 0 ? reports : (overviewData?.recentReports || [])).slice(0, 4).map(r => html`
+                          <div key=${r.id} class="p-3.5 bg-cream-50/60 border border-cream-200 rounded-2xl flex justify-between items-center hover:bg-cream-100/50 transition-colors">
+                            <div class="space-y-0.5">
+                              <p class="font-bold text-navy-950">Case #${r.id} · Against: <strong class="text-rose-700">${r.reported_name || 'Member'}</strong></p>
+                              <p class="text-warmgray-600 text-[11px] line-clamp-1">${r.reason}</p>
+                            </div>
+                            <button
+                              onClick=${() => { setSelectedReport(r); setActiveNav('reports'); }}
+                              class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-2xs shrink-0"
+                            >
+                              Investigate
+                            </button>
                           </div>
-                        </div>
-                        <div class="flex items-center gap-3 font-semibold text-[11px]">
-                          <span class="text-emerald-700 font-bold">${sk.teachers || 0} teachers</span>
-                          <span class="text-warmgray-300">/</span>
-                          <span class="text-indigo-700 font-bold">${sk.learners || 0} learners</span>
-                        </div>
+                        `)}
+                        ${((reports.length === 0 && (!overviewData?.recentReports || overviewData.recentReports.length === 0))) ? html`
+                          <p class="text-center py-6 text-warmgray-500">No open reports logged.</p>
+                        ` : null}
                       </div>
-                    `)}
-                    ${((!overviewData?.topSkills || overviewData.topSkills.length === 0) && (!analytics?.topSkills || analytics.topSkills.length === 0)) ? html`
-                      <p class="text-center py-6 text-warmgray-500">No skill telemetry recorded yet.</p>
-                    ` : null}
-                  </div>
-                </div>
-              </div>
+                    </div>
 
-            </div>
+                    <!-- Top Skills Panel (Live Telemetry) -->
+                    <div class="bg-white p-6 sm:p-7 rounded-3xl border border-cream-300 shadow-xs space-y-4">
+                      <div class="flex items-center justify-between border-b border-cream-100 pb-3">
+                        <h3 class="font-serif text-lg font-bold text-navy-950">Top Skills (Supply vs Demand)</h3>
+                        <button onClick=${() => setActiveNav('skills')} class="text-xs font-bold text-indigo-600 hover:underline">
+                          Manage Skills →
+                        </button>
+                      </div>
+
+                      <div class="space-y-3 max-h-80 overflow-y-auto pr-1 text-xs">
+                        ${((overviewData?.topSkills && overviewData.topSkills.length > 0) ? overviewData.topSkills : (analytics?.topSkills || [])).map(sk => html`
+                          <div key=${sk.id || sk.name} class="p-3.5 bg-cream-50/60 border border-cream-200 rounded-2xl flex items-center justify-between hover:bg-cream-100/60 transition-colors">
+                            <div class="flex items-center gap-2.5">
+                              <span class="text-xl">${sk.icon || '💡'}</span>
+                              <div>
+                                <p class="font-bold text-navy-950">${sk.name}</p>
+                                <p class="text-[10px] text-warmgray-500">${sk.category_name || 'General'}</p>
+                              </div>
+                            </div>
+                            <div class="flex items-center gap-3 font-semibold text-[11px]">
+                              <span class="text-emerald-700 font-bold">${sk.teachers || 0} teachers</span>
+                              <span class="text-warmgray-300">/</span>
+                              <span class="text-indigo-700 font-bold">${sk.learners || 0} learners</span>
+                            </div>
+                          </div>
+                        `)}
+                        ${((!overviewData?.topSkills || overviewData.topSkills.length === 0) && (!analytics?.topSkills || analytics.topSkills.length === 0)) ? html`
+                          <p class="text-center py-6 text-warmgray-500">No skill telemetry recorded yet.</p>
+                        ` : null}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              `;
+            })()}
           `}
 
           <!-- ============================================== -->
@@ -4129,7 +4198,7 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-cream-100">
-                    ${filteredUsers.map(u => html`
+                    ${filteredUsers.length > 0 ? filteredUsers.map(u => html`
                       <tr key=${u.id} class="hover:bg-cream-50/40 transition-colors">
                         <td class="p-3.5">
                           <div class="flex items-center gap-3">
@@ -4188,7 +4257,20 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
                           </button>
                         </td>
                       </tr>
-                    `)}
+                    `) : html`
+                      <tr>
+                        <td colspan="8" class="text-center py-12 text-warmgray-500">
+                          <div class="flex flex-col items-center justify-center space-y-2">
+                            <span class="text-3xl">👥</span>
+                            <p class="font-semibold text-sm text-navy-950">No users found</p>
+                            <p class="text-xs text-warmgray-500">${userSearch ? 'No practitioners matched your search query.' : 'Click below to reload user records from database.'}</p>
+                            <button onClick=${() => loadDataForSection('users')} class="mt-2 px-3.5 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl text-xs font-bold transition-colors">
+                              Reload Users ↻
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    `}
                   </tbody>
                 </table>
               </div>
@@ -4925,74 +5007,88 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
           <!-- ============================================== -->
           <!-- 9. ANALYTICS & MATCHING TELEMETRY              -->
           <!-- ============================================== -->
-          ${!loading && activeNav === 'analytics' && analyticsData && html`
-            <div class="space-y-8 animate-fadeIn text-left">
-              
-              <!-- Bilateral Matching Engine Analytics Card -->
-              <div class="bg-white rounded-3xl border border-cream-300 shadow-xs p-6 sm:p-8 space-y-6">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-200 pb-4">
-                  <div>
-                    <h3 class="font-serif text-lg font-bold text-navy-950">Bilateral Matching Engine Analytics</h3>
-                    <p class="text-xs text-warmgray-600">Mathematical compatibility accuracy, acceptance rates, and top verified pairing pathways.</p>
-                  </div>
-                  <span class="px-3 py-1 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-full border border-indigo-200">
-                    Engine v2.4 Active
-                  </span>
+          ${!loading && activeNav === 'analytics' && html`
+            ${!analyticsData ? html`
+              <div class="p-12 bg-white rounded-3xl border border-cream-300 text-center space-y-4 shadow-xs animate-fadeIn">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-2xl font-bold shadow-xs">📈</div>
+                <div>
+                  <h3 class="font-serif text-lg font-bold text-navy-950">Connecting to Matching Analytics Engine</h3>
+                  <p class="text-xs text-warmgray-500 max-w-md mx-auto mt-1">Bilateral synergy analytics, compatibility scoring distributions, and skill matrix data are loading.</p>
                 </div>
+                <button onClick=${() => loadDataForSection('analytics')} class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors inline-flex items-center gap-2">
+                  <span>Load Analytics Data Now</span>
+                  <span>↻</span>
+                </button>
+              </div>
+            ` : html`
+              <div class="space-y-8 animate-fadeIn text-left">
+                
+                <!-- Bilateral Matching Engine Analytics Card -->
+                <div class="bg-white rounded-3xl border border-cream-300 shadow-xs p-6 sm:p-8 space-y-6">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-200 pb-4">
+                    <div>
+                      <h3 class="font-serif text-lg font-bold text-navy-950">Bilateral Matching Engine Analytics</h3>
+                      <p class="text-xs text-warmgray-600">Mathematical compatibility accuracy, acceptance rates, and top verified pairing pathways.</p>
+                    </div>
+                    <span class="px-3 py-1 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-full border border-indigo-200">
+                      Engine v2.4 Active
+                    </span>
+                  </div>
 
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
-                  <div class="p-4 bg-cream-50 rounded-2xl border border-cream-200 space-y-1">
-                    <span class="text-[10px] font-black text-warmgray-500 uppercase">Avg Match Score</span>
-                    <div class="text-2xl font-serif font-extrabold text-navy-950">${analyticsData.matchingAnalytics?.avgMatchScore}%</div>
+                  <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div class="p-4 bg-cream-50 rounded-2xl border border-cream-200 space-y-1">
+                      <span class="text-[10px] font-black text-warmgray-500 uppercase">Avg Match Score</span>
+                      <div class="text-2xl font-serif font-extrabold text-navy-950">${analyticsData.matchingAnalytics?.avgMatchScore}%</div>
+                    </div>
+                    <div class="p-4 bg-cream-50 rounded-2xl border border-cream-200 space-y-1">
+                      <span class="text-[10px] font-black text-warmgray-500 uppercase">Proposal Acceptance Rate</span>
+                      <div class="text-2xl font-serif font-extrabold text-emerald-700">${analyticsData.matchingAnalytics?.acceptanceRate}%</div>
+                    </div>
+                    <div class="p-4 bg-cream-50 rounded-2xl border border-cream-200 space-y-1">
+                      <span class="text-[10px] font-black text-warmgray-500 uppercase">Swap Completion Rate</span>
+                      <div class="text-2xl font-serif font-extrabold text-indigo-700">${analyticsData.matchingAnalytics?.completionRate}%</div>
+                    </div>
+                    <div class="p-4 bg-cream-50 rounded-2xl border border-cream-200 space-y-1">
+                      <span class="text-[10px] font-black text-warmgray-500 uppercase">Total Matches Computed</span>
+                      <div class="text-2xl font-serif font-extrabold text-navy-950">${analyticsData.matchingAnalytics?.totalMatchesGenerated}</div>
+                    </div>
                   </div>
-                  <div class="p-4 bg-cream-50 rounded-2xl border border-cream-200 space-y-1">
-                    <span class="text-[10px] font-black text-warmgray-500 uppercase">Proposal Acceptance Rate</span>
-                    <div class="text-2xl font-serif font-extrabold text-emerald-700">${analyticsData.matchingAnalytics?.acceptanceRate}%</div>
-                  </div>
-                  <div class="p-4 bg-cream-50 rounded-2xl border border-cream-200 space-y-1">
-                    <span class="text-[10px] font-black text-warmgray-500 uppercase">Swap Completion Rate</span>
-                    <div class="text-2xl font-serif font-extrabold text-indigo-700">${analyticsData.matchingAnalytics?.completionRate}%</div>
-                  </div>
-                  <div class="p-4 bg-cream-50 rounded-2xl border border-cream-200 space-y-1">
-                    <span class="text-[10px] font-black text-warmgray-500 uppercase">Total Matches Computed</span>
-                    <div class="text-2xl font-serif font-extrabold text-navy-950">${analyticsData.matchingAnalytics?.totalMatchesGenerated}</div>
-                  </div>
-                </div>
 
-                <!-- Read-Only Algorithm Weights Table -->
-                <div class="pt-4 border-t border-cream-200 space-y-3">
-                  <h4 class="font-bold text-navy-950 text-xs uppercase tracking-wider">Active 6-Factor Algorithm Weights (Read-Only)</h4>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    ${(analyticsData.matchingAnalytics?.activeAlgorithmWeights || []).map(w => html`
-                      <div key=${w.name} class="p-3.5 bg-white border border-cream-200 rounded-2xl flex items-center justify-between">
-                        <div>
-                          <p class="font-bold text-navy-950">${w.name}</p>
-                          <p class="text-[10px] text-warmgray-500">${w.description}</p>
+                  <!-- Read-Only Algorithm Weights Table -->
+                  <div class="pt-4 border-t border-cream-200 space-y-3">
+                    <h4 class="font-bold text-navy-950 text-xs uppercase tracking-wider">Active 6-Factor Algorithm Weights (Read-Only)</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      ${(analyticsData.matchingAnalytics?.activeAlgorithmWeights || []).map(w => html`
+                        <div key=${w.name} class="p-3.5 bg-white border border-cream-200 rounded-2xl flex items-center justify-between">
+                          <div>
+                            <p class="font-bold text-navy-950">${w.name}</p>
+                            <p class="text-[10px] text-warmgray-500">${w.description}</p>
+                          </div>
+                          <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 font-extrabold text-xs rounded-xl">${w.weight}%</span>
                         </div>
-                        <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 font-extrabold text-xs rounded-xl">${w.weight}%</span>
+                      `)}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Supply vs Demand Imbalance Visualization -->
+                <div class="bg-white rounded-3xl border border-cream-300 shadow-xs p-6 sm:p-8 space-y-4">
+                  <h3 class="font-serif text-lg font-bold text-navy-950">Skill Supply vs Demand Imbalance Matrix</h3>
+                  <div class="space-y-3 pt-2 text-xs">
+                    ${(analyticsData.skillMatrix || []).map(sk => html`
+                      <div key=${sk.id} class="p-3 bg-cream-50/70 rounded-xl border border-cream-200 flex items-center justify-between">
+                        <span class="font-bold text-navy-950 w-48 truncate">${sk.name}</span>
+                        <div class="flex items-center gap-4 text-xs">
+                          <span class="text-emerald-700 font-semibold">${sk.teachers || 0} teachers</span>
+                          <span class="text-indigo-700 font-semibold">${sk.learners || 0} learners</span>
+                        </div>
                       </div>
                     `)}
                   </div>
                 </div>
-              </div>
 
-              <!-- Supply vs Demand Imbalance Visualization -->
-              <div class="bg-white rounded-3xl border border-cream-300 shadow-xs p-6 sm:p-8 space-y-4">
-                <h3 class="font-serif text-lg font-bold text-navy-950">Skill Supply vs Demand Imbalance Matrix</h3>
-                <div class="space-y-3 pt-2 text-xs">
-                  ${(analyticsData.skillMatrix || []).map(sk => html`
-                    <div key=${sk.id} class="p-3 bg-cream-50/70 rounded-xl border border-cream-200 flex items-center justify-between">
-                      <span class="font-bold text-navy-950 w-48 truncate">${sk.name}</span>
-                      <div class="flex items-center gap-4 text-xs">
-                        <span class="text-emerald-700 font-semibold">${sk.teachers || 0} teachers</span>
-                        <span class="text-indigo-700 font-semibold">${sk.learners || 0} learners</span>
-                      </div>
-                    </div>
-                  `)}
-                </div>
               </div>
-
-            </div>
+            `}
           `}
 
           <!-- ============================================== -->
@@ -5270,6 +5366,11 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
           body: JSON.stringify({ email: loginInput.trim(), password: passwordInput, rememberMe: true })
         });
         if (res.user) {
+          try {
+            localStorage.setItem('skillswap_user_id', res.user.id);
+            localStorage.setItem('skillswap_user', JSON.stringify(res.user));
+            if (res.token) localStorage.setItem('skillswap_token', res.token);
+          } catch (e) {}
           if (['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(res.user.role)) {
             if (onAuthSuccess) {
               await onAuthSuccess(res.user);

@@ -284,6 +284,10 @@
         const data = await api('/api/session');
         if (data.authenticated && data.user) {
           setUser(data.user);
+          try {
+            localStorage.setItem('skillswap_user_id', data.user.id);
+            localStorage.setItem('skillswap_user', JSON.stringify(data.user));
+          } catch (e) {}
           const current = parseRouteFromHash();
           // Only auto-redirect to dashboard if user landed on home/login/signup without a deep-link hash
           if (!window.location.hash || window.location.hash === '#' || current.tab === 'home' || current.tab === 'login' || current.tab === 'signup') {
@@ -304,6 +308,11 @@
 
     const handleLogout = async () => {
       await api('/api/account/logout', { method: 'POST' }).catch(() => {});
+      try {
+        localStorage.removeItem('skillswap_user_id');
+        localStorage.removeItem('skillswap_token');
+        localStorage.removeItem('skillswap_user');
+      } catch (e) {}
       setUser(null);
       navigateToTab('home');
     };
