@@ -21,13 +21,22 @@ async function ensureCloudSchema() {
   if (!cloudSchemaPromise) {
     cloudSchemaPromise = (async () => {
       try {
-        const check = await pgPool.query(
-          "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'app_users' LIMIT 1"
+        const essentialTables = [
+          'app_users', 'profiles', 'categories', 'skills', 'user_skills',
+          'requests', 'connections', 'exchange_workspaces', 'reviews',
+          'reports', 'problems', 'proposals', 'skill_verifications',
+          'admin_logs', 'community_posts', 'platform_settings'
+        ];
+        const res = await pgPool.query(
+          "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
         );
-        if (check.rows.length === 0) {
-          console.log('⚡ Detected uninitialized Cloud PostgreSQL database. Running master schema migration...');
+        const existingTables = new Set((res.rows || []).map(r => r.table_name));
+        const missing = essentialTables.some(t => !existingTables.has(t));
+
+        if (missing || existingTables.size === 0) {
+          console.log('⚡ Detected uninitialized or partially initialized Cloud PostgreSQL database. Running master schema migration...');
           await pgPool.query(MASTER_SCHEMA_SQL);
-          console.log('✓ Master schema & seed catalog successfully created in Cloud PostgreSQL!');
+          console.log('✓ Master schema & seed catalog successfully created/verified in Cloud PostgreSQL!');
         }
         isCloudSchemaReady = true;
       } catch (err) {
@@ -156,9 +165,21 @@ export const db = {
     if (pgPool) {
       await ensureCloudSchema();
       try {
-        const pgSql = sql
+        let pgSql = sql
           .replace(/datetime\('now'\)/gi, 'now()')
-          .replace(/date\('now'\)/gi, 'CURRENT_DATE');
+          .replace(/date\('now'\)/gi, 'CURRENT_DATE')
+          .replace(/datetime\(created_at\)/gi, 'created_at')
+          .replace(/date\(created_at\)/gi, 'created_at::date')
+          .replace(/datetime\('now',\s*'-(\d+)\s+days?'\)/gi, "now() - INTERVAL '$1 days'")
+          .replace(/datetime\('now',\s*'-(\d+)\s+hours?'\)/gi, "now() - INTERVAL '$1 hours'")
+          .replace(/is_popular\s*=\s*1\s+OR\s+is_popular\s*=\s*true/gi, 'is_popular = true')
+          .replace(/is_verified\s*=\s*1\s+OR\s+is_verified\s*=\s*true/gi, 'is_verified = true')
+          .replace(/is_popular\s*=\s*1/gi, 'is_popular = true')
+          .replace(/is_verified\s*=\s*1/gi, 'is_verified = true')
+          .replace(/is_popular\s*=\s*0/gi, 'is_popular = false')
+          .replace(/is_verified\s*=\s*0/gi, 'is_verified = false')
+          .replace(/ORDER BY \(([^)]+)\s*=\s*'([^']+)'\) DESC/gi, "ORDER BY (CASE WHEN $1 = '$2' THEN 1 ELSE 0 END) DESC");
+
         const res = await pgPool.query(pgSql, params);
         return {
           rows: res.rows || [],

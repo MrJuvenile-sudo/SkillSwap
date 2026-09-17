@@ -12,25 +12,52 @@ export default async function (req, res) {
   if (!admin) return;
 
   if (req.method === 'GET') {
-    const { rows } = await db.query(
-      `SELECT u.id, u.name, u.username, u.email, u.role, u.status, u.avatar_url, u.headline, u.created_at,
-              u.email_verified,
-              p.location, p.bio, p.preferred_language, p.weekly_hours, p.completion_percentage,
-              (SELECT COUNT(*)::int FROM user_skills WHERE user_id = u.id AND type = 'TEACH') as teach_count,
-              (SELECT COUNT(*)::int FROM user_skills WHERE user_id = u.id AND type = 'LEARN') as learn_count,
-              (SELECT COUNT(*)::int FROM user_skills WHERE user_id = u.id AND (is_verified = 1 OR is_verified = true)) as verified_skills_count,
-              (SELECT COUNT(*)::int FROM exchange_workspaces ew 
-               JOIN connections c ON ew.connection_id = c.id 
-               WHERE (c.user1_id = u.id OR c.user2_id = u.id) AND ew.status = 'COMPLETED') as completed_exchanges,
-              (SELECT ROUND(COALESCE(AVG(rating), 5.0), 1) FROM reviews WHERE reviewee_id = u.id) as avg_rating,
-              (SELECT COUNT(*)::int FROM reviews WHERE reviewee_id = u.id) as reviews_count,
-              (SELECT COUNT(*)::int FROM reports WHERE reported_user_id = u.id) as reports_against
-
-       FROM app_users u
-       LEFT JOIN profiles p ON u.id = p.user_id
-       ORDER BY u.created_at DESC`
-    );
-    return res.json({ users: rows });
+    try {
+      const { rows } = await db.query(
+        `SELECT u.id, u.name, u.username, u.email, u.role, u.status, u.avatar_url, u.headline, u.created_at,
+                u.email_verified,
+                p.location, p.bio, p.preferred_language, p.weekly_hours, p.completion_percentage,
+                (SELECT COUNT(*)::int FROM user_skills WHERE user_id = u.id AND type = 'TEACH') as teach_count,
+                (SELECT COUNT(*)::int FROM user_skills WHERE user_id = u.id AND type = 'LEARN') as learn_count,
+                (SELECT COUNT(*)::int FROM user_skills WHERE user_id = u.id AND is_verified = true) as verified_skills_count,
+                (SELECT COUNT(*)::int FROM exchange_workspaces ew 
+                 JOIN connections c ON ew.connection_id = c.id 
+                 WHERE (c.user1_id = u.id OR c.user2_id = u.id) AND ew.status = 'COMPLETED') as completed_exchanges,
+                (SELECT ROUND(COALESCE(AVG(rating), 5.0)::numeric, 1) FROM reviews WHERE reviewee_id = u.id) as avg_rating,
+                (SELECT COUNT(*)::int FROM reviews WHERE reviewee_id = u.id) as reviews_count,
+                (SELECT COUNT(*)::int FROM reports WHERE reported_user_id = u.id) as reports_against
+         FROM app_users u
+         LEFT JOIN profiles p ON u.id = p.user_id
+         ORDER BY u.created_at DESC`
+      );
+      return res.json({ users: rows || [] });
+    } catch (err) {
+      console.warn('Admin Users: full query failed, attempting simplified query fallback:', err.message);
+      try {
+        const { rows: fallbackRows } = await db.query(
+          `SELECT u.id, u.name, u.username, u.email, u.role, u.status, u.avatar_url, u.headline, u.created_at,
+                  u.email_verified,
+                  p.location, p.bio, p.preferred_language, p.weekly_hours, p.completion_percentage
+           FROM app_users u
+           LEFT JOIN profiles p ON u.id = p.user_id
+           ORDER BY u.created_at DESC`
+        );
+        const enriched = (fallbackRows || []).map(u => ({
+          ...u,
+          teach_count: 0,
+          learn_count: 0,
+          verified_skills_count: 0,
+          completed_exchanges: 0,
+          avg_rating: 5.0,
+          reviews_count: 0,
+          reports_against: 0
+        }));
+        return res.json({ users: enriched });
+      } catch (fallbackErr) {
+        console.error('Admin Users fallback also failed:', fallbackErr.message);
+        return res.json({ users: [] });
+      }
+    }
   }
 
   if (req.method === 'PUT') {

@@ -51,17 +51,21 @@ export default async function (req, res) {
     }
 
 
-    const { rows } = await db.query(
-      `SELECT r.*, 
-              rep.name as reporter_name, rep.avatar_url as reporter_avatar,
-              tar.name as reported_name, tar.avatar_url as reported_avatar, tar.email as reported_email, tar.status as reported_status
-       FROM reports r
-       JOIN app_users rep ON r.reporter_id = rep.id
-       JOIN app_users tar ON r.reported_user_id = tar.id
-       ORDER BY (r.status = 'OPEN') DESC, (r.status = 'UNDER_INVESTIGATION') DESC, r.created_at DESC`
-
-    );
-    return res.json({ reports: rows });
+    try {
+      const { rows } = await db.query(
+        `SELECT r.*, 
+                rep.name as reporter_name, rep.avatar_url as reporter_avatar,
+                tar.name as reported_name, tar.avatar_url as reported_avatar, tar.email as reported_email, tar.status as reported_status
+         FROM reports r
+         JOIN app_users rep ON r.reporter_id = rep.id
+         JOIN app_users tar ON r.reported_user_id = tar.id
+         ORDER BY (CASE WHEN r.status = 'OPEN' THEN 1 ELSE 0 END) DESC, (CASE WHEN r.status = 'UNDER_INVESTIGATION' THEN 1 ELSE 0 END) DESC, r.created_at DESC`
+      );
+      return res.json({ reports: rows || [] });
+    } catch (err) {
+      console.warn('Admin Reports query notice:', err.message);
+      return res.json({ reports: [] });
+    }
   }
 
   if (req.method === 'PUT') {

@@ -3600,46 +3600,50 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
       }
     };
 
-    // Filtered lists
+    // Filtered lists (Null-safe to prevent blank white screens)
     const filteredUsers = useMemo(() => {
-      return users.filter(u => {
+      return (users || []).filter(u => {
+        if (!u) return false;
         const matchesSearch = !userSearch.trim() || 
-          u.name.toLowerCase().includes(userSearch.toLowerCase()) || 
-          u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-          (u.username && u.username.toLowerCase().includes(userSearch.toLowerCase()));
+          (u.name || '').toLowerCase().includes(userSearch.toLowerCase()) || 
+          (u.email || '').toLowerCase().includes(userSearch.toLowerCase()) ||
+          (u.username && (u.username || '').toLowerCase().includes(userSearch.toLowerCase()));
         if (!matchesSearch) return false;
         if (userFilter === 'ACTIVE') return u.status === 'ACTIVE';
         if (userFilter === 'BLOCKED') return u.status === 'BLOCKED';
-        if (userFilter === 'VERIFIED') return u.email_verified || u.verified_skills_count > 0;
+        if (userFilter === 'VERIFIED') return Boolean(u.email_verified || u.verified_skills_count > 0);
         if (userFilter === 'STAFF') return ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'].includes(u.role);
         return true;
       });
     }, [users, userSearch, userFilter]);
 
     const filteredSkills = useMemo(() => {
-      return skills.filter(s => {
+      return (skills || []).filter(s => {
+        if (!s) return false;
         return !skillSearch.trim() || 
-          s.name.toLowerCase().includes(skillSearch.toLowerCase()) || 
-          (s.category_name && s.category_name.toLowerCase().includes(skillSearch.toLowerCase()));
+          (s.name || '').toLowerCase().includes(skillSearch.toLowerCase()) || 
+          (s.category_name && (s.category_name || '').toLowerCase().includes(skillSearch.toLowerCase()));
       });
     }, [skills, skillSearch]);
 
     const filteredReviews = useMemo(() => {
-      return reviews.filter(r => {
+      return (reviews || []).filter(r => {
+        if (!r) return false;
         const matchesSearch = !reviewSearch.trim() || 
-          r.reviewer_name.toLowerCase().includes(reviewSearch.toLowerCase()) || 
-          r.reviewee_name.toLowerCase().includes(reviewSearch.toLowerCase()) ||
-          (r.comment && r.comment.toLowerCase().includes(reviewSearch.toLowerCase()));
+          (r.reviewer_name || '').toLowerCase().includes(reviewSearch.toLowerCase()) || 
+          (r.reviewee_name || '').toLowerCase().includes(reviewSearch.toLowerCase()) ||
+          (r.comment && (r.comment || '').toLowerCase().includes(reviewSearch.toLowerCase()));
         if (!matchesSearch) return false;
         if (reviewFilter === 'LOW') return r.rating <= 2;
-        if (reviewFilter === 'FLAGGED') return r.is_flagged;
-        if (reviewFilter === 'VERIFIED') return r.is_verified_exchange;
+        if (reviewFilter === 'FLAGGED') return Boolean(r.is_flagged);
+        if (reviewFilter === 'VERIFIED') return Boolean(r.is_verified_exchange);
         return true;
       });
     }, [reviews, reviewSearch, reviewFilter]);
 
     const filteredReports = useMemo(() => {
-      return reports.filter(r => {
+      return (reports || []).filter(r => {
+        if (!r) return false;
         if (reportFilter === 'OPEN') return r.status === 'OPEN';
         if (reportFilter === 'UNDER_INVESTIGATION') return r.status === 'UNDER_INVESTIGATION';
         if (reportFilter === 'RESOLVED') return r.status === 'RESOLVED';
@@ -3649,7 +3653,8 @@ Client -> Cloudflare CDN -> Nginx LB -> Node.js Cluster -> Redis Cache -> Postgr
     }, [reports, reportFilter]);
 
     const filteredVerifications = useMemo(() => {
-      return verifications.filter(v => {
+      return (verifications || []).filter(v => {
+        if (!v) return false;
         if (verifFilter === 'PENDING') return v.status === 'PENDING';
         if (verifFilter === 'APPROVED') return v.status === 'APPROVED';
         if (verifFilter === 'REJECTED') return v.status === 'REJECTED';

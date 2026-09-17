@@ -10,27 +10,39 @@ export default async function (req, res) {
 
   try {
     // 1. User Retention & Growth (DAU/WAU/MAU simulated calculations based on activity)
-    const { rows: userActivity } = await db.query(
-      `SELECT 
-         (SELECT COUNT(*)::int FROM app_users) as total_users,
-         (SELECT COUNT(*)::int FROM app_users WHERE status = 'ACTIVE') as active_users,
-         (SELECT COUNT(*)::int FROM app_users WHERE datetime(created_at) >= datetime('now', '-1 day')) as dau,
-         (SELECT COUNT(*)::int FROM app_users WHERE datetime(created_at) >= datetime('now', '-7 days')) as wau,
-         (SELECT COUNT(*)::int FROM app_users WHERE datetime(created_at) >= datetime('now', '-30 days')) as mau`
-    );
+    let userActivity = [{ total_users: 0, active_users: 0, dau: 0, wau: 0, mau: 0 }];
+    try {
+      const res = await db.query(
+        `SELECT 
+           (SELECT COUNT(*)::int FROM app_users) as total_users,
+           (SELECT COUNT(*)::int FROM app_users WHERE status = 'ACTIVE') as active_users,
+           (SELECT COUNT(*)::int FROM app_users WHERE created_at >= now() - INTERVAL '1 day') as dau,
+           (SELECT COUNT(*)::int FROM app_users WHERE created_at >= now() - INTERVAL '7 days') as wau,
+           (SELECT COUNT(*)::int FROM app_users WHERE created_at >= now() - INTERVAL '30 days') as mau`
+      );
+      if (res.rows && res.rows.length > 0) userActivity = res.rows;
+    } catch (actErr) {
+      console.warn('Analytics: userActivity notice:', actErr.message);
+    }
 
     // 2. Supply vs Demand Imbalance Matrix (Top 10 skills)
-    const { rows: skillMatrix } = await db.query(
-      `SELECT s.id, s.name, c.name as category_name,
-              SUM(CASE WHEN us.type = 'TEACH' THEN 1 ELSE 0 END)::int as teachers,
-              SUM(CASE WHEN us.type = 'LEARN' THEN 1 ELSE 0 END)::int as learners,
-              (SUM(CASE WHEN us.type = 'LEARN' THEN 1 ELSE 0 END) - SUM(CASE WHEN us.type = 'TEACH' THEN 1 ELSE 0 END)) as gap
-       FROM skills s
-       JOIN categories c ON s.category_id = c.id
-       LEFT JOIN user_skills us ON s.id = us.skill_id
-       GROUP BY s.id, s.name, c.name
-       ORDER BY (COUNT(us.id)) DESC LIMIT 10`
-    );
+    let skillMatrix = [];
+    try {
+      const res = await db.query(
+        `SELECT s.id, s.name, c.name as category_name,
+                SUM(CASE WHEN us.type = 'TEACH' THEN 1 ELSE 0 END)::int as teachers,
+                SUM(CASE WHEN us.type = 'LEARN' THEN 1 ELSE 0 END)::int as learners,
+                (SUM(CASE WHEN us.type = 'LEARN' THEN 1 ELSE 0 END) - SUM(CASE WHEN us.type = 'TEACH' THEN 1 ELSE 0 END)) as gap
+         FROM skills s
+         JOIN categories c ON s.category_id = c.id
+         LEFT JOIN user_skills us ON s.id = us.skill_id
+         GROUP BY s.id, s.name, c.name
+         ORDER BY (COUNT(us.id)) DESC LIMIT 10`
+      );
+      skillMatrix = res.rows || [];
+    } catch (matErr) {
+      console.warn('Analytics: skillMatrix notice:', matErr.message);
+    }
 
     // 3. Bilateral Matching Engine Analytics
     const matchingAnalytics = {

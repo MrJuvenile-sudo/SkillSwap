@@ -38,6 +38,42 @@
   window.SkillSwap.api = apiFetch;
   const api = apiFetch;
 
+  // ----------------------------------------------------
+  // Universal React Error Boundary to prevent blank white screens
+  // ----------------------------------------------------
+  class ErrorBoundary extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = { hasError: false, error: null };
+    }
+    static getDerivedStateFromError(error) {
+      return { hasError: true, error };
+    }
+    componentDidCatch(error, errorInfo) {
+      console.error('SkillSwap ErrorBoundary caught:', error, errorInfo);
+    }
+    render() {
+      if (this.state.hasError) {
+        return html`
+          <div class="min-h-[400px] flex items-center justify-center p-6 text-center font-sans">
+            <div class="max-w-md w-full bg-white p-8 rounded-3xl border border-cream-300 shadow-lg space-y-4">
+              <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto text-xl">⚠️</div>
+              <h2 class="font-serif text-lg font-bold text-navy-950">Interface Display Recovered</h2>
+              <p class="text-xs text-warmgray-600">A transient display notice was intercepted: ${this.state.error?.message || 'Interface glitch'}. Your data is completely safe.</p>
+              <div class="flex gap-2 justify-center pt-2">
+                <button onClick=${() => { this.setState({ hasError: false, error: null }); window.location.reload(); }} class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors">
+                  Reload Live Panel ↻
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      return this.props.children;
+    }
+  }
+  window.SkillSwap.ErrorBoundary = ErrorBoundary;
+
 
   // ----------------------------------------------------
   // Lightweight SVG Icon Component

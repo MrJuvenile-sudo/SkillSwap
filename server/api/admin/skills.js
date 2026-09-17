@@ -48,7 +48,7 @@ export default async function (req, res) {
         `INSERT INTO skills (name, category_id, description, icon, is_popular, is_trending)
          VALUES ($1, $2, $3, 'Sparkles', $4, $5)
          RETURNING *`,
-        [name.trim(), Number(category_id), description || '', is_popular ? 1 : 0, is_trending ? 1 : 0]
+        [name.trim(), Number(category_id), description || '', Boolean(is_popular), Boolean(is_trending)]
       );
 
       // Log admin action
@@ -99,9 +99,9 @@ export default async function (req, res) {
           name ? name.trim() : null,
           category_id ? Number(category_id) : null,
           description !== undefined ? description : null,
-          is_popular !== undefined ? (is_popular ? 1 : 0) : null,
-          is_trending !== undefined ? (is_trending ? 1 : 0) : null,
-          is_disabled !== undefined ? (is_disabled ? 1 : 0) : null,
+          is_popular !== undefined ? Boolean(is_popular) : null,
+          is_trending !== undefined ? Boolean(is_trending) : null,
+          is_disabled !== undefined ? Boolean(is_disabled) : null,
           Number(id)
         ]
       );
