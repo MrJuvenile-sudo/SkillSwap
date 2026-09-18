@@ -4,7 +4,8 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
-import { pathToFileURL } from 'url';
+import { pathToFileURL, fileURLToPath } from 'url';
+import { registerRoutes } from './server/routes.js';
 
 // ----------------------------------------------------
 // 0. Load Environment Configuration (.env)
@@ -168,15 +169,22 @@ async function loadRoutes() {
   }
 }
 
-await loadRoutes();
+// 1. Synchronously register compiled API routes (no async cold-start race conditions)
+registerRoutes(app);
 
-// Fallback to serving SPA index.html for non-API routes
+// 2. Explicit JSON 404 response for any unhandled /api/* routes
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ error: `API endpoint ${req.method} ${req.path} not found.` });
+});
+
+// 3. Fallback to serving SPA index.html for non-API routes
 app.get('*', (req, res) => {
   res.sendFile(path.resolve('public/index.html'));
 });
 
-// Start Server if running locally (not in Vercel serverless environment)
-if (!process.env.VERCEL) {
+// Start Server if running directly locally (not when imported or in Vercel serverless environment)
+const isDirectRun = process.argv[1] && (import.meta.url === pathToFileURL(process.argv[1]).href || process.argv[1].endsWith('server.js'));
+if (!process.env.VERCEL && isDirectRun) {
   app.listen(PORT, () => {
     console.log(`\n🚀 SkillSwapX Server is running locally at http://localhost:${PORT}\n`);
   });

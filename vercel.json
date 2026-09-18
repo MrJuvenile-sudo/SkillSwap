@@ -2,7 +2,13 @@
   "version": 2,
   "functions": {
     "api/index.js": {
-      "includeFiles": "server/**"
+      "includeFiles": [
+        "server/**",
+        "hatchable/**",
+        "lib/**",
+        "skillswap.db",
+        "package.json"
+      ]
     }
   },
   "rewrites": [

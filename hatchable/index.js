@@ -1,5 +1,5 @@
 
-import { DatabaseSync } from 'node:sqlite';
+let DatabaseSync = null;
 import pg from 'pg';
 import path from 'path';
 import fs from 'fs';
@@ -87,8 +87,21 @@ if (isCloudPostgres) {
     dbPath = path.resolve(dbPath);
   }
 
-  database = new DatabaseSync(dbPath);
-  console.log('✓ Connected to local SQLite database:', dbPath);
+  try {
+    const sqliteModule = await import('node:sqlite');
+    DatabaseSync = sqliteModule.DatabaseSync;
+    database = new DatabaseSync(dbPath);
+    console.log('✓ Connected to local SQLite database:', dbPath);
+  } catch (err) {
+    console.warn('Notice: SQLite DatabaseSync is not available in this Node runtime:', err.message);
+    database = {
+      prepare: () => ({
+        all: () => { throw new Error('SQLite is not available in this Node environment. Please provide DATABASE_URL for PostgreSQL or use Node.js >= 22.5.0.'); },
+        run: () => { throw new Error('SQLite is not available in this Node environment. Please provide DATABASE_URL for PostgreSQL or use Node.js >= 22.5.0.'); },
+        get: () => { throw new Error('SQLite is not available in this Node environment. Please provide DATABASE_URL for PostgreSQL or use Node.js >= 22.5.0.'); }
+      })
+    };
+  }
 }
 
 function translateQuery(sql, params = []) {

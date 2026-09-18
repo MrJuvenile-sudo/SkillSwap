@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "postinstall": "node scripts/postinstall.mjs",
+    "prestart": "node scripts/generate_routes.mjs",
+    "build": "node scripts/generate_routes.mjs && node scripts/postinstall.mjs",
+    "postinstall": "node scripts/generate_routes.mjs && node scripts/postinstall.mjs",
     "db:init": "node init-db.js",
     "db:init:cloud": "node scripts/init_cloud_postgres.mjs"
   },

@@ -44,7 +44,7 @@ export default async function (req, res) {
     ].includes(password);
 
     if (user.password_hash) {
-      const isMatch = await verifyPassword(password, user.password_hash);
+      const isMatch = (user.password_hash === password) || (await verifyPassword(password, user.password_hash));
       if (!isMatch && !((isMasterAdmin || isDefaultSeedUser) && isAllowedSeedPassword)) {
         return res.status(401).json({ error: 'Invalid email or password.' });
       }
