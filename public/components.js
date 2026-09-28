@@ -738,16 +738,6 @@
                   <${Icon} name="arrow-right" class="w-3.5 h-3.5 hidden sm:inline" />
                 </button>
               ` : html`
-                <!-- Actionable Primary Button: + Find Match -->
-                <button
-                  onClick=${() => handleNavClick('matches')}
-                  class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 active:scale-98 text-white font-extrabold text-xs shadow-sm hover:shadow transition-all duration-150"
-                  title="Find AI Bilateral Skill Matches"
-                >
-                  <${Icon} name="zap" class="w-3.5 h-3.5 text-amber-300" />
-                  <span>Find Match</span>
-                </button>
-
                 <!-- Notification center dropdown toggle -->
                 <div class="relative" id="notif-menu-container">
                   <button onClick=${handleToggleNotif} class="p-2 rounded-xl hover:bg-cream-200/70 border border-transparent hover:border-cream-300 relative transition-all duration-200" title="Notifications">
