@@ -182,12 +182,15 @@
     ];
 
     return html`
-      <div class="space-y-28 pb-24 text-center relative overflow-hidden bg-dots-pattern">
+      <div class="space-y-28 pb-24 text-center relative overflow-hidden">
+        <!-- Dedicated Hero Moving Background Dots Layer (Slow Top-to-Bottom Motion) -->
+        <div class="absolute inset-x-0 top-0 h-[880px] pointer-events-none hero-dots-animated [mask-image:linear-gradient(to_bottom,black_70%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_70%,transparent)] z-0"></div>
+
         <!-- Ambient Backdrop Glow -->
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[850px] h-[400px] bg-navy-500/8 blur-[140px] rounded-full pointer-events-none"></div>
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[850px] h-[400px] bg-navy-500/8 blur-[140px] rounded-full pointer-events-none z-0"></div>
 
         <!-- 1. Hero Section with Live Search & Badges -->
-        <section class="relative pt-16 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-8 animate-fadeIn">
+        <section class="relative z-10 pt-16 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-8 animate-fadeIn">
           <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-navy-50/90 border border-navy-200/80 text-navy-800 text-xs font-extrabold tracking-wider shadow-xs animate-hero-badge">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span>Verified Reciprocal Peer-to-Peer Learning Network</span>

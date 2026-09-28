@@ -70,6 +70,31 @@ html, body {
   background-size: 24px 24px;
 }
 
+/* Animated top-to-bottom falling dots for home page hero section */
+.hero-dots-animated,
+.bg-dots-animated {
+  background-image: radial-gradient(rgba(0, 102, 238, 0.08) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  animation: moveDotsDown 35s linear infinite;
+  will-change: background-position;
+}
+
+@keyframes moveDotsDown {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 240px; /* Moves exactly down (top to bottom), looping seamlessly */
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-dots-animated,
+  .bg-dots-animated {
+    animation: none;
+  }
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }

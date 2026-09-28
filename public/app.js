@@ -378,7 +378,7 @@
     };
 
     return html`
-      <div class="min-h-screen flex flex-col bg-cream-100 text-warmgray-900 font-sans bg-dots-pattern">
+      <div class="min-h-screen flex flex-col bg-cream-100 text-warmgray-900 font-sans">
         ${activeTab !== 'admin' ? html`
           <${Header}
             user=${user}
