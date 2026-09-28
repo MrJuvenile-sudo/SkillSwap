@@ -726,17 +726,6 @@
 
             <!-- Right Controls / Auth / Profile Actions -->
             <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-              <!-- Quick Search Button -->
-              <button
-                onClick=${() => handleNavClick('skills-dir')}
-                class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cream-100/80 hover:bg-cream-200/90 text-warmgray-600 hover:text-navy-950 border border-cream-300/80 text-xs font-semibold transition-all duration-150 group"
-                title="Search skills (Ctrl+K)"
-              >
-                <${Icon} name="search" class="w-3.5 h-3.5 text-navy-600 group-hover:scale-110 transition-transform" />
-                <span class="text-xs">Search</span>
-                <kbd class="hidden xl:inline-block px-1.5 py-0.5 text-[9px] font-mono text-warmgray-500 bg-white border border-cream-300 rounded shadow-2xs">Ctrl+K</kbd>
-              </button>
-
               ${!user ? html`
                 <button onClick=${() => handleNavClick('skills-dir')} class="hidden md:inline-flex px-3 py-2 text-xs font-bold text-navy-800 hover:text-navy-950 hover:bg-cream-100 rounded-xl transition-all border border-cream-300/60">
                   Browse Skills
