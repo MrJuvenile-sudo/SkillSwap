@@ -7,7 +7,7 @@
   const htm = window.htm || self.htm;
   if (!React || !htm) return;
 
-  const { useState, useEffect } = React;
+  const { useState, useEffect, useRef } = React;
   const html = htm.bind(React.createElement);
 
   // ----------------------------------------------------
@@ -256,6 +256,33 @@
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
+    const exploreTimerRef = useRef(null);
+    const resourcesTimerRef = useRef(null);
+
+    const handleExploreEnter = () => {
+      if (exploreTimerRef.current) clearTimeout(exploreTimerRef.current);
+      setExploreDropdownOpen(true);
+    };
+
+    const handleExploreLeave = () => {
+      if (exploreTimerRef.current) clearTimeout(exploreTimerRef.current);
+      exploreTimerRef.current = setTimeout(() => {
+        setExploreDropdownOpen(false);
+      }, 180);
+    };
+
+    const handleResourcesEnter = () => {
+      if (resourcesTimerRef.current) clearTimeout(resourcesTimerRef.current);
+      setResourcesDropdownOpen(true);
+    };
+
+    const handleResourcesLeave = () => {
+      if (resourcesTimerRef.current) clearTimeout(resourcesTimerRef.current);
+      resourcesTimerRef.current = setTimeout(() => {
+        setResourcesDropdownOpen(false);
+      }, 180);
+    };
+
     const loadNotifications = () => {
       if (!user) return;
       apiFetch('/api/notifications').then(data => {
@@ -314,6 +341,8 @@
       return () => {
         document.removeEventListener('mousedown', handleOutsideClick);
         window.removeEventListener('keydown', handleKeyDown);
+        if (exploreTimerRef.current) clearTimeout(exploreTimerRef.current);
+        if (resourcesTimerRef.current) clearTimeout(resourcesTimerRef.current);
       };
     }, []);
 
@@ -352,6 +381,8 @@
     };
 
     const handleNavClick = (tab) => {
+      if (exploreTimerRef.current) clearTimeout(exploreTimerRef.current);
+      if (resourcesTimerRef.current) clearTimeout(resourcesTimerRef.current);
       setActiveTab(tab);
       setMobileOpen(false);
       setUserMenuOpen(false);
@@ -501,48 +532,55 @@
                 </button>
 
                 <!-- Explore Dropdown (Left Aligned) -->
-                <div class="relative text-left" id="explore-dropdown-container">
+                <div
+                  class="relative text-left"
+                  id="explore-dropdown-container"
+                  onMouseEnter=${handleExploreEnter}
+                  onMouseLeave=${handleExploreLeave}
+                >
                   <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['skills-dir', 'problems', 'circles', 'help', 'faq'].includes(activeTab) ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold hover:bg-cream-200/60'}">
                     <span>Explore</span>
                     <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${exploreDropdownOpen ? 'rotate-180' : ''}" />
                   </button>
                   ${exploreDropdownOpen ? html`
-                    <div class="absolute left-0 top-full mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cream-300 py-2 z-50 text-xs text-left animate-fadeIn ring-1 ring-black/5 space-y-0.5">
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('skills-dir'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="search" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">Skill Directory</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Browse 120+ verified subjects</p>
-                        </div>
-                      </button>
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('problems'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="layers" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">Problems & Challenges</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Real problem cases seeking solutions</p>
-                        </div>
-                      </button>
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('circles'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="sparkles" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">Skill Circles</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Group peer learning cohorts</p>
-                        </div>
-                      </button>
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('help'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="compass" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">How It Works</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">P2P Barter Guide & Escrow</p>
-                        </div>
-                      </button>
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('faq'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="message-circle" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">FAQ & Support</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Frequently Asked Questions</p>
-                        </div>
-                      </button>
+                    <div class="absolute left-0 top-full pt-1.5 w-64 z-50 animate-fadeIn">
+                      <div class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cream-300 py-2 text-xs text-left ring-1 ring-black/5 space-y-0.5">
+                        <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('skills-dir'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="search" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">Skill Directory</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">Browse 120+ verified subjects</p>
+                          </div>
+                        </button>
+                        <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('problems'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="layers" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">Problems & Challenges</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">Real problem cases seeking solutions</p>
+                          </div>
+                        </button>
+                        <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('circles'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="sparkles" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">Skill Circles</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">Group peer learning cohorts</p>
+                          </div>
+                        </button>
+                        <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('help'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="compass" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">How It Works</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">P2P Barter Guide & Escrow</p>
+                          </div>
+                        </button>
+                        <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('faq'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="message-circle" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">FAQ & Support</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">Frequently Asked Questions</p>
+                          </div>
+                        </button>
+                      </div>
                     </div>
                   ` : null}
                 </div>
@@ -565,92 +603,106 @@
                 </button>
 
                 <!-- Discover Dropdown (People, Problems, Skill Circles, How It Works) -->
-                <div class="relative text-left" id="explore-dropdown-container">
+                <div
+                  class="relative text-left"
+                  id="explore-dropdown-container"
+                  onMouseEnter=${handleExploreEnter}
+                  onMouseLeave=${handleExploreLeave}
+                >
                   <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['skills-dir', 'problems', 'circles', 'help', 'faq'].includes(activeTab) ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold hover:bg-cream-200/60'}">
                     <span>Discover</span>
                     <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${exploreDropdownOpen ? 'rotate-180' : ''}" />
                   </button>
                   ${exploreDropdownOpen ? html`
-                    <div class="absolute left-0 top-full mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cream-300 py-2 z-50 text-xs text-left animate-fadeIn ring-1 ring-black/5 space-y-0.5">
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('skills-dir'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="search" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">Skill Directory</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Browse 120+ verified subjects</p>
-                        </div>
-                      </button>
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('problems'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="layers" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">Problems & Challenges</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Real problem cases seeking solutions</p>
-                        </div>
-                      </button>
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('circles'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="sparkles" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">Skill Circles</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Group peer learning cohorts</p>
-                        </div>
-                      </button>
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('help'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="compass" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">How It Works</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">P2P Barter Guide & Escrow</p>
-                        </div>
-                      </button>
-                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('faq'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="message-circle" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">FAQ & Support</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Frequently Asked Questions</p>
-                        </div>
-                      </button>
+                    <div class="absolute left-0 top-full pt-1.5 w-64 z-50 animate-fadeIn">
+                      <div class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cream-300 py-2 text-xs text-left ring-1 ring-black/5 space-y-0.5">
+                        <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('skills-dir'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="search" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">Skill Directory</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">Browse 120+ verified subjects</p>
+                          </div>
+                        </button>
+                        <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('problems'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="layers" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">Problems & Challenges</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">Real problem cases seeking solutions</p>
+                          </div>
+                        </button>
+                        <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('circles'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="sparkles" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">Skill Circles</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">Group peer learning cohorts</p>
+                          </div>
+                        </button>
+                        <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('help'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="compass" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">How It Works</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">P2P Barter Guide & Escrow</p>
+                          </div>
+                        </button>
+                        <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('faq'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="message-circle" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">FAQ & Support</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">Frequently Asked Questions</p>
+                          </div>
+                        </button>
+                      </div>
                     </div>
                   ` : null}
                 </div>
 
                 <!-- Workspace Dropdown (Matches, Exchanges, Requests, Community) -->
-                <div class="relative text-left" id="resources-dropdown-container">
+                <div
+                  class="relative text-left"
+                  id="resources-dropdown-container"
+                  onMouseEnter=${handleResourcesEnter}
+                  onMouseLeave=${handleResourcesLeave}
+                >
                   <button onClick=${() => setResourcesDropdownOpen(!resourcesDropdownOpen)} class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['matches', 'workspaces', 'requests', 'community'].includes(activeTab) ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold hover:bg-cream-200/60'}">
                     <span>Workspace</span>
                     ${pendingRequestsCount > 0 ? html`<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-sky-500 text-white shadow-xs animate-pulse">${pendingRequestsCount}</span>` : null}
                     <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${resourcesDropdownOpen ? 'rotate-180' : ''}" />
                   </button>
                   ${resourcesDropdownOpen ? html`
-                    <div class="absolute left-0 top-full mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cream-300 py-2 z-50 text-xs text-left animate-fadeIn ring-1 ring-black/5 space-y-0.5">
-                      <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('matches'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="sparkles" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">Reciprocal Matches</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">AI scored 1:1 bilateral matches</p>
-                        </div>
-                      </button>
-                      <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('workspaces'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="folder" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">Active Exchanges</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Ongoing agreement workspaces</p>
-                        </div>
-                      </button>
-                      <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('requests'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center justify-between gap-2 text-navy-900 font-bold transition-colors">
-                        <div class="flex items-center gap-3">
-                          <${Icon} name="inbox" class="w-4 h-4 text-navy-600 shrink-0" />
+                    <div class="absolute left-0 top-full pt-1.5 w-64 z-50 animate-fadeIn">
+                      <div class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cream-300 py-2 text-xs text-left ring-1 ring-black/5 space-y-0.5">
+                        <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('matches'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="sparkles" class="w-4 h-4 text-navy-600 shrink-0" />
                           <div>
-                            <p class="font-bold text-navy-950">Swap Requests</p>
-                            <p class="text-[10px] text-warmgray-500 font-normal">Sent and received barter requests</p>
+                            <p class="font-bold text-navy-950">Reciprocal Matches</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">AI scored 1:1 bilateral matches</p>
                           </div>
-                        </div>
-                        ${pendingRequestsCount > 0 ? html`<span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-500 text-white shadow-xs">${pendingRequestsCount} new</span>` : null}
-                      </button>
-                      <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('community'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
-                        <${Icon} name="message-square" class="w-4 h-4 text-navy-600 shrink-0" />
-                        <div>
-                          <p class="font-bold text-navy-950">Community Feed</p>
-                          <p class="text-[10px] text-warmgray-500 font-normal">Peer discussions & study groups</p>
-                        </div>
-                      </button>
+                        </button>
+                        <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('workspaces'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="folder" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">Active Exchanges</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">Ongoing agreement workspaces</p>
+                          </div>
+                        </button>
+                        <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('requests'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center justify-between gap-2 text-navy-900 font-bold transition-colors">
+                          <div class="flex items-center gap-3">
+                            <${Icon} name="inbox" class="w-4 h-4 text-navy-600 shrink-0" />
+                            <div>
+                              <p class="font-bold text-navy-950">Swap Requests</p>
+                              <p class="text-[10px] text-warmgray-500 font-normal">Sent and received barter requests</p>
+                            </div>
+                          </div>
+                          ${pendingRequestsCount > 0 ? html`<span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-500 text-white shadow-xs">${pendingRequestsCount} new</span>` : null}
+                        </button>
+                        <button onClick=${() => { setResourcesDropdownOpen(false); handleNavClick('community'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                          <${Icon} name="message-square" class="w-4 h-4 text-navy-600 shrink-0" />
+                          <div>
+                            <p class="font-bold text-navy-950">Community Feed</p>
+                            <p class="text-[10px] text-warmgray-500 font-normal">Peer discussions & study groups</p>
+                          </div>
+                        </button>
+                      </div>
                     </div>
                   ` : null}
                 </div>
