@@ -113,7 +113,9 @@
       'folder': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2z"/></svg>`,
       'eye': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`,
       'eye-off': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`,
-      'shield-check': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>`
+      'shield-check': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>`,
+      'plus': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+      'zap': html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`
     };
     return icons[name] || html`<svg class=${cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="8"/></svg>`;
   }
@@ -286,8 +288,33 @@
           setResourcesDropdownOpen(false);
         }
       };
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          setUserMenuOpen(false);
+          setNotifOpen(false);
+          setExploreDropdownOpen(false);
+          setResourcesDropdownOpen(false);
+          setMobileOpen(false);
+        }
+        // Quick Jump to Skill Directory via Ctrl+K / Cmd+K
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          setActiveTab('skills-dir');
+          setUserMenuOpen(false);
+          setNotifOpen(false);
+          setExploreDropdownOpen(false);
+          setResourcesDropdownOpen(false);
+          setMobileOpen(false);
+        }
+      };
+
       document.addEventListener('mousedown', handleOutsideClick);
-      return () => document.removeEventListener('mousedown', handleOutsideClick);
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('mousedown', handleOutsideClick);
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     }, []);
 
     const handleToggleNotif = () => {
@@ -329,6 +356,32 @@
       setMobileOpen(false);
       setUserMenuOpen(false);
       setNotifOpen(false);
+      setExploreDropdownOpen(false);
+      setResourcesDropdownOpen(false);
+    };
+
+    const handleNotificationClick = (n) => {
+      handleReadNotification(n.id);
+      setNotifOpen(false);
+      if (!n.link) {
+        handleNavClick('requests');
+        return;
+      }
+      const raw = n.link.replace(/^\//, '');
+      const path = raw.split('/')[0] || raw;
+      if (['requests', 'request'].includes(path)) {
+        handleNavClick('requests');
+      } else if (['workspaces', 'workspace', 'exchange', 'agreements'].includes(path)) {
+        handleNavClick('workspaces');
+      } else if (['chat', 'messages'].includes(path)) {
+        handleNavClick('chat');
+      } else if (['matches', 'match'].includes(path)) {
+        handleNavClick('matches');
+      } else if (path.startsWith('hub')) {
+        handleNavClick('hub-browse');
+      } else {
+        handleNavClick(path || 'dashboard');
+      }
     };
 
     const guestNavLinks = [
@@ -449,7 +502,7 @@
 
                 <!-- Explore Dropdown (Left Aligned) -->
                 <div class="relative text-left" id="explore-dropdown-container">
-                  <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1 hover:bg-cream-200/60 text-warmgray-700 hover:text-navy-900 font-semibold">
+                  <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['skills-dir', 'problems', 'circles', 'help', 'faq'].includes(activeTab) ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold hover:bg-cream-200/60'}">
                     <span>Explore</span>
                     <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${exploreDropdownOpen ? 'rotate-180' : ''}" />
                   </button>
@@ -513,7 +566,7 @@
 
                 <!-- Discover Dropdown (People, Problems, Skill Circles, How It Works) -->
                 <div class="relative text-left" id="explore-dropdown-container">
-                  <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['skills-dir', 'problems', 'circles', 'help', 'faq'].includes(activeTab) ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold'}">
+                  <button onClick=${() => setExploreDropdownOpen(!exploreDropdownOpen)} class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['skills-dir', 'problems', 'circles', 'help', 'faq'].includes(activeTab) ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold hover:bg-cream-200/60'}">
                     <span>Discover</span>
                     <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${exploreDropdownOpen ? 'rotate-180' : ''}" />
                   </button>
@@ -547,15 +600,22 @@
                           <p class="text-[10px] text-warmgray-500 font-normal">P2P Barter Guide & Escrow</p>
                         </div>
                       </button>
+                      <button onClick=${() => { setExploreDropdownOpen(false); handleNavClick('faq'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 flex items-center gap-3 text-navy-900 font-bold transition-colors">
+                        <${Icon} name="message-circle" class="w-4 h-4 text-navy-600 shrink-0" />
+                        <div>
+                          <p class="font-bold text-navy-950">FAQ & Support</p>
+                          <p class="text-[10px] text-warmgray-500 font-normal">Frequently Asked Questions</p>
+                        </div>
+                      </button>
                     </div>
                   ` : null}
                 </div>
 
                 <!-- Workspace Dropdown (Matches, Exchanges, Requests, Community) -->
                 <div class="relative text-left" id="resources-dropdown-container">
-                  <button onClick=${() => setResourcesDropdownOpen(!resourcesDropdownOpen)} class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['matches', 'workspaces', 'requests', 'community'].includes(activeTab) ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold'}">
+                  <button onClick=${() => setResourcesDropdownOpen(!resourcesDropdownOpen)} class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${['matches', 'workspaces', 'requests', 'community'].includes(activeTab) ? 'tab-pill-active font-extrabold shadow-md' : 'tab-pill-inactive font-semibold hover:bg-cream-200/60'}">
                     <span>Workspace</span>
-                    ${pendingRequestsCount > 0 ? html`<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-sky-500 text-white shadow-xs">${pendingRequestsCount}</span>` : null}
+                    ${pendingRequestsCount > 0 ? html`<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-sky-500 text-white shadow-xs animate-pulse">${pendingRequestsCount}</span>` : null}
                     <${Icon} name="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ${resourcesDropdownOpen ? 'rotate-180' : ''}" />
                   </button>
                   ${resourcesDropdownOpen ? html`
@@ -613,22 +673,46 @@
             </nav>
 
             <!-- Right Controls / Auth / Profile Actions -->
-            <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+              <!-- Quick Search Button -->
+              <button
+                onClick=${() => handleNavClick('skills-dir')}
+                class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cream-100/80 hover:bg-cream-200/90 text-warmgray-600 hover:text-navy-950 border border-cream-300/80 text-xs font-semibold transition-all duration-150 group"
+                title="Search skills (Ctrl+K)"
+              >
+                <${Icon} name="search" class="w-3.5 h-3.5 text-navy-600 group-hover:scale-110 transition-transform" />
+                <span class="text-xs">Search</span>
+                <kbd class="hidden xl:inline-block px-1.5 py-0.5 text-[9px] font-mono text-warmgray-500 bg-white border border-cream-300 rounded shadow-2xs">Ctrl+K</kbd>
+              </button>
+
               ${!user ? html`
-                <button onClick=${() => handleNavClick('login')} class="hidden sm:inline-flex px-3.5 py-2 text-xs sm:text-sm font-bold text-navy-900 hover:text-navy-700 hover:bg-cream-100 rounded-xl transition-all whitespace-nowrap">
+                <button onClick=${() => handleNavClick('skills-dir')} class="hidden md:inline-flex px-3 py-2 text-xs font-bold text-navy-800 hover:text-navy-950 hover:bg-cream-100 rounded-xl transition-all border border-cream-300/60">
+                  Browse Skills
+                </button>
+                <button onClick=${() => handleNavClick('login')} class="px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-bold text-navy-900 hover:text-navy-700 hover:bg-cream-100 rounded-xl transition-all whitespace-nowrap">
                   Log In
                 </button>
-                <button onClick=${() => handleNavClick('signup')} class="px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-extrabold bg-navy-700 hover:bg-navy-800 text-white rounded-xl shadow-sm hover:shadow transition-all duration-200 flex items-center gap-1 whitespace-nowrap">
+                <button onClick=${() => handleNavClick('signup')} class="px-3.5 sm:px-4 py-2 sm:py-2 text-xs sm:text-sm font-extrabold bg-navy-700 hover:bg-navy-800 active:scale-98 text-white rounded-xl shadow-sm hover:shadow transition-all duration-200 flex items-center gap-1 whitespace-nowrap">
                   <span>Join Free</span>
                   <${Icon} name="arrow-right" class="w-3.5 h-3.5 hidden sm:inline" />
                 </button>
               ` : html`
+                <!-- Actionable Primary Button: + Find Match -->
+                <button
+                  onClick=${() => handleNavClick('matches')}
+                  class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 active:scale-98 text-white font-extrabold text-xs shadow-sm hover:shadow transition-all duration-150"
+                  title="Find AI Bilateral Skill Matches"
+                >
+                  <${Icon} name="zap" class="w-3.5 h-3.5 text-amber-300" />
+                  <span>Find Match</span>
+                </button>
+
                 <!-- Notification center dropdown toggle -->
                 <div class="relative" id="notif-menu-container">
                   <button onClick=${handleToggleNotif} class="p-2 rounded-xl hover:bg-cream-200/70 border border-transparent hover:border-cream-300 relative transition-all duration-200" title="Notifications">
                     <${Icon} name="bell" class="w-5 h-5 text-navy-900" />
                     ${unreadCount > 0 ? html`
-                      <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-extrabold flex items-center justify-center border-2 border-white shadow-xs">
+                      <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-extrabold flex items-center justify-center border-2 border-white shadow-xs animate-pulse">
                         ${unreadCount > 99 ? '99+' : unreadCount}
                       </span>
                     ` : null}
@@ -651,7 +735,7 @@
                         ${notifications.map(n => html`
                           <div
                             key=${n.id}
-                            onClick=${() => { handleReadNotification(n.id); if (n.link) handleNavClick(n.link.split('/')[1] || 'dashboard'); setNotifOpen(false); }}
+                            onClick=${() => handleNotificationClick(n)}
                             class="p-3.5 hover:bg-cream-50/70 cursor-pointer flex flex-col gap-1 transition-colors ${!n.is_read ? 'bg-navy-50/40 font-semibold' : ''}"
                           >
                             <div class="flex justify-between items-center text-[10px] text-warmgray-500">
@@ -663,13 +747,19 @@
                         `)}
                         ${notifications.length === 0 ? html`<p class="text-center text-warmgray-400 py-8 italic">No notifications logged.</p>` : null}
                       </div>
+
+                      <div class="px-4 pt-2.5 mt-1 border-t border-cream-100 text-center">
+                        <button onClick=${() => { setNotifOpen(false); handleNavClick('requests'); }} class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
+                          View all swap requests & notifications →
+                        </button>
+                      </div>
                     </div>
                   ` : null}
                 </div>
 
                 <!-- User profile dropdown toggle -->
                 <div class="relative" id="user-menu-container">
-                  <button onClick=${() => { setUserMenuOpen(!userMenuOpen); if (notifOpen) setNotifOpen(false); }} class="flex items-center gap-2.5 p-1.5 pl-2 rounded-2xl hover:bg-cream-200/70 border border-cream-200 hover:border-cream-300 transition-all duration-200 group bg-white shadow-2xs">
+                  <button onClick=${() => { setUserMenuOpen(!userMenuOpen); if (notifOpen) setNotifOpen(false); }} class="flex items-center gap-2 p-1.5 pl-2 rounded-2xl hover:bg-cream-200/70 border border-cream-200 hover:border-cream-300 transition-all duration-200 group bg-white shadow-2xs">
                     <div class="relative">
                       ${['SUPER_ADMIN', 'ADMIN'].includes(user.role) ? html`
                         <div class="w-9 h-9 rounded-full bg-indigo-700 text-white flex items-center justify-center font-bold text-sm shadow-xs border border-indigo-500">
@@ -731,6 +821,12 @@
                       <button onClick=${() => { setUserMenuOpen(false); handleNavClick('skills'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
                         <${Icon} name="layers" class="w-4 h-4 text-navy-600" /> Manage Teach & Learn
                       </button>
+                      <button onClick=${() => { setUserMenuOpen(false); handleNavClick('matches'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
+                        <${Icon} name="sparkles" class="w-4 h-4 text-navy-600" /> Reciprocal Matches
+                      </button>
+                      <button onClick=${() => { setUserMenuOpen(false); handleNavClick('workspaces'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
+                        <${Icon} name="folder" class="w-4 h-4 text-navy-600" /> Active Workspaces
+                      </button>
                       <button onClick=${() => { setUserMenuOpen(false); handleNavClick('settings'); }} class="w-full text-left px-4 py-2.5 hover:bg-cream-100 text-warmgray-700 flex items-center gap-2.5 transition-colors font-semibold">
                         <${Icon} name="settings" class="w-4 h-4 text-navy-600" /> Account & Preferences
                       </button>
@@ -742,12 +838,21 @@
                       <div class="border-t border-cream-100 my-2"></div>
                       <button onClick=${() => { setUserMenuOpen(false); onLogout(); }} class="w-full text-left px-4 py-2.5 hover:bg-rose-50 text-rose-700 flex items-center gap-2.5 font-bold transition-colors">
                         <${Icon} name="log-out" class="w-4 h-4 text-rose-500" /> Log Out
-
                       </button>
                     </div>
                   ` : null}
                 </div>
               `}
+
+              <!-- Dedicated Mobile Hamburger Menu Button (lg:hidden) -->
+              <button
+                onClick=${() => setMobileOpen(!mobileOpen)}
+                class="lg:hidden p-2 rounded-xl border border-cream-300/80 hover:bg-cream-100 active:bg-cream-200 text-navy-800 transition-colors focus:outline-none focus:ring-2 focus:ring-navy-600/30 shrink-0"
+                aria-label="Toggle navigation drawer"
+                aria-expanded=${mobileOpen}
+              >
+                <${Icon} name=${mobileOpen ? 'x' : 'menu'} class="w-5 h-5 text-navy-900" />
+              </button>
             </div>
           </div>
         </div>
@@ -829,6 +934,18 @@
               </button>
             </div>
 
+            <!-- Mobile Quick Search Bar -->
+            <button
+              onClick=${() => handleNavClick('skills-dir')}
+              class="w-full bg-navy-900/90 text-cream-200/90 hover:text-white px-3.5 py-2.5 rounded-xl border border-navy-700/80 flex items-center justify-between text-xs font-semibold hover:border-indigo-400 transition-all text-left shadow-2xs group"
+            >
+              <span class="flex items-center gap-2 text-cream-200/70 group-hover:text-cream-100">
+                <${Icon} name="search" class="w-4 h-4 text-sky-400" />
+                <span>Search 120+ skills, topics...</span>
+              </span>
+              <span class="text-[10px] font-bold text-sky-400 bg-navy-800 px-2 py-0.5 rounded-md border border-navy-700">Go →</span>
+            </button>
+
             <!-- User Info / Welcome Card -->
             ${!user ? html`
               <div class="p-4 bg-gradient-to-br from-navy-900 to-navy-950 rounded-2xl border border-navy-800 text-white space-y-1.5 shadow-sm">
@@ -837,6 +954,16 @@
                   <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded text-[9px] font-black uppercase border border-emerald-500/30">Zero Fees</span>
                 </div>
                 <p class="text-[11px] text-cream-200/80 leading-relaxed">Join 14,000+ verified swappers sharing skills across India.</p>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <button onClick=${() => handleNavClick('signup')} class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs flex items-center justify-center gap-1 shadow-sm active:scale-98 transition-all">
+                  <span>Join Free</span>
+                  <${Icon} name="arrow-right" class="w-3.5 h-3.5" />
+                </button>
+                <button onClick=${() => handleNavClick('skills-dir')} class="w-full py-2.5 px-3 rounded-xl bg-navy-900 hover:bg-navy-800 text-cream-100 font-bold text-xs flex items-center justify-center gap-1.5 border border-navy-700 active:scale-98 transition-all">
+                  <${Icon} name="search" class="w-3.5 h-3.5 text-sky-300" />
+                  <span>Browse Skills</span>
+                </button>
               </div>
             ` : html`
               <div class="p-4 bg-gradient-to-br from-navy-900 to-navy-950 rounded-2xl border border-navy-800 flex items-center gap-3.5 shadow-sm">
@@ -858,6 +985,16 @@
                     <span class="px-1.5 py-0.2 rounded bg-purple-500/30 text-purple-300 text-[8px] font-bold border border-purple-400/40">ADMIN</span>
                   ` : null}
                 </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <button onClick=${() => handleNavClick('matches')} class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-98 transition-all">
+                  <${Icon} name="zap" class="w-3.5 h-3.5 text-amber-300" />
+                  <span>Find Match</span>
+                </button>
+                <button onClick=${() => handleNavClick('workspaces')} class="w-full py-2.5 px-3 rounded-xl bg-navy-900 hover:bg-navy-800 text-cream-100 font-bold text-xs flex items-center justify-center gap-1.5 border border-navy-700 active:scale-98 transition-all">
+                  <${Icon} name="folder" class="w-3.5 h-3.5 text-sky-300" />
+                  <span>Workspaces</span>
+                </button>
               </div>
             `}
 
@@ -930,6 +1067,10 @@
                 <!-- Section 3: Workspace & Comms -->
                 <div class="space-y-1">
                   <p class="text-[9.5px] font-extrabold uppercase tracking-wider text-navy-400 px-2 pb-1">Workspace & Collaboration</p>
+                  <button onClick=${() => handleNavClick('matches')} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'matches' ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'}">
+                    <${Icon} name="sparkles" class="w-4 h-4 ${activeTab === 'matches' ? 'text-white' : 'text-navy-400'}" />
+                    <span>Reciprocal Matches</span>
+                  </button>
                   <button onClick=${() => handleNavClick('requests')} class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all ${activeTab === 'requests' ? 'bg-navy-700 text-white font-extrabold shadow border border-indigo-400/40' : 'text-cream-200/90 hover:bg-navy-900/80 hover:text-white'}">
                     <span class="flex items-center gap-2.5">
                       <${Icon} name="inbox" class="w-4 h-4 ${activeTab === 'requests' ? 'text-white' : 'text-navy-400'}" />
