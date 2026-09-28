@@ -13,11 +13,166 @@
   const api = (...args) => window.SkillSwap.api(...args);
 
   // ----------------------------------------------------
-  // Home Landing Page View (Pristine Hero, FAQ, Roadmap)
+  // Curated Reciprocal Swap Simulation Pairs (Rotates on Refresh)
+  // ----------------------------------------------------
+  const RECIPROCAL_EXCHANGE_PAIRS = [
+    {
+      synergy: 98,
+      peer1: {
+        name: 'Shubhank Parihar',
+        verified: 'Verified Creator',
+        role: 'MCA Final Year • JEC Jabalpur',
+        location: '📍 Jabalpur, MP (IST)',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=shubhank',
+        teaching: 'React & Node.js',
+        learning: 'AI & PyTorch'
+      },
+      peer2: {
+        name: 'Priya Sharma',
+        verified: 'Verified Practitioner',
+        role: 'Senior Cloud Architect',
+        location: '📍 Bengaluru, Karnataka (IST)',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=priya_architect',
+        teaching: 'AI & PyTorch',
+        learning: 'React & Node.js'
+      }
+    },
+    {
+      synergy: 97,
+      peer1: {
+        name: 'Anushka Patel',
+        verified: 'Verified Designer',
+        role: 'Lead UI/UX Designer • JEC Jabalpur',
+        location: '📍 Bhopal, MP (IST)',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=anushka_patel',
+        teaching: 'UI/UX & Figma Design Systems',
+        learning: 'TypeScript & Next.js'
+      },
+      peer2: {
+        name: 'Rohan Verma',
+        verified: 'Verified Engineer',
+        role: 'Full-Stack Web Architect',
+        location: '📍 Indore, MP (IST)',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=rohan_dev',
+        teaching: 'TypeScript & Next.js',
+        learning: 'UI/UX & Figma Design Systems'
+      }
+    },
+    {
+      synergy: 99,
+      peer1: {
+        name: 'Aarav Sharma',
+        verified: 'Verified Researcher',
+        role: 'AI Researcher & Data Engineer',
+        location: '📍 Jabalpur, MP (IST)',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=aarav_ml',
+        teaching: 'Python & LLM Fine-Tuning',
+        learning: 'System Design & High-Scale SQL'
+      },
+      peer2: {
+        name: 'Ananya Patel',
+        verified: 'Verified Specialist',
+        role: 'Principal Backend Engineer',
+        location: '📍 Pune, Maharashtra (IST)',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=ananya_uiux',
+        teaching: 'System Design & High-Scale SQL',
+        learning: 'Python & LLM Fine-Tuning'
+      }
+    },
+    {
+      synergy: 96,
+      peer1: {
+        name: 'Vikramaditya Singh',
+        verified: 'Verified DevOps',
+        role: 'Cloud Native & SRE Engineer',
+        location: '📍 Gurugram, NCR (IST)',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=vikram_devops',
+        teaching: 'Docker & Kubernetes CI/CD',
+        learning: 'Rust & Systems Programming'
+      },
+      peer2: {
+        name: 'Siddharth Joshi',
+        verified: 'Verified Core Dev',
+        role: 'Low-Latency Systems Engineer',
+        location: '📍 Hyderabad, Telangana (IST)',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=siddharth_sys',
+        teaching: 'Rust & Systems Programming',
+        learning: 'Docker & Kubernetes CI/CD'
+      }
+    },
+    {
+      synergy: 98,
+      peer1: {
+        name: 'Sneha Kulkarni',
+        verified: 'Verified Mobile Lead',
+        role: 'Cross-Platform Mobile Architect',
+        location: '📍 Mumbai, Maharashtra (IST)',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=sneha_flutter',
+        teaching: 'Flutter & React Native',
+        learning: 'GraphQL & Micro-Frontends'
+      },
+      peer2: {
+        name: 'Aditya Malhotra',
+        verified: 'Verified Architect',
+        role: 'Senior Web Performance Specialist',
+        location: '📍 New Delhi, NCR (IST)',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=aditya_web',
+        teaching: 'GraphQL & Micro-Frontends',
+        learning: 'Flutter & React Native'
+      }
+    },
+    {
+      synergy: 95,
+      peer1: {
+        name: 'Meera Nambiar',
+        verified: 'Verified Polyglot',
+        role: 'Linguistics & Cross-Cultural Coach',
+        location: '📍 Kochi, Kerala (IST)',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=meera_lang',
+        teaching: 'Spanish Fluency & Idioms',
+        learning: 'Data Analytics & Power BI'
+      },
+      peer2: {
+        name: 'Tanmay Roy',
+        verified: 'Verified Analyst',
+        role: 'Business Intelligence Strategist',
+        location: '📍 Kolkata, West Bengal (IST)',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=tanmay_bi',
+        teaching: 'Data Analytics & Power BI',
+        learning: 'Spanish Fluency & Idioms'
+      }
+    }
+  ];
 
+  // ----------------------------------------------------
+  // Home Landing Page View (Pristine Hero, FAQ, Roadmap)
   // ----------------------------------------------------
   function HomeLandingView({ setActiveTab }) {
     const [searchVal, setSearchVal] = useState('');
+    
+    // Dynamic Reciprocal Swap Pair rotation on page refresh / reload
+    const [pairIndex, setPairIndex] = useState(() => {
+      try {
+        const key = 'skillswap_simulation_pair_idx';
+        const saved = sessionStorage.getItem(key);
+        const prevIdx = saved !== null ? parseInt(saved, 10) : -1;
+        const nextIdx = (prevIdx + 1) % RECIPROCAL_EXCHANGE_PAIRS.length;
+        sessionStorage.setItem(key, String(nextIdx));
+        return nextIdx;
+      } catch (e) {
+        return Math.floor(Math.random() * RECIPROCAL_EXCHANGE_PAIRS.length);
+      }
+    });
+
+    const activePair = RECIPROCAL_EXCHANGE_PAIRS[pairIndex] || RECIPROCAL_EXCHANGE_PAIRS[0];
+
+    const handleCyclePair = () => {
+      setPairIndex(prev => {
+        const nextIdx = (prev + 1) % RECIPROCAL_EXCHANGE_PAIRS.length;
+        try { sessionStorage.setItem('skillswap_simulation_pair_idx', String(nextIdx)); } catch (e) {}
+        return nextIdx;
+      });
+    };
     const [categories, setCategories] = useState([]);
     const [faqOpen, setFaqOpen] = useState({});
     const [featuredPeers, setFeaturedPeers] = useState([]);
@@ -276,34 +431,43 @@
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
                   <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                    Live Mutual Synergy: 98%
+                    Live Mutual Synergy: ${activePair.synergy}%
                   </span>
+                  <button
+                    type="button"
+                    onClick=${handleCyclePair}
+                    title="Cycle live peer exchange simulation"
+                    class="ml-1 inline-flex items-center gap-1.5 text-[11px] font-extrabold text-navy-800 hover:text-navy-950 bg-white hover:bg-cream-100 px-2.5 py-0.5 rounded-full border border-cream-300 shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
+                  >
+                    <span>🔄</span>
+                    <span class="hidden sm:inline">Next Match</span>
+                  </button>
                 </div>
               </div>
 
               <!-- 2-Way Exchange Graphic Grid -->
               <div class="grid grid-cols-1 md:grid-cols-11 items-center gap-4 relative">
                 <!-- Peer 1 Card -->
-                <div class="md:col-span-4 bg-white p-5 rounded-2xl border border-cream-300 shadow-sm space-y-3 card-hover-lift">
+                <div class="md:col-span-4 bg-white p-5 rounded-2xl border border-cream-300 shadow-sm space-y-3 card-hover-lift transition-all duration-300">
                   <div class="flex items-center gap-3">
-                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=shubhank" class="w-12 h-12 rounded-2xl p-1 bg-navy-50 border border-navy-200 shadow-xs" />
+                    <img src=${activePair.peer1.avatar} class="w-12 h-12 rounded-2xl p-1 bg-navy-50 border border-navy-200 shadow-xs object-cover" />
                     <div>
                       <h4 class="font-bold text-navy-950 text-sm flex items-center gap-1">
-                        Shubhank Parihar
-                        <span class="text-navy-600 text-xs font-black" title="Verified Creator">✓</span>
+                        ${activePair.peer1.name}
+                        <span class="text-navy-600 text-xs font-black" title=${activePair.peer1.verified}>✓</span>
                       </h4>
-                      <p class="text-[11px] text-warmgray-500">MCA Final Year • JEC Jabalpur</p>
-                      <p class="text-[10px] text-sky-700 font-semibold">📍 Jabalpur, MP (IST)</p>
+                      <p class="text-[11px] text-warmgray-500">${activePair.peer1.role}</p>
+                      <p class="text-[10px] text-sky-700 font-semibold">${activePair.peer1.location}</p>
                     </div>
                   </div>
                   <div class="space-y-1.5 pt-1 text-xs">
                     <div class="flex items-center justify-between p-2 rounded-xl bg-emerald-50/80 border border-emerald-200/80">
                       <span class="text-[10px] font-bold uppercase text-emerald-800">Teaching:</span>
-                      <span class="font-extrabold text-emerald-900">React & Node.js</span>
+                      <span class="font-extrabold text-emerald-900">${activePair.peer1.teaching}</span>
                     </div>
                     <div class="flex items-center justify-between p-2 rounded-xl bg-sky-50/80 border border-sky-200/80">
                       <span class="text-[10px] font-bold uppercase text-sky-800">Learning:</span>
-                      <span class="font-extrabold text-sky-900">AI & PyTorch</span>
+                      <span class="font-extrabold text-sky-900">${activePair.peer1.learning}</span>
                     </div>
                   </div>
                 </div>
@@ -333,26 +497,26 @@
                 </div>
 
                 <!-- Peer 2 Card -->
-                <div class="md:col-span-4 bg-white p-5 rounded-2xl border border-cream-300 shadow-sm space-y-3 card-hover-lift">
+                <div class="md:col-span-4 bg-white p-5 rounded-2xl border border-cream-300 shadow-sm space-y-3 card-hover-lift transition-all duration-300">
                   <div class="flex items-center gap-3">
-                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=priya_architect" class="w-12 h-12 rounded-2xl p-1 bg-navy-50 border border-navy-200 shadow-xs" />
+                    <img src=${activePair.peer2.avatar} class="w-12 h-12 rounded-2xl p-1 bg-navy-50 border border-navy-200 shadow-xs object-cover" />
                     <div>
                       <h4 class="font-bold text-navy-950 text-sm flex items-center gap-1">
-                        Priya Sharma
-                        <span class="text-navy-600 text-xs font-black" title="Verified Practitioner">✓</span>
+                        ${activePair.peer2.name}
+                        <span class="text-navy-600 text-xs font-black" title=${activePair.peer2.verified}>✓</span>
                       </h4>
-                      <p class="text-[11px] text-warmgray-500">Senior Cloud Architect</p>
-                      <p class="text-[10px] text-sky-700 font-semibold">📍 Bengaluru, Karnataka (IST)</p>
+                      <p class="text-[11px] text-warmgray-500">${activePair.peer2.role}</p>
+                      <p class="text-[10px] text-sky-700 font-semibold">${activePair.peer2.location}</p>
                     </div>
                   </div>
                   <div class="space-y-1.5 pt-1 text-xs">
                     <div class="flex items-center justify-between p-2 rounded-xl bg-emerald-50/80 border border-emerald-200/80">
                       <span class="text-[10px] font-bold uppercase text-emerald-800">Teaching:</span>
-                      <span class="font-extrabold text-emerald-900">AI & PyTorch</span>
+                      <span class="font-extrabold text-emerald-900">${activePair.peer2.teaching}</span>
                     </div>
                     <div class="flex items-center justify-between p-2 rounded-xl bg-sky-50/80 border border-sky-200/80">
                       <span class="text-[10px] font-bold uppercase text-sky-800">Learning:</span>
-                      <span class="font-extrabold text-sky-900">React & Node.js</span>
+                      <span class="font-extrabold text-sky-900">${activePair.peer2.learning}</span>
                     </div>
                   </div>
                 </div>
