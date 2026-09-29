@@ -1,0 +1,24 @@
+{
+  "name": "skillswap-backend",
+  "version": "1.0.0",
+  "description": "SkillSwapX - Peer-to-Peer Reciprocal Skill Exchange Platform Backend",
+  "type": "module",
+  "main": "Server.js",
+  "scripts": {
+    "start": "node Server.js",
+    "dev": "nodemon Server.js",
+    "db:init": "node -e \"import('./config/db.js').then(m => m.initDb())\""
+  },
+  "keywords": ["skill-exchange", "p2p", "barter", "express", "sqlite", "mca-project"],
+  "author": "SkillSwapX Team",
+  "license": "ISC",
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.6",
+    "express": "^4.19.2",
+    "pg": "^8.12.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillSwapX — Peer-to-Peer Reciprocal Skill Exchange</title>
+  
+  <!-- Google Fonts: Playfair Display + Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: {
+              50: '#FDFBF7',
+              100: '#FAF6EF',
+              200: '#F5EFE3',
+              300: '#EFE7D8',
+              400: '#E2D5C3',
+              500: '#D5C3AB'
+            },
+            navy: {
+              50: '#F4F8FD',
+              100: '#E6F0FA',
+              200: '#C2DCF7',
+              600: '#007FFF',
+              700: '#0066EE',
+              800: '#0052CC',
+              900: '#0B1E36',
+              950: '#061324',
+              955: '#040C18'
+            },
+            warmgray: {
+              100: '#F7F6F4',
+              200: '#EFECE6',
+              500: '#7B828F',
+              600: '#5C6470',
+              700: '#434A56',
+              800: '#2D333D',
+              900: '#1A1E24'
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Theme styles -->
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  
+  <!-- Own-Origin Vendored Libraries: React, ReactDOM, HTM -->
+  <script src="/vendor/react.js"></script>
+  <script src="/vendor/react-dom.js"></script>
+  <script src="/vendor/htm.js"></script>
+</head>
+<body class="bg-cream-100 text-warmgray-900 min-h-screen selection:bg-navy-700 selection:text-white">
+  <div id="root">
+    <!-- Initial Splash State -->
+    <div class="min-h-screen flex items-center justify-center bg-cream-100 p-6">
+      <div class="text-center space-y-4 max-w-sm">
+        <img src="/logo-icon.png" alt="SkillSwapX Logo" class="w-14 h-14 rounded-2xl object-contain mx-auto shadow-md animate-pulse bg-white p-1 border border-cream-200" />
+        <h2 class="font-serif text-2xl font-bold text-navy-900">SkillSwapX</h2>
+        <p class="text-xs text-warmgray-600">Initializing reciprocal exchange engine...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modular Application Scripts -->
+  <script src="/components.js"></script>
+  <script src="/views_auth.js"></script>
+  <script src="/views_app.js"></script>
+  <script src="/views_hub.js"></script>
+  <script src="/views_ai.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

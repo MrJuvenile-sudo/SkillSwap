@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { pathToFileURL, fileURLToPath } from 'url';
 import { registerRoutes } from './server/routes.js';
+import backendApiRouter from './Backend/routes/index.js';
 
 // ----------------------------------------------------
 // 0. Load Environment Configuration (.env)
@@ -169,7 +170,8 @@ async function loadRoutes() {
   }
 }
 
-// 1. Synchronously register compiled API routes (no async cold-start race conditions)
+// 1. Mount Modular Backend API routes & compiled API routes
+app.use('/api', backendApiRouter);
 registerRoutes(app);
 
 // 2. Explicit JSON 404 response for any unhandled /api/* routes

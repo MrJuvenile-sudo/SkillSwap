@@ -1,5 +1,5 @@
 // server/routes.js - Auto-generated static route registry
-// Generated at: 2026-09-28T10:47:14.169Z
+// Generated at: 2026-09-29T10:47:09.772Z
 // Do NOT edit directly; run "node scripts/generate_routes.mjs" to regenerate.
 
 import handler_account_bookmarks from './api/account/bookmarks.js';

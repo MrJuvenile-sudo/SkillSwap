@@ -1,0 +1,27 @@
+/* App.css - Custom Component Styling */
+.gradient-badge {
+  background: linear-gradient(135deg, rgba(0, 102, 238, 0.1) 0%, rgba(0, 127, 255, 0.05) 100%);
+  border: 1px solid rgba(0, 102, 238, 0.2);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 213, 195, 0.6);
+}
+
+.glass-nav {
+  background: rgba(250, 246, 239, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(226, 213, 195, 0.7);
+}
+
+.card-hover-effect {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-hover-effect:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px -6px rgba(11, 30, 54, 0.08), 0 4px 10px -2px rgba(11, 30, 54, 0.04);
+}
