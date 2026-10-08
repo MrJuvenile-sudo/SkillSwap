@@ -91,6 +91,7 @@
     const [targetChatConnectionId, setTargetChatConnectionId] = useState(initialRoute.params.conn || null);
     const [targetChatUserId, setTargetChatUserId] = useState(initialRoute.params.chatUser || null);
     const [targetWorkspaceId, setTargetWorkspaceId] = useState(initialRoute.params.wsId ? Number(initialRoute.params.wsId) : null);
+    const [searchQuery, setSearchQuery] = useState(initialRoute.params.q || '');
 
     // Centralized Navigation that keeps window in-place, synchronizes hash, and enables browser back/forward
     const navigateToTab = useCallback((tab, params = {}, replace = false) => {
@@ -102,6 +103,7 @@
       if (params.conn !== undefined) setTargetChatConnectionId(params.conn);
       if (params.chatUser !== undefined) setTargetChatUserId(params.chatUser);
       if (params.wsId !== undefined) setTargetWorkspaceId(params.wsId ? Number(params.wsId) : null);
+      if (params.q !== undefined) setSearchQuery(params.q);
 
       let hash = '#' + tab;
       const q = new URLSearchParams();
@@ -140,6 +142,7 @@
         if (route.params.conn) setTargetChatConnectionId(route.params.conn);
         if (route.params.chatUser) setTargetChatUserId(route.params.chatUser);
         if (route.params.wsId) setTargetWorkspaceId(Number(route.params.wsId));
+        if (route.params.q !== undefined) setSearchQuery(route.params.q);
       };
 
       window.addEventListener('popstate', handlePopState);
@@ -399,7 +402,7 @@
           ${activeTab === 'onboarding' && html`<${OnboardingWizardView} user=${user} setActiveTab=${setActiveTab} onComplete=${checkSession} />`}
           ${activeTab === 'onboarding-skills' && user && html`<${OnboardingSkillsWizardView} user=${user} setActiveTab=${setActiveTab} onComplete=${checkSession} />`}
           
-          ${activeTab === 'skills-dir' && html`<${SkillsDirectoryView} setActiveTab=${setActiveTab} onViewCategory=${handleViewCategory} />`}
+          ${activeTab === 'skills-dir' && html`<${SkillsDirectoryView} setActiveTab=${setActiveTab} onViewCategory=${handleViewCategory} initialSearch=${searchQuery} />`}
           ${activeTab === 'category-detail' && html`<${CategoryDetailView} categoryId=${selectedCategoryId} setActiveTab=${setActiveTab} onViewProfile=${handleViewProfile} onProposeSwap=${handleOpenProposal} />`}
           ${activeTab === 'report-abuse' && user && html`<${ReportAbuseView} reportedUserId=${reportedUserId} setActiveTab=${setActiveTab} />`}
           

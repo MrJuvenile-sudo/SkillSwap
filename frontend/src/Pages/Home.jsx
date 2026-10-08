@@ -16,6 +16,49 @@ const PEER_POOL = [
 export function Home({ setCurrentView, openAuthModal, onProposeSwap }) {
   const canvasRef = useRef(null);
   const [featuredPeers, setFeaturedPeers] = useState([]);
+  const [searchVal, setSearchVal] = useState('');
+
+  // Hero Heading Typewriter Animation State
+  const TYPEWRITER_PHRASES = [
+    'Master What You Need Next.',
+    'Trade React for Python AI.',
+    'Swap UI/UX for System Design.',
+    'Learn Spanish, Teach Guitar.',
+    '100% Free Peer Barter Economy.'
+  ];
+
+  const [typewriterIndex, setTypewriterIndex] = useState(0);
+  const [typedText, setTypedText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const fullText = TYPEWRITER_PHRASES[typewriterIndex];
+    let timer;
+
+    if (!isDeleting) {
+      if (typedText.length < fullText.length) {
+        timer = setTimeout(() => {
+          setTypedText(fullText.slice(0, typedText.length + 1));
+        }, 70);
+      } else {
+        timer = setTimeout(() => {
+          setIsDeleting(true);
+        }, 2200);
+      }
+    } else {
+      if (typedText.length > 0) {
+        timer = setTimeout(() => {
+          setTypedText(fullText.slice(0, typedText.length - 1));
+        }, 35);
+      } else {
+        setIsDeleting(false);
+        setTypewriterIndex(prev => (prev + 1) % TYPEWRITER_PHRASES.length);
+        timer = setTimeout(() => {}, 250);
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [typedText, isDeleting, typewriterIndex]);
 
   // Randomize peer cards on every page refresh / mount
   useEffect(() => {
@@ -104,15 +147,39 @@ export function Home({ setCurrentView, openAuthModal, onProposeSwap }) {
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#0B1E36] leading-[1.12]">
               Teach What You Know, <br />
-              <span className="text-[#0066EE] font-serif italic">Learn What You Crave.</span>
+              <span className="text-[#0066EE] font-serif italic min-h-[1.25em] inline-block">
+                {typedText}<span className="inline-block w-[3px] h-[0.8em] ml-1.5 bg-[#0066EE] animate-pulse align-middle" />
+              </span>
             </h1>
 
             <p className="text-base sm:text-lg text-[#5C6F84] leading-relaxed max-w-2xl mx-auto">
               SkillSwapX connects ambitious learners and mentors across India. Trade software engineering for design, music for languages, and level up with zero money involved.
             </p>
 
+            {/* Hero Search Bar */}
+            <form onSubmit={(e) => { e.preventDefault(); setCurrentView('skills'); }} className="max-w-2xl mx-auto pt-2">
+              <div className="flex items-center bg-white p-2.5 rounded-2xl border border-cream-300 shadow-xl focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                <div className="pl-3.5 text-gray-400">
+                  <Icon name="search" className="w-5 h-5" />
+                </div>
+                <input
+                  type="text"
+                  value={searchVal}
+                  onChange={(e) => setSearchVal(e.target.value)}
+                  placeholder="What do you want to learn? (e.g. Python, UI/UX, Rust, Spanish)..."
+                  className="w-full px-3.5 py-3 text-sm sm:text-base text-[#0B1E36] placeholder-gray-400 focus:outline-none bg-transparent"
+                />
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-gradient-to-r from-[#0066EE] to-[#007FFF] hover:from-[#0052CC] hover:to-[#0066EE] text-white font-bold text-sm rounded-xl shadow-md transition-all shrink-0"
+                >
+                  Find Matches
+                </button>
+              </div>
+            </form>
+
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
               <button
                 onClick={() => openAuthModal('signup')}
                 className="w-full sm:w-auto px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-[#0066EE] to-[#007FFF] hover:from-[#0052CC] hover:to-[#0066EE] rounded-2xl shadow-xl shadow-blue-500/25 transition-all hover:scale-105 active:scale-95"

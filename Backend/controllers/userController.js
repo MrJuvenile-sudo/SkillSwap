@@ -108,14 +108,14 @@ export async function addUserSkill(req, res) {
       );
     }
 
-    const userSkillId = 'us_' + Math.random().toString(36).substring(2, 9);
+    const normalizedType = (skill_type || '').toUpperCase().includes('LEARN') || (skill_type || '').toUpperCase() === 'WANTED' ? 'LEARN' : 'TEACH';
     await db.query(
-      `INSERT INTO user_skills (id, user_id, skill_id, skill_type, proficiency_level, description)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [userSkillId, userId, skillId, skill_type.toUpperCase(), proficiency_level || 'INTERMEDIATE', description || '']
+      `INSERT INTO user_skills (user_id, skill_id, type, level, description)
+       VALUES (?, ?, ?, ?, ?)`,
+      [userId, skillId, normalizedType, proficiency_level || 'Intermediate', description || '']
     );
 
-    return res.status(201).json({ success: true, id: userSkillId, skillId });
+    return res.status(201).json({ success: true, skillId });
   } catch (err) {
     console.error('[userController.addUserSkill] Error:', err);
     return res.status(500).json({ error: 'Failed to add user skill' });
@@ -151,16 +151,36 @@ export async function getAllUsers(req, res) {
     const params = [];
 
     if (search) {
-      query += ` AND (LOWER(u.name) LIKE ? OR LOWER(u.headline) LIKE ? OR LOWER(p.location) LIKE ?)`;
+      query += ` AND (LOWER(u.name) LIKE ? OR LOWER(u.headline) LIKE ? OR LOWER(p.location) LIKE ? OR u.id IN (SELECT us.user_id FROM user_skills us JOIN skills s ON us.skill_id = s.id WHERE LOWER(s.name) LIKE ?))`;
       const term = `%${search.toLowerCase()}%`;
-      params.push(term, term, term);
+      params.push(term, term, term, term);
     }
 
     query += ` ORDER BY u.karma_score DESC LIMIT ? OFFSET ?`;
     params.push(Number(limit), Number(offset));
 
     const result = await db.query(query, params);
-    return res.json({ users: result.rows || [] });
+    const users = result.rows || [];
+
+    for (const u of users) {
+      try {
+        const skillsRes = await db.query(
+          `SELECT us.type, s.name as skill_name 
+           FROM user_skills us 
+           JOIN skills s ON us.skill_id = s.id 
+           WHERE us.user_id = ?`,
+          [u.id]
+        );
+        const rows = skillsRes.rows || [];
+        u.teach_skills = rows.filter(r => (r.type === 'TEACH' || r.type === 'OFFERED')).map(r => r.skill_name);
+        u.learn_skills = rows.filter(r => (r.type === 'LEARN' || r.type === 'WANTED')).map(r => r.skill_name);
+      } catch (e) {
+        u.teach_skills = [];
+        u.learn_skills = [];
+      }
+    }
+
+    return res.json({ users });
   } catch (err) {
     console.error('[userController.getAllUsers] Error:', err);
     return res.status(500).json({ error: 'Failed to retrieve users' });

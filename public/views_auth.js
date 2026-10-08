@@ -196,11 +196,119 @@
         setFeaturedPeers((data.users || []).slice(0, 3));
       }).catch(console.error);
 
+    // Hero Heading Typewriter Animation State
+    const TYPEWRITER_PHRASES = [
+      'Master what you need next.',
+      'Trade React for Python AI.',
+      'Swap UI/UX for System Design.',
+      'Learn Spanish, Teach Guitar.',
+      '100% Free Peer Barter Economy.'
+    ];
+
+    const [typewriterIndex, setTypewriterIndex] = useState(0);
+    const [typedText, setTypedText] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    useEffect(() => {
+      const fullText = TYPEWRITER_PHRASES[typewriterIndex];
+      let timer;
+
+      if (!isDeleting) {
+        if (typedText.length < fullText.length) {
+          timer = setTimeout(() => {
+            setTypedText(fullText.slice(0, typedText.length + 1));
+          }, 70);
+        } else {
+          timer = setTimeout(() => {
+            setIsDeleting(true);
+          }, 2200);
+        }
+      } else {
+        if (typedText.length > 0) {
+          timer = setTimeout(() => {
+            setTypedText(fullText.slice(0, typedText.length - 1));
+          }, 35);
+        } else {
+          setIsDeleting(false);
+          setTypewriterIndex(prev => (prev + 1) % TYPEWRITER_PHRASES.length);
+          timer = setTimeout(() => {}, 250);
+        }
+      }
+
+      return () => clearTimeout(timer);
+    }, [typedText, isDeleting, typewriterIndex]);
+
+    // Hero Live Search State & Logic
+    const [heroSuggestions, setHeroSuggestions] = useState({ skills: [], peers: [] });
+    const [heroSearchLoading, setHeroSearchLoading] = useState(false);
+    const [heroDropdownOpen, setHeroDropdownOpen] = useState(false);
+    const heroSearchTimerRef = useRef(null);
+    const heroContainerRef = useRef(null);
+
+    const executeHeroSearch = (query) => {
+      const trimmed = (query || '').trim().toLowerCase();
+      if (!trimmed) {
+        setHeroSuggestions({ skills: [], peers: [] });
+        setHeroDropdownOpen(false);
+        setHeroSearchLoading(false);
+        return;
+      }
+
+      setHeroSearchLoading(true);
+      setHeroDropdownOpen(true);
+
+      const allSkills = (categories || []).flatMap(c => c.skills || []);
+      const matchedSkills = allSkills.filter(s =>
+        (s.name || '').toLowerCase().includes(trimmed) ||
+        (s.description || '').toLowerCase().includes(trimmed)
+      ).slice(0, 5);
+
+      api('/api/users?search=' + encodeURIComponent(trimmed))
+        .then(res => {
+          const matchedPeers = (res.users || []).filter(u => {
+            const inName = (u.name || '').toLowerCase().includes(trimmed);
+            const inHeadline = (u.headline || '').toLowerCase().includes(trimmed);
+            const inLoc = (u.location || '').toLowerCase().includes(trimmed);
+            const inTeach = (u.teach_skills || []).some(s => s.toLowerCase().includes(trimmed));
+            const inLearn = (u.learn_skills || []).some(s => s.toLowerCase().includes(trimmed));
+            return inName || inHeadline || inLoc || inTeach || inLearn;
+          }).slice(0, 4);
+
+          setHeroSuggestions({
+            skills: matchedSkills,
+            peers: matchedPeers
+          });
+          setHeroSearchLoading(false);
+        })
+        .catch(() => {
+          setHeroSuggestions({ skills: matchedSkills, peers: [] });
+          setHeroSearchLoading(false);
+        });
+    };
+
+    const handleHeroSearchChange = (val) => {
+      setSearchVal(val);
+      if (heroSearchTimerRef.current) clearTimeout(heroSearchTimerRef.current);
+      heroSearchTimerRef.current = setTimeout(() => {
+        executeHeroSearch(val);
+      }, 140);
+    };
+
+    useEffect(() => {
+      const handleClickOutside = (e) => {
+        if (heroContainerRef.current && !heroContainerRef.current.contains(e.target)) {
+          setHeroDropdownOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const handleSearchSubmit = (e) => {
       e.preventDefault();
-      setActiveTab('skills-dir');
+      setHeroDropdownOpen(false);
+      const q = (searchVal || '').trim();
+      setActiveTab('skills-dir', q ? { q } : {});
     };
 
     const toggleFaq = (index) => {
@@ -353,31 +461,141 @@
           
           <h1 class="font-serif text-5xl sm:text-6xl lg:text-7xl font-extrabold text-navy-950 tracking-tight leading-[1.1] max-w-4xl mx-auto">
             <span class="block animate-hero-title-1">Teach what you know.</span>
-            <span class="inline-block italic bg-gradient-to-r from-navy-800 via-indigo-600 to-navy-900 bg-clip-text text-transparent animate-hero-title-2">Master what you need next.</span>
+            <span class="inline-block italic bg-gradient-to-r from-navy-800 via-indigo-600 to-navy-900 bg-clip-text text-transparent animate-hero-title-2 min-h-[1.25em]">
+              ${typedText}<span class="inline-block w-[3px] h-[0.8em] ml-1.5 bg-indigo-600 animate-pulse align-middle"></span>
+            </span>
           </h1>
           
           <p class="text-base sm:text-lg text-warmgray-600 max-w-2xl mx-auto leading-relaxed font-semibold animate-hero-subtitle">
             Trade expertise 1-on-1 with verified practitioners. SkillSwapX matches schedule, levels, and mutual topics so you co-learn faster for free.
           </p>
 
-          <form onSubmit=${handleSearchSubmit} class="max-w-2xl mx-auto pt-2">
-            <div class="flex items-center bg-white p-2.5 rounded-2xl border border-cream-300 shadow-xl focus-within:border-navy-600 focus-within:ring-2 focus-within:ring-navy-100 transition-all duration-200">
-              <div class="pl-3.5 text-warmgray-400">
-                <${Icon} name="search" class="w-5.5 h-5.5" />
-
+          <div ref=${heroContainerRef} class="max-w-2xl mx-auto pt-2 relative">
+            <form onSubmit=${handleSearchSubmit}>
+              <div class="flex items-center bg-white p-2.5 rounded-2xl border border-cream-300 shadow-xl focus-within:border-navy-600 focus-within:ring-2 focus-within:ring-navy-100 transition-all duration-200">
+                <div class="pl-3.5 text-warmgray-400">
+                  <${Icon} name="search" class="w-5.5 h-5.5" />
+                </div>
+                <input
+                  type="text"
+                  value=${searchVal}
+                  onInput=${e => handleHeroSearchChange(e.target.value)}
+                  onFocus=${() => { if (searchVal.trim()) setHeroDropdownOpen(true); }}
+                  placeholder="What do you want to learn? (e.g. Python, UI/UX, Rust, Spanish)..."
+                  class="w-full px-3.5 py-3 text-sm sm:text-base text-navy-955 placeholder-warmgray-400 focus:outline-none bg-transparent"
+                />
+                ${searchVal ? html`
+                  <button
+                    type="button"
+                    onClick=${() => { setSearchVal(''); setHeroDropdownOpen(false); }}
+                    class="p-2 text-warmgray-400 hover:text-navy-900 transition-colors mr-1"
+                    title="Clear search"
+                  >
+                    <${Icon} name="x" class="w-4 h-4" />
+                  </button>
+                ` : null}
+                <button type="submit" class="px-7 py-3.5 bg-gradient-to-r from-navy-700 to-navy-800 hover:from-navy-800 hover:to-navy-900 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all shrink-0">
+                  Find Matches
+                </button>
               </div>
-              <input
-                type="text"
-                value=${searchVal}
-                onChange=${e => setSearchVal(e.target.value)}
-                placeholder="What do you want to learn? (e.g. Python, UI/UX, Rust, Spanish)..."
-                class="w-full px-3.5 py-3 text-sm sm:text-base text-navy-955 placeholder-warmgray-400 focus:outline-none bg-transparent"
-              />
-              <button type="submit" class="px-7 py-3.5 bg-gradient-to-r from-navy-700 to-navy-800 hover:from-navy-800 hover:to-navy-900 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all shrink-0">
-                Find Matches
-              </button>
-            </div>
-            
+            </form>
+
+            <!-- Hero Live Search Dropdown - Strictly Shows Searched Text Results Only -->
+            ${heroDropdownOpen && searchVal.trim() ? html`
+              <div class="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-cream-300 overflow-hidden z-50 text-left animate-slideDown max-h-96 overflow-y-auto">
+                ${heroSearchLoading ? html`
+                  <div class="p-6 text-center text-xs text-warmgray-500 flex items-center justify-center gap-2">
+                    <div class="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Searching barter skills and verified mentors...</span>
+                  </div>
+                ` : null}
+
+                ${!heroSearchLoading && heroSuggestions.skills.length === 0 && heroSuggestions.peers.length === 0 ? html`
+                  <div class="p-6 text-center space-y-2">
+                    <p class="text-xs font-bold text-navy-950">No barter results found for "${searchVal}"</p>
+                    <p class="text-[11px] text-warmgray-500">Be the first to propose this skill or browse 120+ active topics.</p>
+                    <button
+                      type="button"
+                      onClick=${() => { setHeroDropdownOpen(false); setActiveTab('skills-dir', { q: '' }); }}
+                      class="mt-1 px-3 py-1.5 bg-navy-700 text-white rounded-lg text-xs font-bold shadow-xs hover:bg-navy-800"
+                    >
+                      Browse Skill Directory
+                    </button>
+                  </div>
+                ` : null}
+
+                <!-- Matching Skills in Hero Dropdown -->
+                ${!heroSearchLoading && heroSuggestions.skills.length > 0 ? html`
+                  <div class="p-3 border-b border-cream-100 bg-cream-50/50">
+                    <span class="text-[10px] font-black uppercase tracking-wider text-warmgray-500 block mb-2">Matching Skills:</span>
+                    <div class="space-y-1">
+                      ${heroSuggestions.skills.map(s => html`
+                        <div
+                          key=${s.id}
+                          onClick=${() => { setHeroDropdownOpen(false); setActiveTab('skills-dir', { q: s.name }); }}
+                          class="p-2 rounded-xl hover:bg-indigo-50 border border-transparent hover:border-indigo-200 cursor-pointer flex items-center justify-between transition-all group"
+                        >
+                          <div class="flex items-center gap-2">
+                            <span class="text-base">${s.icon || '🎯'}</span>
+                            <span class="text-xs font-bold text-navy-950 group-hover:text-indigo-700">${s.name}</span>
+                          </div>
+                          <span class="text-[10px] font-bold text-indigo-600">View in Directory →</span>
+                        </div>
+                      `)}
+                    </div>
+                  </div>
+                ` : null}
+
+                <!-- Matching Mentors in Hero Dropdown -->
+                ${!heroSearchLoading && heroSuggestions.peers.length > 0 ? html`
+                  <div class="p-3">
+                    <span class="text-[10px] font-black uppercase tracking-wider text-warmgray-500 block mb-2">Verified Mentors Ready to Barter:</span>
+                    <div class="space-y-2">
+                      ${heroSuggestions.peers.map(peer => html`
+                        <div
+                          key=${peer.id}
+                          class="p-2.5 rounded-xl bg-white hover:bg-cream-50 border border-cream-200 flex items-center justify-between gap-3 transition-all"
+                        >
+                          <div class="flex items-center gap-2.5 min-w-0">
+                            <img src=${peer.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(peer.name)} class="w-8 h-8 rounded-xl object-cover shrink-0" />
+                            <div class="min-w-0">
+                              <h5 class="text-xs font-bold text-navy-950 truncate">${peer.name}</h5>
+                              <p class="text-[10px] text-warmgray-500 truncate">${peer.headline || 'SkillSwap Member'}</p>
+                              ${peer.teach_skills && peer.teach_skills.length > 0 ? html`
+                                <span class="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded mt-0.5 inline-block">
+                                  Teaches: ${peer.teach_skills.slice(0, 2).join(', ')}
+                                </span>
+                              ` : null}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick=${() => { setHeroDropdownOpen(false); setActiveTab('public-profile', { user: peer.username }); }}
+                            class="px-3 py-1.5 bg-navy-700 hover:bg-navy-800 text-white rounded-lg text-[10px] font-bold shrink-0 transition-all shadow-2xs"
+                          >
+                            Profile →
+                          </button>
+                        </div>
+                      `)}
+                    </div>
+                  </div>
+                ` : null}
+
+                <!-- View All Link -->
+                ${!heroSearchLoading && (heroSuggestions.skills.length > 0 || heroSuggestions.peers.length > 0) ? html`
+                  <div class="p-2.5 bg-cream-50 border-t border-cream-200 text-center">
+                    <button
+                      type="button"
+                      onClick=${() => { setHeroDropdownOpen(false); setActiveTab('skills-dir', { q: searchVal.trim() }); }}
+                      class="text-xs font-bold text-indigo-700 hover:underline"
+                    >
+                      View all results for "${searchVal}" in directory →
+                    </button>
+                  </div>
+                ` : null}
+              </div>
+            ` : null}
+
             <!-- Quick Suggestion Tags -->
             <div class="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs font-semibold text-warmgray-600">
               <span>Popular topics:</span>
@@ -385,14 +603,14 @@
                 <button
                   type="button"
                   key=${tag}
-                  onClick=${() => { setSearchVal(tag); setActiveTab('skills-dir'); }}
+                  onClick=${() => { setSearchVal(tag); setActiveTab('skills-dir', { q: tag }); }}
                   class="px-3 py-1.5 bg-cream-50 hover:bg-cream-200/60 border border-cream-300 rounded-lg text-navy-900 transition-colors shadow-2xs font-semibold"
                 >
                   ${tag}
                 </button>
               `)}
             </div>
-          </form>
+          </div>
 
           <!-- Metrics Ticker -->
           <div class="pt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-14 text-warmgray-600 text-xs sm:text-sm font-semibold border-t border-cream-300/70 max-w-3xl mx-auto">
@@ -1669,9 +1887,10 @@
   // ----------------------------------------------------
   // Public Skill Directory View (Detailed alphabetical top filters)
   // ----------------------------------------------------
-  function SkillsDirectoryView({ setActiveTab, onViewCategory }) {
+  function SkillsDirectoryView({ setActiveTab, onViewCategory, initialSearch = '' }) {
     const [directory, setDirectory] = useState([]);
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState(initialSearch || '');
+    const [matchingMentors, setMatchingMentors] = useState([]);
     const [selectedAlphaFilter, setSelectedAlphaFilter] = useState('');
     const [selectedTrending, setSelectedTrending] = useState('ALL');
     const [selectedCategoryTab, setSelectedCategoryTab] = useState('ALL');
@@ -1682,10 +1901,35 @@
     const [requestCategory, setRequestCategory] = useState('Engineering');
     const [requestSubmitted, setRequestSubmitted] = useState(false);
 
-
     useEffect(() => {
       api('/api/skills/directory').then(data => setDirectory(data.directory || [])).catch(console.error);
     }, []);
+
+    useEffect(() => {
+      if (initialSearch !== undefined) {
+        setSearch(initialSearch || '');
+      }
+    }, [initialSearch]);
+
+    // Live mentor search when searching skills directory
+    useEffect(() => {
+      const q = (search || '').trim().toLowerCase();
+      if (!q) {
+        setMatchingMentors([]);
+        return;
+      }
+      api('/api/users?search=' + encodeURIComponent(q)).then(res => {
+        const filteredPeers = (res.users || []).filter(u => {
+          const inName = (u.name || '').toLowerCase().includes(q);
+          const inHeadline = (u.headline || '').toLowerCase().includes(q);
+          const inLoc = (u.location || '').toLowerCase().includes(q);
+          const inTeach = (u.teach_skills || []).some(s => s.toLowerCase().includes(q));
+          const inLearn = (u.learn_skills || []).some(s => s.toLowerCase().includes(q));
+          return inName || inHeadline || inLoc || inTeach || inLearn;
+        });
+        setMatchingMentors(filteredPeers);
+      }).catch(() => setMatchingMentors([]));
+    }, [search]);
 
     const alphabeticalIndex = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     const trendingSkills = ['ALL', 'Python', 'React', 'Figma', 'System Design', 'Machine Learning', 'Rust', 'Prompt Engineering', 'Spanish'];
@@ -1743,13 +1987,16 @@
         result = result.filter(cat => cat.name.toLowerCase().includes(catQ) || cat.description.toLowerCase().includes(catQ));
       }
 
-      // Keyword search
+      // Keyword search - strictly matching searched text results only
       if (search.trim()) {
         const q = search.toLowerCase();
         result = result.map(cat => ({
           ...cat,
-          skills: (cat.skills || []).filter(s => s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q))
-        })).filter(cat => cat.skills.length > 0 || cat.name.toLowerCase().includes(q));
+          skills: (cat.skills || []).filter(s =>
+            s.name.toLowerCase().includes(q) ||
+            (s.description && s.description.toLowerCase().includes(q))
+          )
+        })).filter(cat => cat.skills.length > 0);
       }
       
       // Trending filter
@@ -1973,6 +2220,73 @@
             </button>
           `)}
         </div>
+
+        <!-- Active Filter Indicator Banner -->
+        ${search.trim() ? html`
+          <div class="p-4 bg-indigo-50/80 border border-indigo-200/90 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+            <div class="flex items-center gap-2.5">
+              <span class="text-base">🔍</span>
+              <span class="text-xs text-navy-950 font-bold">
+                Showing results for: <span class="text-indigo-700 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 shadow-2xs font-mono">"${search}"</span>
+              </span>
+            </div>
+            <button
+              onClick=${() => setSearch('')}
+              class="px-3.5 py-1.5 bg-white hover:bg-cream-100 border border-indigo-200 text-indigo-700 rounded-xl text-xs font-bold transition-all shadow-2xs hover:shadow-xs"
+            >
+              Clear Search ✕
+            </button>
+          </div>
+        ` : null}
+
+        <!-- Matching Mentors Section When Search is Active -->
+        ${search.trim() && matchingMentors.length > 0 ? html`
+          <div class="space-y-4">
+            <div class="flex items-center justify-between border-l-4 border-indigo-600 pl-3.5 pr-2">
+              <div>
+                <h3 class="font-serif text-xl font-bold text-navy-950 flex items-center gap-2">
+                  <span>👥 Verified Mentors Ready to Barter "${search}"</span>
+                  <span class="text-xs font-normal text-warmgray-500">(${matchingMentors.length} found)</span>
+                </h3>
+                <p class="text-xs text-warmgray-600">Peers who actively teach or seek knowledge matching this keyword.</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              ${matchingMentors.map(m => html`
+                <div key=${m.id} class="bg-white p-5 rounded-3xl border border-cream-300 shadow-sm flex flex-col justify-between space-y-3 hover:shadow-md transition-all">
+                  <div class="flex items-center gap-3">
+                    <img src=${m.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(m.name)} class="w-12 h-12 rounded-2xl object-cover border border-cream-200" />
+                    <div class="min-w-0">
+                      <h4 class="font-bold text-navy-950 text-sm truncate">${m.name}</h4>
+                      <p class="text-[10px] text-warmgray-500 truncate">${m.headline || 'SkillSwap Member'}</p>
+                      <div class="text-[10px] font-bold text-amber-600 mt-0.5">★ ${m.karma_score || 95} Karma</div>
+                    </div>
+                  </div>
+                  <div class="space-y-1 text-[10px] border-t border-cream-100 pt-2">
+                    ${m.teach_skills && m.teach_skills.length > 0 ? html`
+                      <div class="flex items-center gap-1 truncate">
+                        <span class="font-extrabold text-emerald-800">Teaches:</span>
+                        <span class="text-navy-900 font-medium truncate">${m.teach_skills.join(', ')}</span>
+                      </div>
+                    ` : null}
+                    ${m.learn_skills && m.learn_skills.length > 0 ? html`
+                      <div class="flex items-center gap-1 truncate">
+                        <span class="font-extrabold text-sky-800">Wants:</span>
+                        <span class="text-navy-900 font-medium truncate">${m.learn_skills.join(', ')}</span>
+                      </div>
+                    ` : null}
+                  </div>
+                  <button
+                    onClick=${() => setActiveTab('public-profile', { user: m.username })}
+                    class="w-full py-2 bg-navy-700 hover:bg-navy-800 text-white rounded-xl text-xs font-bold transition-all text-center shadow-2xs"
+                  >
+                    View Mentor Profile →
+                  </button>
+                </div>
+              `)}
+            </div>
+          </div>
+        ` : null}
 
         <!-- Category Grid & Skills Listing -->
         <div class="space-y-12">

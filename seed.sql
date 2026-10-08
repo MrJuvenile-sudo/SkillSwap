@@ -113,3 +113,67 @@ ON CONFLICT (user_id) DO UPDATE SET
   bio = EXCLUDED.bio,
   location = EXCLUDED.location,
   availability = EXCLUDED.availability;
+
+-- 5. Verified Demo Users
+INSERT INTO app_users (id, name, username, email, password_hash, role, status, headline, avatar_url, onboarding_completed, karma_score)
+VALUES 
+  ('user_priya_sharma', 'Priya Sharma', 'priya_architect', 'priya@example.com', '8e9c0a30e97709d7b6513caea03b9022:4189ef6a298c4f9dd90ad03fa8b46998c51c19668ed8eb68d00f033447873562', 'USER', 'ACTIVE', 'Senior Cloud Architect & Distributed Systems Specialist (Bengaluru)', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop', 1, 98),
+  ('user_shubhank_parihar', 'Shubhank Parihar', 'shubhank', 'shubhank@example.com', '8e9c0a30e97709d7b6513caea03b9022:4189ef6a298c4f9dd90ad03fa8b46998c51c19668ed8eb68d00f033447873562', 'USER', 'ACTIVE', 'MCA Final Year | Full-Stack Architect & Web Engineering (JEC Jabalpur)', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop', 1, 99),
+  ('user_aarav_sharma', 'Aarav Sharma', 'aarav_ml', 'aarav@example.com', '8e9c0a30e97709d7b6513caea03b9022:4189ef6a298c4f9dd90ad03fa8b46998c51c19668ed8eb68d00f033447873562', 'USER', 'ACTIVE', 'Full-Stack Developer & AI Researcher (Jabalpur)', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&h=150&fit=crop', 1, 95),
+  ('user_rohan_verma', 'Rohan Verma', 'rohan_db', 'rohan@example.com', '8e9c0a30e97709d7b6513caea03b9022:4189ef6a298c4f9dd90ad03fa8b46998c51c19668ed8eb68d00f033447873562', 'USER', 'ACTIVE', 'Backend Engineer & Database Optimization Specialist (Indore, MP)', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop', 1, 94),
+  ('user_ananya_patel', 'Ananya Patel', 'ananya_ux', 'ananya@example.com', '8e9c0a30e97709d7b6513caea03b9022:4189ef6a298c4f9dd90ad03fa8b46998c51c19668ed8eb68d00f033447873562', 'USER', 'ACTIVE', 'Product Designer & Creative Specialist (Bhopal, MP)', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop', 1, 96)
+ON CONFLICT (id) DO NOTHING;
+
+-- 6. Demo User Skills Mappings
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_priya_sharma', s.id, 'TEACH', 'Expert', 5.0, 1 FROM skills s WHERE s.name = 'Python'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_priya_sharma', s.id, 'LEARN', 'Intermediate', 1.0, 1 FROM skills s WHERE s.name = 'React'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_aarav_sharma', s.id, 'TEACH', 'Advanced', 3.0, 1 FROM skills s WHERE s.name = 'React'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_aarav_sharma', s.id, 'TEACH', 'Intermediate', 2.0, 1 FROM skills s WHERE s.name = 'Machine Learning'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_aarav_sharma', s.id, 'LEARN', 'Beginner', 0.5, 1 FROM skills s WHERE s.name = 'SQL & Analytics'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_rohan_verma', s.id, 'TEACH', 'Advanced', 3.0, 1 FROM skills s WHERE s.name = 'SQL & Analytics'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_rohan_verma', s.id, 'LEARN', 'Intermediate', 1.0, 1 FROM skills s WHERE s.name = 'Python'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_ananya_patel', s.id, 'TEACH', 'Advanced', 2.0, 1 FROM skills s WHERE s.name = 'Figma'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_ananya_patel', s.id, 'TEACH', 'Advanced', 2.0, 1 FROM skills s WHERE s.name = 'UI/UX Design'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_ananya_patel', s.id, 'LEARN', 'Beginner', 0.5, 1 FROM skills s WHERE s.name = 'React'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_shubhank_parihar', s.id, 'TEACH', 'Expert', 4.0, 1 FROM skills s WHERE s.name = 'React'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_shubhank_parihar', s.id, 'TEACH', 'Expert', 4.0, 1 FROM skills s WHERE s.name = 'TypeScript'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_skills (user_id, skill_id, type, level, experience_years, is_verified)
+SELECT 'user_shubhank_parihar', s.id, 'LEARN', 'Intermediate', 1.0, 1 FROM skills s WHERE s.name = 'Machine Learning'
+ON CONFLICT DO NOTHING;
+

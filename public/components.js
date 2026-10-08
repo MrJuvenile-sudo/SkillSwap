@@ -256,6 +256,109 @@
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
+    // Enhanced Psychological & Live Spotlight Search State
+    const [searchOpen, setSearchOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState({ skills: [], peers: [], circles: [] });
+    const [searchLoading, setSearchLoading] = useState(false);
+    const searchInputRef = useRef(null);
+    const searchTimerRef = useRef(null);
+
+    const POPULAR_SKILLS = [
+      { name: 'React & Frontend Engineering', category: 'Technology', mentors: 142, icon: '💻', highlight: '98% Match Rate' },
+      { name: 'Figma & UI/UX Product Design', category: 'Design', mentors: 118, icon: '🎨', highlight: 'High Demand' },
+      { name: 'Python, ML & Generative AI', category: 'AI', mentors: 165, icon: '🤖', highlight: 'Top Barter' },
+      { name: 'Spoken English & Communication', category: 'Language', mentors: 94, icon: '🗣️', highlight: 'Fast Trade' },
+      { name: 'Node.js & Backend Architecture', category: 'Technology', mentors: 120, icon: '⚡', highlight: 'Verified' },
+      { name: 'Docker, DevOps & AWS Cloud', category: 'Technology', mentors: 86, icon: '☁️', highlight: 'Industry Grade' },
+      { name: 'Guitar & Music Production', category: 'Music', mentors: 52, icon: '🎵', highlight: 'Creative' },
+      { name: 'Financial Modeling & Valuation', category: 'Business', mentors: 64, icon: '📈', highlight: 'Entrepreneurial' }
+    ];
+
+    const [catalogSkills, setCatalogSkills] = useState(POPULAR_SKILLS);
+
+    useEffect(() => {
+      apiFetch('/api/skills/directory').then(data => {
+        if (data.skills && Array.isArray(data.skills)) {
+          const map = {};
+          POPULAR_SKILLS.forEach(s => { map[s.name.toLowerCase()] = s; });
+          data.skills.forEach(s => {
+            const key = s.name.toLowerCase();
+            if (!map[key]) {
+              map[key] = {
+                name: s.name,
+                category: s.category_name || 'General',
+                mentors: s.total_members || s.teachers_count || 15,
+                icon: s.icon || '🎯',
+                highlight: 'Tradeable'
+              };
+            }
+          });
+          setCatalogSkills(Object.values(map));
+        }
+      }).catch(() => {});
+    }, []);
+
+    const executeSearch = (q) => {
+      const trimmed = (q || '').trim().toLowerCase();
+      setSearchLoading(true);
+
+      if (!trimmed) {
+        setSearchResults({ skills: [], peers: [], circles: [] });
+        setSearchLoading(false);
+        return;
+      }
+
+      const matchedSkills = catalogSkills.filter(s => 
+        (s.name || '').toLowerCase().includes(trimmed) || (s.category || '').toLowerCase().includes(trimmed)
+      ).slice(0, 6);
+
+      Promise.all([
+        apiFetch('/api/users?search=' + encodeURIComponent(trimmed)).catch(() => ({ users: [] })),
+        apiFetch('/api/hub/circles?search=' + encodeURIComponent(trimmed)).catch(() => ({ circles: [] }))
+      ]).then(([usersData, circlesData]) => {
+        const matchedPeers = (usersData.users || []).filter(u => {
+          const inName = (u.name || '').toLowerCase().includes(trimmed);
+          const inHeadline = (u.headline || '').toLowerCase().includes(trimmed);
+          const inLoc = (u.location || '').toLowerCase().includes(trimmed);
+          const inTeach = (u.teach_skills || []).some(s => s.toLowerCase().includes(trimmed));
+          const inLearn = (u.learn_skills || []).some(s => s.toLowerCase().includes(trimmed));
+          return inName || inHeadline || inLoc || inTeach || inLearn;
+        }).slice(0, 6);
+
+        const matchedCircles = (circlesData.circles || []).filter(c => {
+          const inName = (c.name || '').toLowerCase().includes(trimmed);
+          const inTopic = (c.topic || '').toLowerCase().includes(trimmed);
+          const inDesc = (c.description || '').toLowerCase().includes(trimmed);
+          return inName || inTopic || inDesc;
+        }).slice(0, 4);
+
+        setSearchResults({
+          skills: matchedSkills,
+          peers: matchedPeers,
+          circles: matchedCircles
+        });
+        setSearchLoading(false);
+      });
+    };
+
+    const handleSearchInput = (val) => {
+      setSearchQuery(val);
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = setTimeout(() => {
+        executeSearch(val);
+      }, 140);
+    };
+
+    useEffect(() => {
+      if (searchOpen) {
+        if (searchInputRef.current) {
+          setTimeout(() => searchInputRef.current.focus(), 60);
+        }
+        executeSearch(searchQuery);
+      }
+    }, [searchOpen]);
+
     const exploreTimerRef = useRef(null);
     const resourcesTimerRef = useRef(null);
 
@@ -323,11 +426,12 @@
           setExploreDropdownOpen(false);
           setResourcesDropdownOpen(false);
           setMobileOpen(false);
+          setSearchOpen(false);
         }
-        // Quick Jump to Skill Directory via Ctrl+K / Cmd+K
+        // Quick Toggle Spotlight Search via Ctrl+K / Cmd+K
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
           e.preventDefault();
-          setActiveTab('skills-dir');
+          setSearchOpen(prev => !prev);
           setUserMenuOpen(false);
           setNotifOpen(false);
           setExploreDropdownOpen(false);
@@ -380,10 +484,10 @@
       loadNotifications();
     };
 
-    const handleNavClick = (tab) => {
+    const handleNavClick = (tab, params = {}) => {
       if (exploreTimerRef.current) clearTimeout(exploreTimerRef.current);
       if (resourcesTimerRef.current) clearTimeout(resourcesTimerRef.current);
-      setActiveTab(tab);
+      setActiveTab(tab, params);
       setMobileOpen(false);
       setUserMenuOpen(false);
       setNotifOpen(false);
@@ -726,10 +830,35 @@
 
             <!-- Right Controls / Auth / Profile Actions -->
             <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+              <!-- Interactive Topbar Search Bar (Desktop) -->
+              <button
+                type="button"
+                onClick=${() => setSearchOpen(true)}
+                class="hidden md:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-cream-100/90 hover:bg-white border border-cream-300 hover:border-indigo-400 text-warmgray-500 hover:text-navy-955 shadow-2xs hover:shadow-md transition-all duration-200 group w-44 lg:w-56 xl:w-68 text-left select-none"
+                title="Search skills, verified mentors & study circles (Ctrl + K)"
+              >
+                <span class="text-indigo-600 group-hover:scale-110 transition-transform">
+                  <${Icon} name="search" class="w-3.5 h-3.5" />
+                </span>
+                <span class="text-xs font-medium text-warmgray-500 group-hover:text-navy-900 truncate flex-1">
+                  Search 500+ skills to swap...
+                </span>
+                <kbd class="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9.5px] font-mono font-bold bg-white text-navy-700 rounded-md border border-cream-300 shadow-2xs">
+                  ⌘K
+                </kbd>
+              </button>
+
+              <!-- Mobile Search Button -->
+              <button
+                type="button"
+                onClick=${() => setSearchOpen(true)}
+                class="md:hidden p-2 rounded-xl text-navy-800 hover:bg-cream-200/70 border border-transparent hover:border-cream-300 transition-all"
+                title="Search Skills"
+              >
+                <${Icon} name="search" class="w-5 h-5 text-navy-900" />
+              </button>
+
               ${!user ? html`
-                <button onClick=${() => handleNavClick('skills-dir')} class="hidden md:inline-flex px-3 py-2 text-xs font-bold text-navy-800 hover:text-navy-950 hover:bg-cream-100 rounded-xl transition-all border border-cream-300/60">
-                  Browse Skills
-                </button>
                 <button onClick=${() => handleNavClick('login')} class="px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-bold text-navy-900 hover:text-navy-700 hover:bg-cream-100 rounded-xl transition-all whitespace-nowrap">
                   Log In
                 </button>
@@ -889,6 +1018,291 @@
         </div>
       </div>
 
+      <!-- Spotlight Command Palette Search Modal -->
+      ${searchOpen ? html`
+        <div class="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
+          <!-- Frosted Glass Backdrop -->
+          <div
+            class="fixed inset-0 bg-navy-955/75 backdrop-blur-md transition-opacity animate-fadeIn"
+            onClick=${() => setSearchOpen(false)}
+          ></div>
+
+          <div class="flex min-h-full items-start justify-center p-3 sm:p-6 pt-12 sm:pt-20">
+            <div class="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-cream-300 overflow-hidden animate-slideDown ring-1 ring-black/5 text-left">
+              
+              <!-- Search Input Bar -->
+              <div class="p-4 sm:p-5 border-b border-cream-200 bg-cream-50/50 flex items-center gap-3">
+                <span class="text-indigo-600 animate-pulse">
+                  <${Icon} name="search" class="w-5 h-5" />
+                </span>
+                <input
+                  ref=${searchInputRef}
+                  type="text"
+                  placeholder="Search any skill to learn or trade (e.g. React, Python, UI/UX, Spanish)..."
+                  value=${searchQuery}
+                  onInput=${e => handleSearchInput(e.target.value)}
+                  onKeyDown=${e => {
+                    if (e.key === 'Enter') {
+                      setSearchOpen(false);
+                      handleNavClick('skills-dir', searchQuery.trim() ? { q: searchQuery.trim() } : {});
+                    }
+                    if (e.key === 'Escape') setSearchOpen(false);
+                  }}
+                  class="flex-1 bg-transparent text-sm sm:text-base font-semibold text-navy-950 placeholder:text-warmgray-400 placeholder:font-normal focus:outline-none"
+                />
+                ${searchQuery ? html`
+                  <button
+                    onClick=${() => handleSearchInput('')}
+                    class="p-1 rounded-lg hover:bg-cream-200 text-warmgray-500 hover:text-navy-900 transition-colors"
+                    title="Clear search"
+                  >
+                    <${Icon} name="x" class="w-4 h-4" />
+                  </button>
+                ` : null}
+                <button
+                  onClick=${() => setSearchOpen(false)}
+                  class="hidden sm:inline-flex items-center gap-1 px-2 py-1 bg-white hover:bg-cream-100 rounded-lg border border-cream-300 text-[10px] font-bold text-warmgray-600 shadow-2xs transition-colors"
+                >
+                  <span>ESC</span>
+                </button>
+              </div>
+
+              <!-- Psychological Motivational Banner -->
+              <div class="px-5 py-3 bg-gradient-to-r from-indigo-50/90 via-sky-50/70 to-emerald-50/70 border-b border-cream-200 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-black text-indigo-900 uppercase tracking-wider flex items-center gap-1">
+                    <span>✨</span>
+                    <span>100% Reciprocal Barter Economy</span>
+                  </span>
+                  <span class="text-[10px] text-warmgray-600 hidden sm:inline">• Trade knowledge, zero money</span>
+                </div>
+                <span class="text-[10.5px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-200/80">
+                  ⚡ 4.9/5 Reciprocity Score
+                </span>
+              </div>
+
+              <!-- Trending / Suggested Filter Chips -->
+              <div class="px-5 py-2.5 bg-cream-50/30 border-b border-cream-100 flex items-center gap-1.5 overflow-x-auto scrollbar-none text-[11px]">
+                <span class="font-bold text-warmgray-500 shrink-0 mr-1 flex items-center gap-1">
+                  <span>🔥</span>
+                  <span>Trending:</span>
+                </span>
+                ${['React', 'Figma & UX', 'Python AI', 'Spoken English', 'System Design', 'Music'].map(tag => html`
+                  <button
+                    key=${tag}
+                    onClick=${() => handleSearchInput(tag)}
+                    class="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 border border-cream-200 text-navy-800 font-semibold transition-all shrink-0 active:scale-95 shadow-2xs"
+                  >
+                    #${tag}
+                  </button>
+                `)}
+              </div>
+
+              <!-- Search Results Stream -->
+              <div class="max-h-[60vh] overflow-y-auto p-4 sm:p-5 space-y-6">
+                
+                ${searchLoading ? html`
+                  <div class="py-12 text-center space-y-3">
+                    <div class="w-7 h-7 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p class="text-xs font-medium text-warmgray-500">Searching 500+ verified barter skills and active mentors across India...</p>
+                  </div>
+                ` : null}
+
+                ${!searchLoading && !searchQuery.trim() ? html`
+                  <div class="py-10 px-4 text-center max-w-md mx-auto space-y-3">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl shadow-xs">
+                      🔍
+                    </div>
+                    <h4 class="text-sm font-bold text-navy-950">Search 500+ Barter Skills & Mentors</h4>
+                    <p class="text-xs text-warmgray-500 leading-relaxed">
+                      Type any skill (e.g. React, Python, UI/UX, Spanish) or mentor name above, or click a trending tag to find direct barter matches.
+                    </p>
+                  </div>
+                ` : null}
+
+                ${!searchLoading && searchQuery.trim() && searchResults.skills.length === 0 && searchResults.peers.length === 0 && searchResults.circles.length === 0 ? html`
+                  <!-- Psychological Encouraging Empty State for searched text -->
+                  <div class="py-10 px-4 text-center max-w-md mx-auto space-y-3">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto text-xl shadow-xs">
+                      💡
+                    </div>
+                    <h4 class="text-sm font-bold text-navy-950">No results found for "${searchQuery}"</h4>
+                    <p class="text-xs text-warmgray-600 leading-relaxed">
+                      Nobody has registered this exact barter yet — you could be the pioneer! Propose it to our community or explore all active categories.
+                    </p>
+                    <div class="pt-2 flex items-center justify-center gap-2">
+                      <button
+                        onClick=${() => { setSearchOpen(false); handleNavClick('community'); }}
+                        class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
+                      >
+                        Post in Community
+                      </button>
+                      <button
+                        onClick=${() => { setSearchOpen(false); handleNavClick('skills-dir'); }}
+                        class="px-3.5 py-2 bg-cream-100 hover:bg-cream-200 text-navy-900 font-bold text-xs rounded-xl border border-cream-300 transition-all"
+                      >
+                        Browse All Categories
+                      </button>
+                    </div>
+                  </div>
+                ` : null}
+
+                <!-- 1. Matching Skills Section -->
+                ${!searchLoading && searchResults.skills.length > 0 ? html`
+                  <div>
+                    <div class="flex items-center justify-between mb-2.5">
+                      <h4 class="text-[11px] font-bold uppercase tracking-wider text-warmgray-500 flex items-center gap-1.5">
+                        <span>📚</span>
+                        <span>Skills & Disciplines</span>
+                      </h4>
+                      <button
+                        onClick=${() => { setSearchOpen(false); handleNavClick('skills-dir', searchQuery.trim() ? { q: searchQuery.trim() } : {}); }}
+                        class="text-[11px] font-bold text-indigo-600 hover:underline"
+                      >
+                        View Directory &rarr;
+                      </button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      ${searchResults.skills.map((s, idx) => html`
+                        <div
+                          key=${idx}
+                          onClick=${() => { setSearchOpen(false); handleNavClick('skills-dir', { q: s.name }); }}
+                          class="p-3 rounded-2xl bg-cream-50/70 hover:bg-indigo-50/60 border border-cream-200 hover:border-indigo-300 cursor-pointer transition-all flex items-center justify-between group"
+                        >
+                          <div class="flex items-center gap-3">
+                            <span class="text-xl group-hover:scale-110 transition-transform">${s.icon || '🎯'}</span>
+                            <div>
+                              <div class="text-xs font-bold text-navy-950 group-hover:text-indigo-700">${s.name}</div>
+                              <div class="text-[10px] text-warmgray-500">${s.mentors || 20}+ active mentors</div>
+                            </div>
+                          </div>
+                          <span class="text-[9.5px] font-bold text-indigo-700 bg-white px-2 py-0.5 rounded-full border border-indigo-200 shadow-2xs">
+                            ${s.highlight || 'Tradeable'}
+                          </span>
+                        </div>
+                      `)}
+                    </div>
+                  </div>
+                ` : null}
+
+                <!-- 2. Matching Mentors / Peers Section -->
+                ${!searchLoading && searchResults.peers.length > 0 ? html`
+                  <div>
+                    <div class="flex items-center justify-between mb-2.5">
+                      <h4 class="text-[11px] font-bold uppercase tracking-wider text-warmgray-500 flex items-center gap-1.5">
+                        <span>👥</span>
+                        <span>Verified Mentors Ready to Barter</span>
+                      </h4>
+                      <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        Instant Reciprocal Matches
+                      </span>
+                    </div>
+                    <div class="space-y-2">
+                      ${searchResults.peers.map((peer, idx) => html`
+                        <div
+                          key=${peer.id || idx}
+                          class="p-3 sm:p-3.5 rounded-2xl bg-white hover:bg-cream-50 border border-cream-200 hover:border-cream-300 shadow-2xs hover:shadow transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                        >
+                          <div class="flex items-center gap-3">
+                            <img
+                              src=${peer.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(peer.name)}
+                              alt=${peer.name}
+                              class="w-11 h-11 rounded-2xl object-cover bg-indigo-50 border border-indigo-100 shrink-0"
+                            />
+                            <div class="min-w-0">
+                              <div class="flex items-center gap-2">
+                                <h5 class="text-xs sm:text-sm font-bold text-navy-950 truncate">${peer.name}</h5>
+                                <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.2 rounded-md border border-amber-200">
+                                  ★ 4.9
+                                </span>
+                              </div>
+                              <p class="text-[11px] text-warmgray-500 truncate">${peer.headline || 'SkillSwap Member'}</p>
+                              ${peer.location ? html`
+                                <p class="text-[10px] text-warmgray-400 mt-0.5">📍 ${peer.location}</p>
+                              ` : null}
+                            </div>
+                          </div>
+
+                          <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                            <button
+                              onClick=${() => {
+                                setSearchOpen(false);
+                                if (onViewProfile && peer.username) {
+                                  onViewProfile(peer.username);
+                                } else {
+                                  handleNavClick('public-profile', { user: peer.username });
+                                }
+                              }}
+                              class="px-2.5 py-1.5 bg-cream-100 hover:bg-cream-200 text-navy-900 border border-cream-300 rounded-xl text-xs font-bold transition-all shadow-2xs"
+                            >
+                              Profile
+                            </button>
+                            <button
+                              onClick=${() => {
+                                setSearchOpen(false);
+                                if (onProposeSwap) {
+                                  onProposeSwap(peer);
+                                } else {
+                                  handleNavClick('matches');
+                                }
+                              }}
+                              class="px-3 py-1.5 bg-navy-900 hover:bg-navy-800 text-white rounded-xl text-xs font-bold transition-all shadow-2xs hover:shadow"
+                            >
+                              Propose Swap &rarr;
+                            </button>
+                          </div>
+                        </div>
+                      `)}
+                    </div>
+                  </div>
+                ` : null}
+
+                <!-- 3. Skill Circles Section -->
+                ${!searchLoading && searchResults.circles.length > 0 ? html`
+                  <div>
+                    <div class="flex items-center justify-between mb-2.5">
+                      <h4 class="text-[11px] font-bold uppercase tracking-wider text-warmgray-500 flex items-center gap-1.5">
+                        <span>⭕</span>
+                        <span>Study Circles & Cohorts</span>
+                      </h4>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      ${searchResults.circles.map((c, idx) => html`
+                        <div
+                          key=${c.id || idx}
+                          onClick=${() => { setSearchOpen(false); handleNavClick('circles'); }}
+                          class="p-3 rounded-2xl bg-cream-50/70 hover:bg-indigo-50/60 border border-cream-200 hover:border-indigo-300 cursor-pointer transition-all"
+                        >
+                          <div class="text-xs font-bold text-navy-950 truncate">${c.name}</div>
+                          <div class="text-[10px] text-warmgray-500 line-clamp-1 mt-0.5">${c.description || 'Group peer cohort'}</div>
+                          <div class="mt-2 flex items-center justify-between text-[10px]">
+                            <span class="text-indigo-600 font-bold">👥 ${c.member_count || 1} members</span>
+                            <span class="text-emerald-700 font-bold">Join Circle &rarr;</span>
+                          </div>
+                        </div>
+                      `)}
+                    </div>
+                  </div>
+                ` : null}
+
+              </div>
+
+              <!-- Spotlight Footer Guidance -->
+              <div class="p-3 sm:p-4 bg-cream-50/80 border-t border-cream-200 flex flex-wrap items-center justify-between gap-2 text-[11px] text-warmgray-500">
+                <div class="flex items-center gap-3">
+                  <span>Press <kbd class="px-1.5 py-0.5 bg-white border border-cream-300 rounded font-mono font-bold text-[9px] text-navy-700">↵ Enter</kbd> to search all</span>
+                  <span><kbd class="px-1.5 py-0.5 bg-white border border-cream-300 rounded font-mono font-bold text-[9px] text-navy-700">ESC</kbd> to exit</span>
+                </div>
+                <div class="text-indigo-600 font-bold flex items-center gap-1">
+                  <span>🛡️ Escrow Verified Reciprocal Exchange</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      ` : null}
+
       </header>
 
       <!-- Native Mobile Application Bottom Navigation Bar (Mobile View) -->
@@ -967,14 +1381,14 @@
 
             <!-- Mobile Quick Search Bar -->
             <button
-              onClick=${() => handleNavClick('skills-dir')}
+              onClick=${() => { setMobileOpen(false); setSearchOpen(true); }}
               class="w-full bg-navy-900/90 text-cream-200/90 hover:text-white px-3.5 py-2.5 rounded-xl border border-navy-700/80 flex items-center justify-between text-xs font-semibold hover:border-indigo-400 transition-all text-left shadow-2xs group"
             >
               <span class="flex items-center gap-2 text-cream-200/70 group-hover:text-cream-100">
                 <${Icon} name="search" class="w-4 h-4 text-sky-400" />
-                <span>Search 120+ skills, topics...</span>
+                <span>Search 500+ skills to swap...</span>
               </span>
-              <span class="text-[10px] font-bold text-sky-400 bg-navy-800 px-2 py-0.5 rounded-md border border-navy-700">Go →</span>
+              <span class="text-[10px] font-bold text-sky-400 bg-navy-800 px-2 py-0.5 rounded-md border border-navy-700">⌘K</span>
             </button>
 
             <!-- User Info / Welcome Card -->
@@ -991,9 +1405,9 @@
                   <span>Join Free</span>
                   <${Icon} name="arrow-right" class="w-3.5 h-3.5" />
                 </button>
-                <button onClick=${() => handleNavClick('skills-dir')} class="w-full py-2.5 px-3 rounded-xl bg-navy-900 hover:bg-navy-800 text-cream-100 font-bold text-xs flex items-center justify-center gap-1.5 border border-navy-700 active:scale-98 transition-all">
+                <button onClick=${() => { setMobileOpen(false); setSearchOpen(true); }} class="w-full py-2.5 px-3 rounded-xl bg-navy-900 hover:bg-navy-800 text-cream-100 font-bold text-xs flex items-center justify-center gap-1.5 border border-navy-700 active:scale-98 transition-all">
                   <${Icon} name="search" class="w-3.5 h-3.5 text-sky-300" />
-                  <span>Browse Skills</span>
+                  <span>Search Skills</span>
                 </button>
               </div>
             ` : html`
