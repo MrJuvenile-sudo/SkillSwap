@@ -195,6 +195,7 @@
       api('/api/users/list').then(data => {
         setFeaturedPeers((data.users || []).slice(0, 3));
       }).catch(console.error);
+    }, []);
 
     // Hero Heading Typewriter Animation State
     const TYPEWRITER_PHRASES = [
