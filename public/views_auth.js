@@ -764,93 +764,94 @@
 
         <!-- 2. Interactive Synergy Sandbox / Simulator Widget -->
         <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="bg-gradient-to-br from-navy-900 via-navy-950 to-navy-955 rounded-3xl p-8 sm:p-10 text-white border border-navy-700/40 shadow-2xl space-y-8 relative overflow-hidden text-left">
-            <div class="absolute top-0 right-0 w-80 h-80 bg-navy-600/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="bg-gradient-to-br from-white via-navy-50/40 to-cream-50 rounded-3xl p-8 sm:p-10 text-navy-950 border border-cream-300 shadow-xl space-y-8 relative overflow-hidden text-left ring-1 ring-black/5">
+            <div class="absolute top-0 right-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-navy-800 pb-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-cream-200 pb-6 relative z-10">
               <div class="space-y-1">
-                <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-navy-800 text-navy-200 border border-navy-700/60 inline-block">
-                  ⚡ Interactive Simulator
+                <span class="px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-indigo-50 text-indigo-700 border border-indigo-200/80 inline-flex items-center gap-1.5 shadow-2xs">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                  <span>⚡ Interactive Simulator</span>
                 </span>
-                <h2 class="font-serif text-2xl sm:text-3xl font-bold">Test Your Synergy Match Potential</h2>
-                <p class="text-xs sm:text-sm text-cream-200/80">Select what you can teach and what you want to learn to see the real-time algorithm in action.</p>
+                <h2 class="font-serif text-2xl sm:text-3xl font-bold text-navy-950">Test Your Synergy Match Potential</h2>
+                <p class="text-xs sm:text-sm text-warmgray-600">Select what you can teach and what you want to learn to see the real-time algorithm in action.</p>
               </div>
-              <div class="text-right shrink-0 bg-navy-800/80 p-3 rounded-2xl border border-navy-700 text-center">
-                <span class="text-[10px] uppercase font-bold text-cream-200/70 block">Calculated Synergy</span>
-                <span class="font-serif text-3xl font-extrabold text-sky-400">96%</span>
+              <div class="text-center shrink-0 bg-white p-3.5 px-5 rounded-2xl border border-cream-300 shadow-xs">
+                <span class="text-[10px] uppercase font-bold tracking-wider text-warmgray-500 block">Calculated Synergy</span>
+                <span class="font-serif text-3xl font-extrabold bg-gradient-to-r from-navy-800 to-indigo-600 bg-clip-text text-transparent">96%</span>
               </div>
             </div>
 
             <!-- Interactive Skill Selectors -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2 bg-navy-800/40 p-5 rounded-2xl border border-navy-700/50">
-                <label class="block text-xs font-bold uppercase tracking-wider text-emerald-400">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+              <div class="space-y-2 bg-white/90 p-5 rounded-2xl border border-cream-300 shadow-2xs hover:border-emerald-300 transition-all">
+                <label class="block text-xs font-black uppercase tracking-wider text-emerald-700 flex items-center gap-1.5 mb-1.5">
                   Step 1: What can you offer to teach?
                 </label>
                 <select
                   value=${sandboxTeach}
                   onChange=${e => setSandboxTeach(e.target.value)}
-                  class="w-full p-3 bg-navy-900 border border-navy-700 rounded-xl text-xs sm:text-sm font-semibold text-white focus:outline-none focus:border-navy-500"
+                  class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl text-xs sm:text-sm font-bold text-navy-950 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all shadow-2xs"
                 >
                   ${availableSandboxSkills.map(s => html`<option key=${s} value=${s}>${s} (Proficient)</option>`)}
                 </select>
-                <p class="text-[10px] text-cream-200/60">You will teach this in 1:1 sessions or async pairing.</p>
+                <p class="text-[10.5px] text-warmgray-500 font-medium">You will teach this in 1:1 sessions or async pairing.</p>
               </div>
 
-              <div class="space-y-2 bg-navy-800/40 p-5 rounded-2xl border border-navy-700/50">
-                <label class="block text-xs font-bold uppercase tracking-wider text-sky-400">
+              <div class="space-y-2 bg-white/90 p-5 rounded-2xl border border-cream-300 shadow-2xs hover:border-indigo-300 transition-all">
+                <label class="block text-xs font-black uppercase tracking-wider text-indigo-700 flex items-center gap-1.5 mb-1.5">
                   Step 2: What skill do you want to learn?
                 </label>
                 <select
                   value=${sandboxLearn}
                   onChange=${e => setSandboxLearn(e.target.value)}
-                  class="w-full p-3 bg-navy-900 border border-navy-700 rounded-xl text-xs sm:text-sm font-semibold text-white focus:outline-none focus:border-navy-500"
+                  class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl text-xs sm:text-sm font-bold text-navy-950 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-2xs"
                 >
                   ${availableSandboxSkills.map(s => html`<option key=${s} value=${s}>${s} (Target Goal)</option>`)}
                 </select>
-                <p class="text-[10px] text-cream-200/60">A matched partner will guide and review your work.</p>
+                <p class="text-[10.5px] text-warmgray-500 font-medium">A matched partner will guide and review your work.</p>
               </div>
             </div>
 
             <!-- Live Match Preview Card -->
-            <div class="bg-navy-950/70 p-6 rounded-2xl border border-navy-800 space-y-4">
+            <div class="bg-white p-6 rounded-2xl border border-cream-300 shadow-md space-y-4 relative z-10">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-navy-300">Live Peer Match Simulation</span>
-                <span class="px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/30">
-                  Optimal Match Available
+                <span class="text-xs font-bold uppercase tracking-wider text-navy-900">Live Peer Match Simulation</span>
+                <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-extrabold border border-emerald-200 shadow-2xs">
+                  ✓ Optimal Match Available
                 </span>
               </div>
 
               <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div class="flex items-center gap-3.5">
-                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" class="w-12 h-12 rounded-xl object-cover ring-2 ring-navy-600" />
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" class="w-12 h-12 rounded-xl object-cover ring-2 ring-indigo-200 shadow-xs" />
                   <div>
-                    <h4 class="font-bold text-white text-base">Elena Rostova <span class="text-xs font-normal text-cream-200/70">(Senior Practitioner)</span></h4>
-                    <p class="text-xs text-cream-200/70">★ 4.98 Karma · 18 Swaps Completed · UTC-4 (New York)</p>
+                    <h4 class="font-bold text-navy-950 text-base">Elena Rostova <span class="text-xs font-normal text-warmgray-500">(Senior Practitioner)</span></h4>
+                    <p class="text-xs text-warmgray-600 font-medium">★ 4.98 Karma · 18 Swaps Completed · UTC-4 (New York)</p>
                   </div>
                 </div>
-                <button onClick=${() => setActiveTab('signup')} class="px-6 py-3 bg-gradient-to-r from-navy-700 to-indigo-700 hover:from-navy-800 hover:to-indigo-800 text-navy-950 font-extrabold rounded-xl shadow-lg transition-all text-xs shrink-0">
+                <button onClick=${() => setActiveTab('signup')} class="px-6 py-3 bg-navy-800 hover:bg-navy-900 active:scale-98 text-white font-extrabold rounded-xl shadow-md hover:shadow-lg transition-all text-xs shrink-0">
                   Claim Match & Start Free →
                 </button>
               </div>
 
               <!-- Synergy Breakdown Chips -->
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-[11px]">
-                <div class="p-2.5 bg-navy-900/80 rounded-xl border border-navy-800">
-                  <span class="text-cream-200/60 block text-[9px] uppercase font-bold">They Teach:</span>
-                  <span class="font-bold text-sky-300">${sandboxLearn}</span>
+                <div class="p-2.5 bg-cream-50/80 rounded-xl border border-cream-200/80">
+                  <span class="text-warmgray-500 block text-[9.5px] uppercase font-bold">They Teach:</span>
+                  <span class="font-extrabold text-indigo-700 text-xs">${sandboxLearn}</span>
                 </div>
-                <div class="p-2.5 bg-navy-900/80 rounded-xl border border-navy-800">
-                  <span class="text-cream-200/60 block text-[9px] uppercase font-bold">They Want:</span>
-                  <span class="font-bold text-emerald-300">${sandboxTeach}</span>
+                <div class="p-2.5 bg-cream-50/80 rounded-xl border border-cream-200/80">
+                  <span class="text-warmgray-500 block text-[9.5px] uppercase font-bold">They Want:</span>
+                  <span class="font-extrabold text-emerald-700 text-xs">${sandboxTeach}</span>
                 </div>
-                <div class="p-2.5 bg-navy-900/80 rounded-xl border border-navy-800">
-                  <span class="text-cream-200/60 block text-[9px] uppercase font-bold">Overlap Timezone:</span>
-                  <span class="font-bold text-white">4.5 hrs / day</span>
+                <div class="p-2.5 bg-cream-50/80 rounded-xl border border-cream-200/80">
+                  <span class="text-warmgray-500 block text-[9.5px] uppercase font-bold">Overlap Timezone:</span>
+                  <span class="font-bold text-navy-950 text-xs">4.5 hrs / day</span>
                 </div>
-                <div class="p-2.5 bg-navy-900/80 rounded-xl border border-navy-800">
-                  <span class="text-cream-200/60 block text-[9px] uppercase font-bold">Commitment:</span>
-                  <span class="font-bold text-white">2 hrs / week</span>
+                <div class="p-2.5 bg-cream-50/80 rounded-xl border border-cream-200/80">
+                  <span class="text-warmgray-500 block text-[9.5px] uppercase font-bold">Commitment:</span>
+                  <span class="font-bold text-navy-950 text-xs">2 hrs / week</span>
                 </div>
               </div>
             </div>
@@ -1112,12 +1113,12 @@
 
         <!-- 9. Final High-Impact Conversion CTA Section -->
         <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="bg-gradient-to-r from-navy-700 via-navy-800 to-navy-900 rounded-3xl p-10 sm:p-14 text-white text-center space-y-6 shadow-2xl border border-navy-600/50 relative overflow-hidden">
+          <div class="bg-gradient-to-br from-white via-indigo-50/40 to-cream-50 rounded-3xl p-10 sm:p-14 text-navy-950 text-center space-y-6 shadow-xl border border-cream-300 relative overflow-hidden ring-1 ring-black/5">
             <div class="space-y-3 relative z-10 max-w-2xl mx-auto">
-              <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+              <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-navy-950">
                 Ready to trade skills with verified peers?
               </h2>
-              <p class="text-sm sm:text-base text-cream-200/90 leading-relaxed">
+              <p class="text-sm sm:text-base text-warmgray-600 leading-relaxed font-medium">
                 Join thousands of software engineers, designers, creators, and practitioners swapping expert knowledge every single day.
               </p>
             </div>
@@ -1125,19 +1126,19 @@
             <div class="flex flex-wrap items-center justify-center gap-3.5 pt-2 relative z-10">
               <button
                 onClick=${() => setActiveTab('signup')}
-                class="px-8 py-4 bg-white hover:bg-cream-100 text-navy-950 font-extrabold text-sm rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
+                class="px-8 py-4 bg-navy-800 hover:bg-navy-900 text-white font-extrabold text-sm rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
               >
                 Create Free Account Now →
               </button>
               <button
                 onClick=${() => setActiveTab('skills-dir')}
-                class="px-7 py-4 bg-navy-800/80 hover:bg-navy-800 text-white font-bold text-sm rounded-xl border border-navy-500 transition-all duration-200"
+                class="px-7 py-4 bg-white hover:bg-cream-100 text-navy-800 font-bold text-sm rounded-xl border border-cream-300 shadow-sm transition-all duration-200"
               >
                 Explore Skills Directory
               </button>
             </div>
 
-            <div class="flex items-center justify-center gap-6 text-xs text-cream-200/70 pt-4 relative z-10 font-semibold">
+            <div class="flex items-center justify-center gap-6 text-xs text-warmgray-500 pt-4 relative z-10 font-bold">
               <span>✓ 100% Free Knowledge Barter</span>
               <span>✓ Zero Credit Card Required</span>
               <span>✓ 1-on-1 Dedicated Workspaces</span>
@@ -1951,7 +1952,8 @@
         learn: "Python & FastAPI",
         pairs: "840 Active Pairs",
         badge: "High Reciprocity 🔥",
-        color: "from-navy-900 to-navy-950 text-white border-navy-700"
+        color: "bg-white text-navy-950 border-cream-300 hover:border-indigo-300 shadow-2xs hover:shadow-md",
+        badgeBg: "bg-indigo-50 text-indigo-700 border-indigo-200"
       },
       {
         title: "AI & Cloud Systems",
@@ -1959,7 +1961,8 @@
         learn: "Docker & AWS",
         pairs: "620 Active Pairs",
         badge: "Trending ⚡",
-        color: "from-navy-900 to-navy-950 text-white border-navy-700"
+        color: "bg-white text-navy-950 border-cream-300 hover:border-sky-300 shadow-2xs hover:shadow-md",
+        badgeBg: "bg-sky-50 text-sky-700 border-sky-200"
       },
       {
         title: "Product Design & Code",
@@ -1967,7 +1970,8 @@
         learn: "Tailwind & Frontend",
         pairs: "710 Active Pairs",
         badge: "Popular ⭐",
-        color: "from-navy-900 to-navy-950 text-white border-navy-700"
+        color: "bg-white text-navy-950 border-cream-300 hover:border-emerald-300 shadow-2xs hover:shadow-md",
+        badgeBg: "bg-emerald-50 text-emerald-800 border-emerald-200"
       },
       {
         title: "Bilingual Immersion",
@@ -1975,7 +1979,8 @@
         learn: "English Fluency",
         pairs: "930 Active Pairs",
         badge: "Global 🌐",
-        color: "from-navy-900 to-navy-950 text-white border-navy-700"
+        color: "bg-white text-navy-950 border-cream-300 hover:border-amber-300 shadow-2xs hover:shadow-md",
+        badgeBg: "bg-amber-50 text-amber-800 border-amber-200"
       }
     ];
 
@@ -2116,26 +2121,26 @@
               <div
                 key=${pIdx}
                 onClick=${() => { setSearch(path.teach.split(' ')[0]); setSelectedTrending('ALL'); }}
-                class="bg-gradient-to-br ${path.color} p-5 rounded-3xl border shadow-md hover:shadow-xl hover:scale-[1.02] cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-4 text-left"
+                class="${path.color} p-5 rounded-3xl border cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-4 text-left hover:scale-[1.02]"
               >
                 <div class="space-y-2.5">
                   <div class="flex items-center justify-between">
-                    <span class="px-2 py-0.5 rounded-md bg-navy-800 text-sky-300 text-[9px] font-black uppercase tracking-wider border border-navy-700">
+                    <span class="px-2 py-0.5 rounded-md ${path.badgeBg} text-[9px] font-black uppercase tracking-wider border">
                       ${path.badge}
                     </span>
-                    <span class="text-[10px] text-cream-200/70 font-semibold">${path.pairs}</span>
+                    <span class="text-[10px] text-warmgray-500 font-semibold">${path.pairs}</span>
                   </div>
-                  <h3 class="font-serif text-base font-bold text-white">${path.title}</h3>
+                  <h3 class="font-serif text-base font-bold text-navy-950">${path.title}</h3>
                 </div>
 
-                <div class="space-y-1.5 pt-2 border-t border-navy-800 text-[11px]">
-                  <div class="flex items-center justify-between text-emerald-300 font-semibold">
+                <div class="space-y-1.5 pt-2 border-t border-cream-200 text-[11px]">
+                  <div class="flex items-center justify-between text-warmgray-600 font-semibold">
                     <span>Teach:</span>
-                    <span class="font-bold">${path.teach}</span>
+                    <span class="font-bold text-emerald-700">${path.teach}</span>
                   </div>
-                  <div class="flex items-center justify-between text-sky-300 font-semibold">
+                  <div class="flex items-center justify-between text-warmgray-600 font-semibold">
                     <span>Learn:</span>
-                    <span class="font-bold">${path.learn}</span>
+                    <span class="font-bold text-indigo-700">${path.learn}</span>
                   </div>
                 </div>
               </div>
@@ -2144,24 +2149,24 @@
         </div>
 
         <!-- Mentor of the Week Spotlight Card -->
-        <div class="bg-gradient-to-r from-navy-900 via-navy-950 to-navy-900 rounded-3xl p-6 sm:p-8 text-white border border-navy-700/50 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+        <div class="bg-gradient-to-r from-white via-indigo-50/40 to-cream-50 rounded-3xl p-6 sm:p-8 text-navy-950 border border-cream-300 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden ring-1 ring-black/5">
           <div class="flex items-center gap-4">
             <div class="relative shrink-0">
-              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=140&h=140&fit=crop" class="w-15 h-15 sm:w-18 sm:h-18 rounded-2xl object-cover ring-2 ring-indigo-400 shadow-lg" />
-              <span class="absolute -bottom-1 -right-1 px-1.5 py-0.5 bg-sky-400 text-navy-950 text-[8px] font-black uppercase rounded-md shadow-xs">Mentor</span>
+              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=140&h=140&fit=crop" class="w-15 h-15 sm:w-18 sm:h-18 rounded-2xl object-cover ring-2 ring-indigo-200 shadow-md" />
+              <span class="absolute -bottom-1 -right-1 px-1.5 py-0.5 bg-sky-500 text-white text-[8px] font-black uppercase rounded-md shadow-xs">Mentor</span>
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-md bg-indigo-500/20 text-sky-300 text-[9px] font-extrabold border border-indigo-500/30">🌟 Practitioner Spotlight of the Week</span>
-                <span class="text-xs text-cream-200/70">★ 5.0 (24 verified reviews)</span>
+                <span class="px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[9px] font-extrabold border border-indigo-200">🌟 Practitioner Spotlight of the Week</span>
+                <span class="text-xs text-warmgray-500">★ 5.0 (24 verified reviews)</span>
               </div>
-              <h3 class="font-serif text-lg sm:text-xl font-bold">Sophia Lin · Senior Staff UI/UX Architect</h3>
-              <p class="text-xs text-cream-200/80 max-w-xl">
+              <h3 class="font-serif text-lg sm:text-xl font-bold text-navy-950">Sophia Lin · Senior Staff UI/UX Architect</h3>
+              <p class="text-xs text-warmgray-600 max-w-xl">
                 Teaches <strong>Figma Design Systems & Design Tokens</strong> in exchange for <strong>Rust Backend Optimization</strong>.
               </p>
             </div>
           </div>
-          <button onClick=${() => setActiveTab('signup')} class="px-6 py-3.5 bg-white hover:bg-cream-100 text-navy-950 font-extrabold text-xs rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all shrink-0">
+          <button onClick=${() => setActiveTab('signup')} class="px-6 py-3.5 bg-navy-800 hover:bg-navy-900 text-white font-extrabold text-xs rounded-xl shadow-md hover:scale-105 active:scale-95 transition-all shrink-0">
             Request Swap with Sophia →
           </button>
         </div>
@@ -3820,27 +3825,27 @@
         </div>
 
         <!-- Interactive Exchange Potential Calculator -->
-        <div class="bg-gradient-to-br from-navy-900 via-navy-950 to-navy-900 rounded-3xl p-8 sm:p-12 text-white border border-navy-700/60 shadow-2xl space-y-8">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-navy-800 pb-6">
+        <div class="bg-gradient-to-br from-white via-indigo-50/30 to-cream-50 rounded-3xl p-8 sm:p-12 text-navy-950 border border-cream-300 shadow-xl space-y-8 ring-1 ring-black/5">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-cream-200 pb-6">
             <div>
-              <span class="px-2.5 py-0.5 rounded-md bg-indigo-500/20 text-sky-300 text-[10px] font-bold border border-indigo-500/30">
+              <span class="px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold border border-indigo-200">
                 ⚡ Exchange Velocity Calculator
               </span>
-              <h2 class="font-serif text-2xl sm:text-3xl font-bold mt-1">Calculate Your Value from Peer Barter</h2>
-              <p class="text-xs sm:text-sm text-cream-200/80">Estimate how much money and time you save compared to private tutoring and paid academies.</p>
+              <h2 class="font-serif text-2xl sm:text-3xl font-bold mt-1 text-navy-950">Calculate Your Value from Peer Barter</h2>
+              <p class="text-xs sm:text-sm text-warmgray-600">Estimate how much money and time you save compared to private tutoring and paid academies.</p>
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div class="space-y-5 bg-navy-800/40 p-6 rounded-2xl border border-navy-700">
+            <div class="space-y-5 bg-white p-6 rounded-2xl border border-cream-300 shadow-2xs">
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-cream-200 mb-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-navy-900 mb-2">
                   Select Domain of Study:
                 </label>
                 <select
                   value=${calcDomain}
                   onChange=${e => setCalcDomain(e.target.value)}
-                  class="w-full p-3 bg-navy-900 border border-navy-700 rounded-xl text-xs sm:text-sm font-semibold text-white focus:outline-none focus:border-navy-500"
+                  class="w-full p-3 bg-cream-50/70 border border-cream-300 rounded-xl text-xs sm:text-sm font-semibold text-navy-950 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                 >
                   <option value="coding">Software Engineering ($95/hr market equivalent)</option>
                   <option value="design">Product Design & Figma ($85/hr market equivalent)</option>
@@ -3850,9 +3855,9 @@
               </div>
 
               <div>
-                <div class="flex justify-between text-xs font-bold uppercase tracking-wider text-cream-200 mb-2">
+                <div class="flex justify-between text-xs font-bold uppercase tracking-wider text-navy-900 mb-2">
                   <span>Weekly Commitment:</span>
-                  <span class="text-sky-400">${calcHours} hours / week</span>
+                  <span class="text-indigo-600 font-extrabold">${calcHours} hours / week</span>
                 </div>
                 <input
                   type="range"
@@ -3861,9 +3866,9 @@
                   value=${calcHours}
                   onInput=${e => setCalcHours(Number(e.target.value))}
                   onChange=${e => setCalcHours(Number(e.target.value))}
-                  class="w-full h-2 bg-navy-700 rounded-lg appearance-none cursor-pointer accent-navy-700"
+                  class="w-full h-2 bg-cream-200 rounded-lg appearance-none cursor-pointer accent-navy-700"
                 />
-                <div class="flex justify-between text-[10px] text-cream-200/60 mt-1">
+                <div class="flex justify-between text-[10px] text-warmgray-500 font-semibold mt-1">
                   <span>1 hr (Casual)</span>
                   <span>5 hrs (Accelerated)</span>
                   <span>10 hrs (Sprint)</span>
@@ -3872,13 +3877,13 @@
             </div>
 
             <!-- Results Output Box -->
-            <div class="bg-navy-950 p-6 rounded-2xl border border-navy-800 text-center space-y-4">
+            <div class="bg-cream-50/80 p-6 rounded-2xl border border-cream-300 text-center space-y-4 shadow-2xs">
               <div class="space-y-1">
-                <span class="text-[10px] uppercase font-bold text-cream-200/60 block">Equivalent Tutoring Value Earned For Free</span>
-                <span class="font-serif text-4xl sm:text-5xl font-extrabold text-sky-400">$${annualSaved.toLocaleString()}</span>
-                <span class="text-xs text-cream-200/80 block">per year ($${monthlySaved.toLocaleString()} / month)</span>
+                <span class="text-[10px] uppercase font-bold text-warmgray-500 block">Equivalent Tutoring Value Earned For Free</span>
+                <span class="font-serif text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-navy-800 to-indigo-600 bg-clip-text text-transparent">$${annualSaved.toLocaleString()}</span>
+                <span class="text-xs text-warmgray-600 font-semibold block">per year ($${monthlySaved.toLocaleString()} / month)</span>
               </div>
-              <div class="p-3 bg-navy-900 rounded-xl text-xs text-emerald-300 font-semibold border border-navy-800">
+              <div class="p-3 bg-white rounded-xl text-xs text-emerald-800 font-bold border border-emerald-200 shadow-2xs">
                 🚀 Velocity: ${domainMultipliers[calcDomain]?.speed}
               </div>
             </div>
